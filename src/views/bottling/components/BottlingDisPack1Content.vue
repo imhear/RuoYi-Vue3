@@ -323,23 +323,23 @@
                 <input type="checkbox" :checked="record.s3OzoneGeneratorFlag === 'Y'" disabled />
                 <span>臭氧机</span>
               </label>
-              （ {{ record.s3OzoneGeneratorNumber || '' }} ）
+              （{{ record.s3OzoneGeneratorNumber || '' }}）
               <label class="native-checkbox">
                 <input type="checkbox" :checked="record.s3BottleWashingMachineFlag === 'Y'" disabled />
                 <span>洗瓶机</span>
               </label>
-              （ {{ record.s3BottleWashingMachineNumber || '' }} ）
+              （{{ record.s3BottleWashingMachineNumber || '' }}）
               <label class="native-checkbox">
                 <input type="checkbox" :checked="record.s3BottleBlowingMachineFlag === 'Y'" disabled />
                 <span>吹瓶机</span>
               </label>
-              （ {{ record.s3BottleBlowingMachineNumber || '' }} ）
+              （{{ record.s3BottleBlowingMachineNumber || '' }}）
               <br>
               <label class="native-checkbox" style="margin-left: 92px;">
                 <input type="checkbox" :checked="record.s3AirShowerMachineFlag === 'Y'" disabled />
                 <span>风淋室</span>
               </label>
-              （ {{ record.s3AirShowerMachineNumber || '' }} ）
+              （{{ record.s3AirShowerMachineNumber || '' }}）
               <br>
               <span>2）消毒</span>
               <br>

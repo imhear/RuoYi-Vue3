@@ -81,8 +81,6 @@
           <el-button link type="primary" icon="" @click="handleHandle(scope.row)">处理</el-button>
           <el-button link type="primary" icon="" @click="handleReview(scope.row)">复核</el-button>
           <el-button link type="primary" icon="" @click="handleInspect(scope.row)">检查</el-button>
-          <!-- <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['bottling:disinfectionPackaging1:edit']">修改</el-button> -->
-          <!-- <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['bottling:disinfectionPackaging1:remove']">删除</el-button> -->
         </template>
       </el-table-column>
       <!-- <el-table-column label="记录主键" align="center" prop="recordId" /> -->

@@ -79,8 +79,10 @@
         <template #default="scope">
           <el-button link type="primary" icon="" @click="handleView(scope.row)">查看</el-button>
           <el-button link type="primary" icon="" @click="handleHandle(scope.row)">处理</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['bottling:disinfectionPackaging1:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['bottling:disinfectionPackaging1:remove']">删除</el-button>
+          <el-button link type="primary" icon="" @click="handleReview(scope.row)">复核</el-button>
+          <el-button link type="primary" icon="" @click="handleInspect(scope.row)">检查</el-button>
+          <!-- <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['bottling:disinfectionPackaging1:edit']">修改</el-button> -->
+          <!-- <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['bottling:disinfectionPackaging1:remove']">删除</el-button> -->
         </template>
       </el-table-column>
       <!-- <el-table-column label="记录主键" align="center" prop="recordId" /> -->
@@ -107,7 +109,26 @@
     <!-- 查看对话框组件 -->
     <BottlingDisPack1View ref="disPack1ViewRef" />
     <!-- 处理对话框 -->
-    <BottlingDisPack1Handle ref="disPack1HandleRef" @submit="handleConfirmHandle" />
+    <BottlingDisPack1Handle ref="disPack1HandleRef"
+      @step1Submit="handleStep1Submit"
+      @step2Submit="handleStep2Submit"
+      @step3Submit="handleStep3Submit"
+      @step4Submit="handleStep4Submit"
+      @submit="getList" />
+    <!-- 复核对话框 -->
+     <BottlingDisPack1Review ref="disPack1ReviewRef"
+      @step1Review="handleStep1Review"
+      @step2Review="handleStep2Review"
+      @step3Review="handleStep3Review"
+      @step4Review="handleStep4Review"
+      @submit="getList" />
+    <!-- <BottlingDisPack1Review ref="disPack1ReviewRef" @step1Review="handleStep1Review" @submit="getList" /> -->
+    <!-- 检查对话框 -->
+    <BottlingDisPack1Inspect ref="disPack1InspectRef"
+      @step1Inspect="handleStep1Inspect"
+      @step2Inspect="handleStep2Inspect"
+      @step3Inspect="handleStep3Inspect"
+      @submit="getList" />
 
     <!-- 添加或修改灌装包材处理记录1对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
@@ -597,12 +618,20 @@
 
 <script setup name="DisinfectionPackaging1">
 import { listDisinfectionPackaging1, getDisinfectionPackaging1, delDisinfectionPackaging1, addDisinfectionPackaging1, updateDisinfectionPackaging1 } from "@/api/bottling/disinfectionPackaging1"
+// 新增导入
+import { handleStep1, handleStep2, handleStep3, handleStep4, reviewStep1, reviewStep2, reviewStep3, reviewStep4, inspectStep1, inspectStep2, inspectStep3 } from "@/api/bottling/disinfectionPackaging1"
 
 // 引入查看对话框组件
 import BottlingDisPack1View from '@/views/bottling/components/BottlingDisPack1View.vue'
 
 // 引入处理对话框组件
 import BottlingDisPack1Handle from '@/views/bottling/components/BottlingDisPack1Handle.vue'
+
+// 引入复核对话框组件
+import BottlingDisPack1Review from '@/views/bottling/components/BottlingDisPack1Review.vue'
+
+// 引入检查对话框组件
+import BottlingDisPack1Inspect from '@/views/bottling/components/BottlingDisPack1Inspect.vue'
 
 const { proxy } = getCurrentInstance()
 const { sys_yes_no, disinfection_packaging_status } = proxy.useDict('sys_yes_no', 'disinfection_packaging_status')
@@ -611,6 +640,10 @@ const { sys_yes_no, disinfection_packaging_status } = proxy.useDict('sys_yes_no'
 const disPack1ViewRef = ref(null)
 // 处理对话框组件引用
 const disPack1HandleRef = ref(null)
+// 复核对话框组件引用
+const disPack1ReviewRef = ref(null)
+// 检查对话框组件引用
+const disPack1InspectRef = ref(null)
 
 const disinfectionPackaging1List = ref([])
 const open = ref(false)
@@ -938,11 +971,165 @@ function handleHandle(row) {
   })
 }
 
-/** 处理提交确认（后端未实现，暂留空） */
-function handleConfirmHandle(formData) {
-  // TODO: 调用后端处理保存接口
-  console.log('处理提交数据：', formData)
-  proxy.$modal.msgSuccess('处理保存接口待实现')
+/** 打开复核对话框 */
+function handleReview(row) {
+  getDisinfectionPackaging1(row.recordId).then(res => {
+    disPack1ReviewRef.value?.open(res.data)
+  }).catch(() => {
+    proxy.$modal.msgError('获取详情失败')
+  })
+}
+
+/** 打开检查对话框 */
+function handleInspect(row) {
+  getDisinfectionPackaging1(row.recordId).then(res => {
+    disPack1InspectRef.value?.open(res.data)
+  }).catch(() => {
+    proxy.$modal.msgError('获取详情失败')
+  })
+}
+
+/** Step1 提交处理 */
+async function handleStep1Submit(formData) {
+  try {
+    await proxy.$modal.confirm('是否确认提交 Step1 操作记录？')
+    await handleStep1(formData.recordId, formData)
+    proxy.$modal.msgSuccess('Step1 提交成功')
+    disPack1HandleRef.value?.close()  // 关闭处理对话框
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step1 提交失败')
+  }
+}
+
+/** Step2 提交处理 */
+async function handleStep2Submit(formData) {
+  try {
+    await proxy.$modal.confirm('是否确认提交 Step2 操作记录？')
+    await handleStep2(formData.recordId, formData)
+    proxy.$modal.msgSuccess('Step2 提交成功')
+    disPack1HandleRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step2 提交失败')
+  }
+}
+
+/** Step3 提交处理 */
+async function handleStep3Submit(formData) {
+  try {
+    await proxy.$modal.confirm('是否确认提交 Step3 操作记录？')
+    await handleStep3(formData.recordId, formData)
+    proxy.$modal.msgSuccess('Step3 提交成功')
+    disPack1HandleRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step3 提交失败')
+  }
+}
+
+/** Step4 提交处理 */
+async function handleStep4Submit(formData) {
+  try {
+    await proxy.$modal.confirm('是否确认提交 Step4 操作记录？')
+    await handleStep4(formData.recordId, formData)
+    proxy.$modal.msgSuccess('Step4 提交成功')
+    disPack1HandleRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step4 提交失败')
+  }
+}
+
+/** Step1 复核处理 */
+async function handleStep1Review({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认复核 Step1？')
+    await reviewStep1(recordId)
+    proxy.$modal.msgSuccess('Step1 复核成功')
+    disPack1ReviewRef.value?.close()  // 关闭复核对话框
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step1 复核失败')
+  }
+}
+
+/** Step2 复核处理 */
+async function handleStep2Review({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认复核 Step2？')
+    await reviewStep2(recordId)
+    proxy.$modal.msgSuccess('Step2 复核成功')
+    disPack1ReviewRef.value?.close()  // 关闭复核对话框
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step1 复核失败')
+  }
+}
+
+/** Step3 复核处理 */
+async function handleStep3Review({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认复核 Step3？')
+    await reviewStep3(recordId)
+    proxy.$modal.msgSuccess('Step3 复核成功')
+    disPack1ReviewRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step3 复核失败')
+  }
+}
+
+/** Step4 复核处理 */
+async function handleStep4Review({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认复核 Step4？')
+    await reviewStep4(recordId)
+    proxy.$modal.msgSuccess('Step4 复核成功')
+    disPack1ReviewRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step4 复核失败')
+  }
+}
+
+/** Step1 检查处理 */
+async function handleStep1Inspect({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认检查 Step1？')
+    await inspectStep1(recordId)
+    proxy.$modal.msgSuccess('Step1 检查成功')
+    disPack1InspectRef.value?.close()  // 关闭检查对话框
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step1 检查失败')
+  }
+}
+
+/** Step2 检查处理 */
+async function handleStep2Inspect({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认检查 Step2？')
+    await inspectStep2(recordId)
+    proxy.$modal.msgSuccess('Step2 检查成功')
+    disPack1InspectRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step2 检查失败')
+  }
+}
+
+/** Step3 检查处理 */
+async function handleStep3Inspect({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认检查 Step3？')
+    await inspectStep3(recordId)
+    proxy.$modal.msgSuccess('Step3 检查成功')
+    disPack1InspectRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step3 检查失败')
+  }
 }
 
 getList()

@@ -3,7 +3,7 @@
   外层 el-dialog，内部引用纯内容组件
 -->
 <template>
-  <el-dialog v-model="visible" title="灌装包材处理记录1" width="300mm" append-to-body @closed="handleClosed">
+  <el-dialog v-model="visible" title="灌装包材处理记录1" width="280mm" append-to-body @closed="handleClosed">
     <BottlingDisPack1Content ref="contentRef" />
   </el-dialog>
 </template>

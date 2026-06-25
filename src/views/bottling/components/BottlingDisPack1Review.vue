@@ -72,12 +72,12 @@
           <td class="td-no-padding" >
             <table class="inner-fill-table step1-inner" style="border-collapse: collapse; font-size: 14px; width: 100%; height: 100%;">
               <tr style="height: 28px;">
-                <td colspan="2" style="text-align: center;">
+                <!-- <td colspan="2" style="text-align: center;">
                   <el-date-picker v-model="form.s1StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="开始时间" size="small" style="width: 180px;" />
                   <span style="margin: 0 8px;">至</span>
                   <el-date-picker v-model="form.s1EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="结束时间" size="small" style="width: 180px;" />
-                </td>
-                <!-- <td colspan="2">{{ form.s1StartTime ? parseTime(form.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ form.s1EndTime ? parseTime(form.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}</td> -->
+                </td> -->
+                <td colspan="2">{{ form.s1StartTime ? parseTime(form.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ form.s1EndTime ? parseTime(form.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}</td>
               </tr>
               <tr style="height: 92px;">
                 <td class="s1-split-left">
@@ -89,26 +89,22 @@
                 </td>
                 <td class="s1-split-right">
                   温湿度记录：<br/>
-                  一般区：
-                  <input v-model="form.s1NormalAreaTemperature" class="edit-input-short" placeholder="℃" /> ℃，
-                  <input v-model="form.s1NormalAreaHumidity" class="edit-input-short" placeholder="%" /> %，
-                  洁净区：
-                  <input v-model="form.s1CleanAreaTemperature" class="edit-input-short" placeholder="℃" /> ℃，
-                  <input v-model="form.s1CleanAreaHumidity" class="edit-input-short" placeholder="%" /> %
+                  一般区：{{ form.s1NormalAreaTemperature || '' }} ℃，{{ form.s1NormalAreaHumidity || '' }} %，
+                  洁净区：{{ form.s1CleanAreaTemperature || '' }} ℃，{{ form.s1CleanAreaHumidity || '' }} %
                   <br/>
                   <div style="height: 5px;"></div>
                   <span>检查是否合格：</span>
                   <!-- "文字在前、复选框在后" 使用 native-checkbox-after 类 -->
                   <label class="native-checkbox-after">
                     <span>是</span>
-                    <input type="checkbox" v-model="form.s1QualifiedFlag" true-value="Y" false-value="" />
+                    <input type="checkbox" :checked="form.s1QualifiedFlag === 'Y'" disabled />
                   </label>
                   <label class="native-checkbox-after">
                     <span>否</span>
-                    <input type="checkbox" v-model="form.s1QualifiedFlag" true-value="N" false-value="" />
+                    <input type="checkbox" :checked="form.s1QualifiedFlag === 'N'" disabled />
                   </label>
                   ；不合格情况说明及处理方式：<br/>
-                  <textarea v-model="form.s1Remark" class="edit-textarea" rows="2" placeholder="请输入不合格情况说明"></textarea>
+                  {{ form.s1Remark || '' }}
                 </td>
               </tr>
             </table>
@@ -122,14 +118,15 @@
             <div v-if="form.s1InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ form.s1Inspector || '' }}</div>
             <div v-if="form.s1InspectorTime" style="color: gray; font-size: 12px;">{{ form.s1InspectorTime ? form.s1InspectorTime.substring(0, 16) : '' }}</div>
             <!-- 检查人未提交时，显示操作按钮 -->
-            <div v-if="!form.s1InspectorTime" style="margin-top: 8px;">
-              <el-button type="primary" size="small" @click="handleSubmitStep1">提交</el-button>
+            <div v-if="!form.s1InspectorTime" style="margin-top: 4px;">
+              <el-button type="success" size="small" @click="handleReviewStep1">复核</el-button>
             </div>
           </td>
         </tr>
       </table>
 
-      <!-- ===== Step2 处理（可编辑） ===== -->
+
+      <!-- ===== Step2 处理（暂时只读，后续改造） ===== -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">
@@ -142,22 +139,18 @@
           <td class="td-no-padding">
             <table class="inner-fill-table step2-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
               <tr style="height: 28px;">
-                <td colspan="2" style="text-align: center;">
-                  <el-date-picker v-model="form.s2StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="开始时间" size="small" style="width: 180px;" />
-                  <span style="margin: 0 8px;">至</span>
-                  <el-date-picker v-model="form.s2EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="结束时间" size="small" style="width: 180px;" />
-                </td>
+                <td colspan="2">{{ form.s2StartTime ? parseTime(form.s2StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ form.s2EndTime ? parseTime(form.s2EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}</td>
               </tr>
               <tr style="height: 28px;">
                 <td class="split-left">
                   <label class="native-checkbox">
-                    <input type="checkbox" v-model="form.s2OzoneDesinfectionFlag" true-value="Y" false-value="N" />
+                    <input type="checkbox" :checked="form.s2OzoneDesinfectionFlag === 'Y'" disabled />
                     <span>臭氧</span>
                   </label>
                 </td>
                 <td class="split-right">
                   <label class="native-checkbox">
-                    <input type="checkbox" v-model="form.s2HighDesinfectionTemperatureFlag" true-value="Y" false-value="N" />
+                    <input type="checkbox" :checked="form.s2HighDesinfectionTemperatureFlag === 'Y'" disabled />
                     <span>高温</span>
                   </label>
                 </td>
@@ -181,107 +174,110 @@
             </table>
           </td>
           <td>
-            <div style="padding: 0px 0px;">
+            <div style="padding: 0px 16px;">
               <div class="step-text">
                 1）设备/编码：
                 <label class="native-checkbox">
-                  <input type="checkbox" v-model="form.s2OzoneGeneratorFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2OzoneGeneratorFlag === 'Y'" disabled />
                   <span>臭氧机</span>
                 </label>
-                （<input v-model="form.s2OzoneGeneratorNumber" class="edit-input-short" style="width: 20px;"/>）
+                （{{ form.s2OzoneGeneratorNumber || '' }}）
                 <label class="native-checkbox">
-                  <input type="checkbox" v-model="form.s2BottleWashingMachineFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2BottleWashingMachineFlag === 'Y'" disabled />
                   <span>洗瓶机</span>
                 </label>
-                （<input v-model="form.s2BottleWashingMachineNumber" class="edit-input-short" style="width: 20px;"/>）
+                （{{ form.s2BottleWashingMachineNumber || '' }}）
                 <label class="native-checkbox">
-                  <input type="checkbox" v-model="form.s2BottleBlowingMachineFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2BottleBlowingMachineFlag === 'Y'" disabled />
                   <span>吹瓶机</span>
                 </label>
-                （<input v-model="form.s2BottleBlowingMachineNumber" class="edit-input-short" style="width: 20px;"/>）
+                （{{ form.s2BottleBlowingMachineNumber || '' }}）
                 <br>
                 <label class="native-checkbox" style="margin-left: 92px;">
-                  <input type="checkbox" v-model="form.s2AirGunFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2AirGunFlag === 'Y'" disabled />
                   <span>气枪</span>
                 </label>
                 <label class="native-checkbox" style="margin-left: 25px;">
-                  <input type="checkbox" v-model="form.s2ManualWashingFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2ManualWashingFlag === 'Y'" disabled />
                   <span>手动洗</span>
                 </label>
                 <label class="native-checkbox" style="margin-left: 25px;">
-                  <input type="checkbox" v-model="form.s2WasherDryerComboFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2WasherDryerComboFlag === 'Y'" disabled />
                   <span>洗烘一体机</span>
                 </label>
-                （<input v-model="form.s2WasherDryerComboNumber" class="edit-input-short" />）
+                （{{ form.s2WasherDryerComboNumber || '' }}）
                 <br>
                 2）
                 <label class="native-checkbox">
-                  <input type="checkbox" v-model="form.s2OzoneDesinfectionFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2OzoneDesinfectionFlag === 'Y'" disabled />
                   <span>臭氧</span>
                 </label>
-                ：消毒臭氧浓度 <input v-model="form.s2OzoneConcentration" class="edit-input-short" /> ppm，
+                ：消毒臭氧浓度
+                {{ form.s2OzoneConcentration || '' }}ppm，
                 <br/>
                 <span style="margin-left: 30px;">
-                  消毒时间 <el-time-picker v-model="form.s2OzoneDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  至 <el-time-picker v-model="form.s2OzoneDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  ，共 <input v-model="form.s2OzoneDesinfectionCost" class="edit-input-short" /> 分钟
+                  消毒时间 {{ (form.s2OzoneDesinfectionStartTime || '').substring(0, 5) }} 至 {{ (form.s2OzoneDesinfectionEndTime || '').substring(0, 5) }}
+                  ，共{{ form.s2OzoneDesinfectionCost || '' }}分钟
                 </span>
                 <br/>
                 <label class="native-checkbox" style="margin-left: 25px;">
-                  <input type="checkbox" v-model="form.s2HighDesinfectionTemperatureFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2HighDesinfectionTemperatureFlag === 'Y'" disabled />
                   <span>高温</span>
                 </label>
-                ：烘干消毒温度 <input v-model="form.s2DryingDesinfectionTemperature" class="edit-input-short" /> ℃，
+                ：烘干消毒温度
+                {{ form.s2DryingDesinfectionTemperature || '' }} ℃，
                 <br/>
                 <span style="margin-left: 30px;">
-                  消毒时间 <el-time-picker v-model="form.s2DryingDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  至 <el-time-picker v-model="form.s2DryingDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  ，共 <input v-model="form.s2DryingDesinfectionCost" class="edit-input-short" /> 分钟
+                  消毒时间 {{ (form.s2DryingDesinfectionStartTime || '').substring(0, 5) }} 至 {{ (form.s2DryingDesinfectionEndTime || '').substring(0, 5) }}
+                  ，共{{ form.s2DryingDesinfectionCost || '' }}分钟
                 </span>
                 <br/>
                 <label class="native-checkbox" style="margin-left: 25px;">
-                  <input type="checkbox" v-model="form.s2WasherDryerComboFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2WasherDryerComboFlag === 'Y'" disabled />
                   <span>洗烘一体机</span>
                 </label>
-                ：高温烘干消毒温度 <input v-model="form.s2HighDryingDesinfectionTemperature" class="edit-input-short" /> ℃，
+                ：高温烘干消毒温度
+                {{ form.s2HighDryingDesinfectionTemperature || '' }} ℃，
                 <br/>
                 <span style="margin-left: 30px;">
-                  消毒时间 <el-time-picker v-model="form.s2HighDryingDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  至 <el-time-picker v-model="form.s2HighDryingDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
+                  消毒时间 {{ (form.s2HighDryingDesinfectionStartTime || '').substring(0, 5) }} 至 {{ (form.s2HighDryingDesinfectionEndTime || '').substring(0, 5) }}
                 </span>
                 <br/>
                 <span>3）是否干净，干燥、完好、外观无变色：</span>
+                <!-- "文字在前、复选框在后" 使用 native-checkbox-after 类 -->
                 <label class="native-checkbox-after">
                   <span>是</span>
-                  <input type="checkbox" v-model="form.s2WaiguanFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2WaiguanFlag === 'Y'" disabled />
                 </label>
                 <label class="native-checkbox-after">
                   <span>否</span>
-                  <input type="checkbox" v-model="form.s2WaiguanFlag" true-value="N" false-value="Y" />
+                  <input type="checkbox" :checked="form.s2WaiguanFlag === 'N'" disabled />
                 </label>
                 <br/>
                 <span>4）洗瓶用水是否纯化水：</span>
+                <!-- "文字在前、复选框在后" 使用 native-checkbox-after 类 -->
                 <label class="native-checkbox-after">
                   <span>是</span>
-                  <input type="checkbox" v-model="form.s2PurifiedWaterFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2PurifiedWaterFlag === 'Y'" disabled />
                 </label>
                 <label class="native-checkbox-after">
                   <span>否</span>
-                  <input type="checkbox" v-model="form.s2PurifiedWaterFlag" true-value="N" false-value="Y" />
+                  <input type="checkbox" :checked="form.s2PurifiedWaterFlag === 'N'" disabled />
                 </label>
                 <label class="native-checkbox-after">
                   <span>；无此项</span>
-                  <input type="checkbox" v-model="form.s2NoPurifiedWaterFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2NoPurifiedWaterFlag === 'Y'" disabled />
                 </label>
                 <br/>
                 <span>5）是否装入洁净袋：</span>
+                <!-- "文字在前、复选框在后" 使用 native-checkbox-after 类 -->
                 <label class="native-checkbox-after">
                   <span>是</span>
-                  <input type="checkbox" v-model="form.s2CleanBagFlag" true-value="Y" false-value="N" />
+                  <input type="checkbox" :checked="form.s2CleanBagFlag === 'Y'" disabled />
                 </label>
                 <label class="native-checkbox-after">
                   <span>否</span>
-                  <input type="checkbox" v-model="form.s2CleanBagFlag" true-value="N" false-value="Y" />
+                  <input type="checkbox" :checked="form.s2CleanBagFlag === 'N'" disabled />
                 </label>
               </div>
             </div>
@@ -293,15 +289,15 @@
             <div v-if="form.s2ReviewerTime" style="color: gray; font-size: 12px;">{{ form.s2ReviewerTime ? form.s2ReviewerTime.substring(0, 16) : '' }}</div>
             <div v-if="form.s2InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ form.s2Inspector || '' }}</div>
             <div v-if="form.s2InspectorTime" style="color: gray; font-size: 12px;">{{ form.s2InspectorTime ? form.s2InspectorTime.substring(0, 16) : '' }}</div>
-            <!-- 检查人未提交时，显示提交按钮 -->
+            <!-- 复核按钮 -->
             <div v-if="!form.s2InspectorTime" style="margin-top: 8px;">
-              <el-button type="primary" size="small" @click="handleSubmitStep2">提交</el-button>
+              <el-button type="success" size="small" @click="handleReviewStep2">复核</el-button>
             </div>
           </td>
         </tr>
       </table>
 
-      <!-- ===== Step3 处理（可编辑） ===== -->
+      <!-- ===== Step3 处理（暂时只读，后续改造） ===== -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">
@@ -314,74 +310,122 @@
           <td class="td-no-padding">
             <table class="inner-fill-table step3-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
               <tr style="height: 28px;">
-                <td colspan="2" style="text-align: center;">
-                  <el-date-picker v-model="form.s3StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="开始时间" size="small" style="width: 180px;" />
-                  <span style="margin: 0 8px;">至</span>
-                  <el-date-picker v-model="form.s3EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="结束时间" size="small" style="width: 180px;" />
-                </td>
+                <td colspan="2">{{ form.s3StartTime ? parseTime(form.s3StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ form.s3EndTime ? parseTime(form.s3EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}</td>
               </tr>
               <tr style="height: 28px;">
                 <td class="split-left">
                   <label class="native-checkbox">
-                    <input type="checkbox" v-model="form.s3OzoneDesinfectionFlag" true-value="Y" false-value="N" />
+                    <input type="checkbox" :checked="form.s3OzoneDesinfectionFlag === 'Y'" disabled />
                     <span>臭氧</span>
                   </label>
                 </td>
                 <td class="split-right">
                   <label class="native-checkbox">
-                    <input type="checkbox" v-model="form.s3AirShowerFlag" true-value="Y" false-value="N" />
+                    <input type="checkbox" :checked="form.s3AirShowerFlag === 'Y'" disabled />
                     <span>风淋</span>
                   </label>
                 </td>
               </tr>
               <tr style="height: 113px;">
                 <td class="split-left split-text">
-                  1）脱包；<br/>2）挑选；<br/>3）用臭氧灭菌柜消毒；<br/>4）消毒臭氧浓度20ppm，30分钟。
+                  1）脱包；<br/>
+                  2）挑选；<br/>
+                  3）用臭氧灭菌柜消毒；<br/>
+                  4）消毒臭氧浓度20ppm，30分钟。
                 </td>
                 <td class="split-right split-text">
-                  1）脱包；<br/>2）75%酒精消毒或者紫外消毒；<br/>3）放入风淋室，风淋吹扫静置。
+                  1）脱包；<br/>
+                  2）75%酒精消毒或者紫外消毒；<br/>
+                  3）放入风淋室，风淋吹扫静置。
                 </td>
               </tr>
             </table>
           </td>
           <td>
-            <div style="padding: 0px 0px;">
+            <div style="padding: 0px 16px;">
               <div class="step-text">
                 1）设备/编码：
-                <label class="native-checkbox"><input type="checkbox" v-model="form.s3OzoneGeneratorFlag" true-value="Y" false-value="N" /><span>臭氧机</span></label>
-                （<input v-model="form.s3OzoneGeneratorNumber" class="edit-input-short"  style="width: 20px;"/>）
-                <label class="native-checkbox"><input type="checkbox" v-model="form.s3BottleWashingMachineFlag" true-value="Y" false-value="N" /><span>洗瓶机</span></label>
-                （<input v-model="form.s3BottleWashingMachineNumber" class="edit-input-short"  style="width: 20px;"/>）
-                <label class="native-checkbox"><input type="checkbox" v-model="form.s3BottleBlowingMachineFlag" true-value="Y" false-value="N" /><span>吹瓶机</span></label>
-                （<input v-model="form.s3BottleBlowingMachineNumber" class="edit-input-short"  style="width: 20px;"/>）
+                <label class="native-checkbox">
+                  <input type="checkbox" :checked="form.s3OzoneGeneratorFlag === 'Y'" disabled />
+                  <span>臭氧机</span>
+                </label>
+                （{{ form.s3OzoneGeneratorNumber || '' }}）
+                <label class="native-checkbox">
+                  <input type="checkbox" :checked="form.s3BottleWashingMachineFlag === 'Y'" disabled />
+                  <span>洗瓶机</span>
+                </label>
+                （{{ form.s3BottleWashingMachineNumber || '' }}）
+                <label class="native-checkbox">
+                  <input type="checkbox" :checked="form.s3BottleBlowingMachineFlag === 'Y'" disabled />
+                  <span>吹瓶机</span>
+                </label>
+                （{{ form.s3BottleBlowingMachineNumber || '' }}）
                 <br>
-                <label class="native-checkbox" style="margin-left: 92px;"><input type="checkbox" v-model="form.s3AirShowerMachineFlag" true-value="Y" false-value="N" /><span>风淋室</span></label>
-                （<input v-model="form.s3AirShowerMachineNumber" class="edit-input-short"  style="width: 20px;"/>）
+                <label class="native-checkbox" style="margin-left: 92px;">
+                  <input type="checkbox" :checked="form.s3AirShowerMachineFlag === 'Y'" disabled />
+                  <span>风淋室</span>
+                </label>
+                （{{ form.s3AirShowerMachineNumber || '' }}）
                 <br>
-                <span>2）消毒</span><br>
-                <label class="native-checkbox"><input type="checkbox" v-model="form.s3OzoneDesinfectionFlag" true-value="Y" false-value="N" /><span>臭氧</span></label>
-                ：臭氧浓度 <input v-model="form.s3OzoneConcentration" class="edit-input-short" /> ppm，
-                <label class="native-checkbox"><input type="checkbox" v-model="form.s3AlcoholDesinfectionFlag" true-value="Y" false-value="N" /><span>75%酒精消毒；</span></label>
-                <label class="native-checkbox"><input type="checkbox" v-model="form.s3UvDesinfectionFlag" true-value="Y" false-value="N" /><span>紫外线消毒</span></label>
+                <span>2）消毒</span>
+                <br>
+                <label class="native-checkbox">
+                  <input type="checkbox" :checked="form.s3OzoneDesinfectionFlag === 'Y'" disabled />
+                  <span>臭氧</span>
+                </label>
+                ：臭氧浓度
+                {{ form.s3OzoneConcentration || '' }}ppm，
+                <label class="native-checkbox">
+                  <input type="checkbox" :checked="form.s3AlcoholDesinfectionFlag === 'Y'" disabled />
+                  <span>75%酒精消毒；</span>
+                </label>
+                <label class="native-checkbox">
+                  <input type="checkbox" :checked="form.s3UvDesinfectionFlag === 'Y'" disabled />
+                  <span>紫外线消毒</span>
+                </label>
                 <br/>
                 <span style="margin-left: 30px;">
-                  消毒时间 <el-time-picker v-model="form.s3OzoneDesinfectionStartTime" value-format="HH:mm:ss" size="small" style="width: 100px;" />
-                  至 <el-time-picker v-model="form.s3OzoneDesinfectionEndTime" value-format="HH:mm:ss" size="small" style="width: 100px;" />
-                  ，共 <input v-model="form.s3OzoneDesinfectionCost" class="edit-input-short" /> 分钟
+                  消毒时间 {{ (form.s3OzoneDesinfectionStartTime || '').substring(0, 5) }} 至 {{ (form.s3OzoneDesinfectionEndTime || '').substring(0, 5) }}
+                  ，共{{ form.s3OzoneDesinfectionCost || '' }}分钟
                 </span>
                 <br/>
-                <label class="native-checkbox"><input type="checkbox" v-model="form.s3AirShowerFlag" true-value="Y" false-value="N" /><span>风淋</span></label>
+                <label class="native-checkbox">
+                  <input type="checkbox" :checked="form.s3AirShowerFlag === 'Y'" disabled />
+                  <span>风淋</span>
+                </label>
                 <span>，内包装是否完整：</span>
-                <label class="native-checkbox-after"><span>是</span><input type="checkbox" v-model="form.s3AirShowerInnerPackagingFlag" true-value="Y" false-value="N" /></label>
-                <label class="native-checkbox-after"><span>否</span><input type="checkbox" v-model="form.s3AirShowerInnerPackagingFlag" true-value="N" false-value="Y" /></label>
+                <!-- "文字在前、复选框在后" 使用 native-checkbox-after 类 -->
+                <label class="native-checkbox-after">
+                  <span>是</span>
+                  <input type="checkbox" :checked="form.s3AirShowerInnerPackagingFlag === 'Y'" disabled />
+                </label>
+                <label class="native-checkbox-after">
+                  <span>否</span>
+                  <input type="checkbox" :checked="form.s3AirShowerInnerPackagingFlag === 'N'" disabled />
+                </label>
                 <br/>
                 <span>3）是否干净，干燥、完好、外观无变色：</span>
-                <label class="native-checkbox-after"><span>是</span><input type="checkbox" v-model="form.s3WaiguanFlag" true-value="Y" false-value="N" /></label>
-                <label class="native-checkbox-after"><span>否</span><input type="checkbox" v-model="form.s3WaiguanFlag" true-value="N" false-value="Y" /></label>
+                <!-- "文字在前、复选框在后" 使用 native-checkbox-after 类 -->
+                <label class="native-checkbox-after">
+                  <span>是</span>
+                  <input type="checkbox" :checked="form.s3WaiguanFlag === 'Y'" disabled />
+                </label>
+                <label class="native-checkbox-after">
+                  <span>否</span>
+                  <input type="checkbox" :checked="form.s3WaiguanFlag === 'N'" disabled />
+                </label>
                 <br/>
                 <span>4）是否装入洁净袋：</span>
-                <label class="native-checkbox-after"><span>是</span><input type="checkbox" v-model="form.s3CleanBagFlag" true-value="Y" false-value="N" /></label>
-                <label class="native-checkbox-after"><span>否</span><input type="checkbox" v-model="form.s3CleanBagFlag" true-value="N" false-value="Y" /></label>
+                <!-- "文字在前、复选框在后" 使用 native-checkbox-after 类 -->
+                <label class="native-checkbox-after">
+                  <span>是</span>
+                  <input type="checkbox" :checked="form.s3CleanBagFlag === 'Y'" disabled />
+                </label>
+                <!-- <span style="margin-left: 18px;">,</span> -->
+                <label class="native-checkbox-after">
+                  <span>否</span>
+                  <input type="checkbox" :checked="form.s3CleanBagFlag === 'N'" disabled />
+                </label>
               </div>
             </div>
           </td>
@@ -392,35 +436,43 @@
             <div v-if="form.s3ReviewerTime" style="color: gray; font-size: 12px;">{{ form.s3ReviewerTime ? form.s3ReviewerTime.substring(0, 16) : '' }}</div>
             <div v-if="form.s3InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ form.s3Inspector || '' }}</div>
             <div v-if="form.s3InspectorTime" style="color: gray; font-size: 12px;">{{ form.s3InspectorTime ? form.s3InspectorTime.substring(0, 16) : '' }}</div>
-            <!-- 检查人未提交时，显示提交按钮 -->
+            <!-- 复核按钮 -->
             <div v-if="!form.s3InspectorTime" style="margin-top: 8px;">
-              <el-button type="primary" size="small" @click="handleSubmitStep3">提交</el-button>
+              <el-button type="success" size="small" @click="handleReviewStep3">复核</el-button>
             </div>
           </td>
         </tr>
       </table>
 
-
-      <!-- ===== Step4 物料使用统计（可编辑） ===== -->
+      <!-- ===== Step4 物料使用统计（暂时只读，后续改造） ===== -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;"><col><col><col style="width: 100px;">
+          <col style="width: 80px;">
+          <col>
+          <col>
+          <col style="width: 100px;">
         </colgroup>
         <tr style="height: 124px;">
           <td class="td-step-label">4.物料使用统计</td>
           <td class="td-no-padding" colspan="2">
             <table class="inner-fill-table step4-inner" style="border-collapse: collapse; font-size: 12px; width: 100%; height: 100%;">
               <tr style="height: 28px; background: #ffffff; font-weight: normal;">
-                <td>物料名称</td><td>规格</td><td>单位</td><td>领入量</td><td>使用量</td><td>损耗量</td><td>剩余量</td>
+                <td>物料名称</td>
+                <td>规格</td>
+                <td>单位</td>
+                <td>领入量</td>
+                <td>使用量</td>
+                <td>损耗量</td>
+                <td>剩余量</td>
               </tr>
               <tr v-for="(item, idx) in paddedStep4List" :key="idx" style="height: 32px;">
-                <td><input v-model="item.materialName" class="edit-input-short" style="width: 80px;" /></td>
-                <td><input v-model="item.spec" class="edit-input-short" style="width: 60px;" /></td>
-                <td><input v-model="item.unit" class="edit-input-short" style="width: 40px;" /></td>
-                <td><input v-model="item.receiveQty" class="edit-input-short" style="width: 60px;" /></td>
-                <td><input v-model="item.useQty" class="edit-input-short" style="width: 60px;" /></td>
-                <td><input v-model="item.lossQty" class="edit-input-short" style="width: 60px;" /></td>
-                <td><input v-model="item.remainQty" class="edit-input-short" style="width: 60px;" /></td>
+                <td>{{ item.materialName || '' }}</td>
+                <td>{{ item.spec || '' }}</td>
+                <td>{{ item.unit || '' }}</td>
+                <td>{{ item.receiveQty || '' }}</td>
+                <td>{{ item.useQty || '' }}</td>
+                <td>{{ item.lossQty || '' }}</td>
+                <td>{{ item.remainQty || '' }}</td>
               </tr>
             </table>
           </td>
@@ -431,14 +483,13 @@
             <div v-if="form.s4ReviewerTime" style="color: gray; font-size: 12px;">{{ form.s4ReviewerTime ? form.s4ReviewerTime.substring(0, 16) : '' }}</div>
             <div v-if="form.s4InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ form.s4Inspector || '' }}</div>
             <div v-if="form.s4InspectorTime" style="color: gray; font-size: 12px;">{{ form.s4InspectorTime ? form.s4InspectorTime.substring(0, 16) : '' }}</div>
-            <!-- 复核人未提交时，显示提交按钮 -->
+            <!-- 复核按钮 -->
             <div v-if="!form.s4ReviewerTime" style="margin-top: 8px;">
-              <el-button type="primary" size="small" @click="handleSubmitStep4">提交</el-button>
+              <el-button type="success" size="small" @click="handleReviewStep4">复核</el-button>
             </div>
           </td>
         </tr>
       </table>
-
     </div>
   </el-dialog>
 </template>
@@ -519,160 +570,24 @@ function open(data) {
   visible.value = true
 }
 
-/** Step1 提交：校验 + emit 数据给父组件处理 */
-function handleSubmitStep1() {
-  // 追加去空格（安全转换，避免数字类型报 replace 错误）
-  form.s1NormalAreaTemperature = String(form.s1NormalAreaTemperature ?? '').replace(/\s/g, '')
-  form.s1NormalAreaHumidity = String(form.s1NormalAreaHumidity ?? '').replace(/\s/g, '')
-  form.s1CleanAreaTemperature = String(form.s1CleanAreaTemperature ?? '').replace(/\s/g, '')
-  form.s1CleanAreaHumidity = String(form.s1CleanAreaHumidity ?? '').replace(/\s/g, '')
-  form.s1Remark = String(form.s1Remark ?? '').replace(/\s/g, '')
-  // 前端校验
-  if (form.s1NormalAreaTemperature && (isNaN(form.s1NormalAreaTemperature) || Number(form.s1NormalAreaTemperature) <= 0)) {
-    proxy.$modal.msgError('一般区温度必须为正数')
-    return
-  }
-  if (form.s1NormalAreaHumidity && (isNaN(form.s1NormalAreaHumidity) || Number(form.s1NormalAreaHumidity) <= 0)) {
-    proxy.$modal.msgError('一般区湿度必须为正数')
-    return
-  }
-  if (form.s1CleanAreaTemperature && (isNaN(form.s1CleanAreaTemperature) || Number(form.s1CleanAreaTemperature) <= 0)) {
-    proxy.$modal.msgError('洁净区温度必须为正数')
-    return
-  }
-  if (form.s1CleanAreaHumidity && (isNaN(form.s1CleanAreaHumidity) || Number(form.s1CleanAreaHumidity) <= 0)) {
-    proxy.$modal.msgError('洁净区湿度必须为正数')
-    return
-  }
-  // 时间字段必填校验
-  if (!form.s1StartTime) {
-    proxy.$modal.msgError('请选择开始时间')
-    return
-  }
-  if (!form.s1EndTime) {
-    proxy.$modal.msgError('请选择结束时间')
-    return
-  }
-
-  // Step1 提交：emit 数据给父组件，由父组件处理二次确认和调接口
-  emit('step1Submit', {
-    recordId: currentRecordId.value,
-    s1StartTime: form.s1StartTime,           // 新增
-    s1EndTime: form.s1EndTime,               // 新增
-    s1NormalAreaTemperature: form.s1NormalAreaTemperature,
-    s1NormalAreaHumidity: form.s1NormalAreaHumidity,
-    s1CleanAreaTemperature: form.s1CleanAreaTemperature,
-    s1CleanAreaHumidity: form.s1CleanAreaHumidity,
-    s1QualifiedFlag: form.s1QualifiedFlag,
-    s1Remark: form.s1Remark
-  })
+/** Step1 复核：emit 给父组件处理 */
+function handleReviewStep1() {
+  emit('step1Review', { recordId: currentRecordId.value })
 }
 
-
-/** Step2 提交：校验 + emit 数据给父组件处理 */
-function handleSubmitStep2() {
-  // 去空格处理（文本字段）
-  form.s2OzoneGeneratorNumber = String(form.s2OzoneGeneratorNumber ?? '').replace(/\s/g, '')
-  form.s2BottleWashingMachineNumber = String(form.s2BottleWashingMachineNumber ?? '').replace(/\s/g, '')
-  form.s2BottleBlowingMachineNumber = String(form.s2BottleBlowingMachineNumber ?? '').replace(/\s/g, '')
-  form.s2WasherDryerComboNumber = String(form.s2WasherDryerComboNumber ?? '').replace(/\s/g, '')
-  form.s2OzoneConcentration = String(form.s2OzoneConcentration ?? '').replace(/\s/g, '')
-  form.s2OzoneDesinfectionCost = String(form.s2OzoneDesinfectionCost ?? '').replace(/\s/g, '')
-  form.s2DryingDesinfectionTemperature = String(form.s2DryingDesinfectionTemperature ?? '').replace(/\s/g, '')
-  form.s2DryingDesinfectionCost = String(form.s2DryingDesinfectionCost ?? '').replace(/\s/g, '')
-  form.s2HighDryingDesinfectionTemperature = String(form.s2HighDryingDesinfectionTemperature ?? '').replace(/\s/g, '')
-  form.s2HighDryingDesinfectionCost = String(form.s2HighDryingDesinfectionCost ?? '').replace(/\s/g, '')
-
-  // 时间字段必填校验
-  if (!form.s2StartTime) { proxy.$modal.msgError('请选择开始时间'); return }
-  if (!form.s2EndTime) { proxy.$modal.msgError('请选择结束时间'); return }
-
-  emit('step2Submit', {
-    recordId: currentRecordId.value,
-    s2StartTime: form.s2StartTime,
-    s2EndTime: form.s2EndTime,
-    s2OzoneDesinfectionFlag: form.s2OzoneDesinfectionFlag,
-    s2HighDesinfectionTemperatureFlag: form.s2HighDesinfectionTemperatureFlag,
-    s2OzoneGeneratorFlag: form.s2OzoneGeneratorFlag,
-    s2OzoneGeneratorNumber: form.s2OzoneGeneratorNumber,
-    s2BottleWashingMachineFlag: form.s2BottleWashingMachineFlag,
-    s2BottleWashingMachineNumber: form.s2BottleWashingMachineNumber,
-    s2BottleBlowingMachineFlag: form.s2BottleBlowingMachineFlag,
-    s2BottleBlowingMachineNumber: form.s2BottleBlowingMachineNumber,
-    s2AirGunFlag: form.s2AirGunFlag,
-    s2ManualWashingFlag: form.s2ManualWashingFlag,
-    s2WasherDryerComboFlag: form.s2WasherDryerComboFlag,
-    s2WasherDryerComboNumber: form.s2WasherDryerComboNumber,
-    s2OzoneConcentration: form.s2OzoneConcentration,
-    s2OzoneDesinfectionStartTime: form.s2OzoneDesinfectionStartTime,
-    s2OzoneDesinfectionEndTime: form.s2OzoneDesinfectionEndTime,
-    s2OzoneDesinfectionCost: form.s2OzoneDesinfectionCost,
-    s2DryingDesinfectionTemperature: form.s2DryingDesinfectionTemperature,
-    s2DryingDesinfectionStartTime: form.s2DryingDesinfectionStartTime,
-    s2DryingDesinfectionEndTime: form.s2DryingDesinfectionEndTime,
-    s2DryingDesinfectionCost: form.s2DryingDesinfectionCost,
-    s2HighDryingDesinfectionTemperature: form.s2HighDryingDesinfectionTemperature,
-    s2HighDryingDesinfectionStartTime: form.s2HighDryingDesinfectionStartTime,
-    s2HighDryingDesinfectionEndTime: form.s2HighDryingDesinfectionEndTime,
-    s2HighDryingDesinfectionCost: form.s2HighDryingDesinfectionCost,
-    s2WaiguanFlag: form.s2WaiguanFlag,
-    s2PurifiedWaterFlag: form.s2PurifiedWaterFlag,
-    s2NoPurifiedWaterFlag: form.s2NoPurifiedWaterFlag,
-    s2CleanBagFlag: form.s2CleanBagFlag
-  })
+/** Step2 复核：emit 给父组件处理 */
+function handleReviewStep2() {
+  emit('step2Review', { recordId: currentRecordId.value })
 }
 
-
-/** 格式化时间 HH:mm:ss → HH:mm */
-function formatTime(timeStr) {
-  if (!timeStr || timeStr.length < 5) return ''
-  return timeStr.substring(0, 5)
+/** Step3 复核：emit 给父组件处理 */
+function handleReviewStep3() {
+  emit('step3Review', { recordId: currentRecordId.value })
 }
 
-/** Step3 提交 */
-function handleSubmitStep3() {
-  // 去空格
-  form.s3OzoneGeneratorNumber = String(form.s3OzoneGeneratorNumber ?? '').replace(/\s/g, '')
-  form.s3BottleWashingMachineNumber = String(form.s3BottleWashingMachineNumber ?? '').replace(/\s/g, '')
-  form.s3BottleBlowingMachineNumber = String(form.s3BottleBlowingMachineNumber ?? '').replace(/\s/g, '')
-  form.s3AirShowerMachineNumber = String(form.s3AirShowerMachineNumber ?? '').replace(/\s/g, '')
-  form.s3OzoneConcentration = String(form.s3OzoneConcentration ?? '').replace(/\s/g, '')
-  form.s3OzoneDesinfectionCost = String(form.s3OzoneDesinfectionCost ?? '').replace(/\s/g, '')
-  if (!form.s3StartTime) { proxy.$modal.msgError('请选择开始时间'); return }
-  if (!form.s3EndTime) { proxy.$modal.msgError('请选择结束时间'); return }
-
-  emit('step3Submit', {
-    recordId: currentRecordId.value,
-    s3StartTime: form.s3StartTime,
-    s3EndTime: form.s3EndTime,
-    s3OzoneDesinfectionFlag: form.s3OzoneDesinfectionFlag,
-    s3AirShowerFlag: form.s3AirShowerFlag,
-    s3OzoneGeneratorFlag: form.s3OzoneGeneratorFlag,
-    s3OzoneGeneratorNumber: form.s3OzoneGeneratorNumber,
-    s3BottleWashingMachineFlag: form.s3BottleWashingMachineFlag,
-    s3BottleWashingMachineNumber: form.s3BottleWashingMachineNumber,
-    s3BottleBlowingMachineFlag: form.s3BottleBlowingMachineFlag,
-    s3BottleBlowingMachineNumber: form.s3BottleBlowingMachineNumber,
-    s3AirShowerMachineFlag: form.s3AirShowerMachineFlag,
-    s3AirShowerMachineNumber: form.s3AirShowerMachineNumber,
-    s3OzoneConcentration: form.s3OzoneConcentration,
-    s3OzoneDesinfectionStartTime: form.s3OzoneDesinfectionStartTime,
-    s3OzoneDesinfectionEndTime: form.s3OzoneDesinfectionEndTime,
-    s3OzoneDesinfectionCost: form.s3OzoneDesinfectionCost,
-    s3AlcoholDesinfectionFlag: form.s3AlcoholDesinfectionFlag,
-    s3UvDesinfectionFlag: form.s3UvDesinfectionFlag,
-    s3AirShowerInnerPackagingFlag: form.s3AirShowerInnerPackagingFlag,
-    s3WaiguanFlag: form.s3WaiguanFlag,
-    s3CleanBagFlag: form.s3CleanBagFlag
-  })
-}
-
-/** Step4 提交 */
-function handleSubmitStep4() {
-  emit('step4Submit', {
-    recordId: currentRecordId.value,
-    step4List: form.step4List
-  })
+/** Step4 复核：emit 给父组件处理 */
+function handleReviewStep4() {
+  emit('step4Review', { recordId: currentRecordId.value })
 }
 
 function handleClosed() {
@@ -681,7 +596,7 @@ function handleClosed() {
 
 function close() { visible.value = false }
 
-const emit = defineEmits(['step1Submit', 'step2Submit', 'step3Submit', 'step4Submit', 'submit'])
+const emit = defineEmits(['step1Review', 'step2Review', 'step3Review', 'step4Review', 'submit'])
 defineExpose({ open, close })
 </script>
 

@@ -42,3 +42,97 @@ export function delDisinfectionPackaging1(recordId) {
     method: 'delete'
   })
 }
+
+// ========== 手工新增方法 ==========
+
+// Step1 处理提交
+export function handleStep1(recordId, data) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep1/' + recordId,
+    method: 'post',
+    data: data
+  })
+}
+
+// Step2 处理提交
+export function handleStep2(recordId, data) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep2/' + recordId,
+    method: 'post',
+    data: data
+  })
+}
+
+// Step3 处理提交
+export function handleStep3(recordId, data) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep3/' + recordId,
+    method: 'post',
+    data: data
+  })
+}
+
+// Step4 处理提交
+export function handleStep4(recordId, data) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep4/' + recordId,
+    method: 'post',
+    data: data
+  })
+}
+
+// Step1 复核提交
+export function reviewStep1(recordId) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep1Review/' + recordId,
+    method: 'post'
+  })
+}
+
+// Step2 复核提交
+export function reviewStep2(recordId) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep2Review/' + recordId,
+    method: 'post'
+  })
+}
+
+// Step3 复核提交
+export function reviewStep3(recordId) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep3Review/' + recordId,
+    method: 'post'
+  })
+}
+
+// Step4 复核提交
+export function reviewStep4(recordId) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep4Review/' + recordId,
+    method: 'post'
+  })
+}
+
+// Step1 检查提交
+export function inspectStep1(recordId) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep1Inspect/' + recordId,
+    method: 'post'
+  })
+}
+
+// Step2 检查提交
+export function inspectStep2(recordId) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep2Inspect/' + recordId,
+    method: 'post'
+  })
+}
+
+// Step3 检查提交
+export function inspectStep3(recordId) {
+  return request({
+    url: '/bottling/disinfectionPackaging1/handleStep3Inspect/' + recordId,
+    method: 'post'
+  })
+}

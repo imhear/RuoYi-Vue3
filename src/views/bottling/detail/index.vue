@@ -244,7 +244,7 @@
 
 <script setup name="Detail">
 import { listDetail, getDetail, delDetail, addDetail, updateDetail, scheduleDetail } from "@/api/bottling/detail"
-import { getOrderDetailByNum } from "@/api/bottling/order"
+import { getOrderDetail } from "@/api/bottling/order"
 
 // 引入排产组件
 import BottlingOrderSchedule from '@/views/bottling/components/BottlingOrderSchedule.vue'
@@ -411,7 +411,7 @@ function handleExport() {
 async function handleSchedule(row) {
   try {
     // 获取完整工单详情（含明细和BOM）
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     scheduleRef.value?.open(res.data)
   } catch (e) {
     proxy.$modal.msgError('获取工单详情失败')
@@ -435,7 +435,7 @@ function handleConfirmSchedule({ detailId, batchNumber, planQty, planStart, plan
 /** 查看工单详情 */
 async function handleOrderView(row) {
   try {
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     // viewOpen.value = true
     await nextTick()
     orderViewRef.value?.open(res.data)

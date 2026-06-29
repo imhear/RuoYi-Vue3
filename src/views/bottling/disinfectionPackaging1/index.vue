@@ -682,6 +682,10 @@ const data = reactive({
     orderNum: undefined,
     planCode: undefined,
     batchNumber: undefined,
+    status: '0,1,2', // 默认查询（0=待开始,1=处理中,2=已完成）的记录
+    delFlag: '0',   // 默认查询未删除的工单
+    orderByColumn: 'create_time',
+    isAsc: 'desc'
   },
   rules: {
     s1StepNumber: [

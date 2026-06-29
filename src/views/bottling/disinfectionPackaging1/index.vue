@@ -77,7 +77,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="" @click="handleView(scope.row)">查看</el-button>
+          <!-- <el-button link type="primary" icon="" @click="handleView(scope.row)">查看</el-button> -->
           <el-button link type="primary" icon="" @click="handleHandle(scope.row)">处理</el-button>
           <el-button link type="primary" icon="" @click="handleReview(scope.row)">复核</el-button>
           <el-button link type="primary" icon="" @click="handleInspect(scope.row)">检查</el-button>
@@ -89,8 +89,20 @@
           <dict-tag :options="disinfection_packaging_status" :value="scope.row.status"/>
         </template>
       </el-table-column>
-      <el-table-column label="工单号" align="center" prop="orderNum" />
-      <el-table-column label="排产单号" align="center" prop="planCode" />
+      <!-- 任务单号改为超链接，点击触发查看 -->
+      <el-table-column label="任务单号" align="center" min-width="120">
+        <template #default="scope">
+          <el-button link type="primary" @click="handleView(scope.row)">{{ scope.row.planCode }}</el-button>
+        </template>
+      </el-table-column>
+      <!-- 工单号改为超链接，点击触发查看 -->
+      <el-table-column label="工单号" align="center" min-width="120">
+        <template #default="scope">
+          <el-button link type="primary" @click="handleOrderView(scope.row)">{{ scope.row.orderNum }}</el-button>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="工单号" align="center" prop="orderNum" /> -->
+      <!-- <el-table-column label="排产单号" align="center" prop="planCode" /> -->
       <el-table-column label="产品名称" align="center" prop="productName" />
       <el-table-column label="规格" align="center" prop="spec" />
       <el-table-column label="产品批号" align="center" prop="batchNumber" />
@@ -127,6 +139,9 @@
       @step2Inspect="handleStep2Inspect"
       @step3Inspect="handleStep3Inspect"
       @submit="getList" />
+
+    <!-- 查看工单对话框组件 -->
+    <BottlingOrderView ref="orderViewRef" />
 
     <!-- 添加或修改灌装包材处理记录1对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
@@ -618,6 +633,7 @@
 import { listDisinfectionPackaging1, getDisinfectionPackaging1, delDisinfectionPackaging1, addDisinfectionPackaging1, updateDisinfectionPackaging1 } from "@/api/bottling/disinfectionPackaging1"
 // 新增导入
 import { handleStep1, handleStep2, handleStep3, handleStep4, reviewStep1, reviewStep2, reviewStep3, reviewStep4, inspectStep1, inspectStep2, inspectStep3 } from "@/api/bottling/disinfectionPackaging1"
+import { getOrderDetailByNum } from "@/api/bottling/order"
 
 // 引入查看对话框组件
 import BottlingDisPack1View from '@/views/bottling/components/BottlingDisPack1View.vue'
@@ -631,6 +647,9 @@ import BottlingDisPack1Review from '@/views/bottling/components/BottlingDisPack1
 // 引入检查对话框组件
 import BottlingDisPack1Inspect from '@/views/bottling/components/BottlingDisPack1Inspect.vue'
 
+// 引入工单查看组件
+import BottlingOrderView from '@/views/bottling/components/BottlingOrderView.vue'
+
 const { proxy } = getCurrentInstance()
 const { sys_yes_no, disinfection_packaging_status } = proxy.useDict('sys_yes_no', 'disinfection_packaging_status')
 
@@ -642,6 +661,8 @@ const disPack1HandleRef = ref(null)
 const disPack1ReviewRef = ref(null)
 // 检查对话框组件引用
 const disPack1InspectRef = ref(null)
+// 查看工单组件引用
+const orderViewRef = ref(null)
 
 const disinfectionPackaging1List = ref([])
 const open = ref(false)
@@ -1129,6 +1150,19 @@ async function handleStep3Inspect({ recordId }) {
     if (e !== 'cancel') proxy.$modal.msgError('Step3 检查失败')
   }
 }
+
+/** 查看工单详情 */
+async function handleOrderView(row) {
+  try {
+    const res = await getOrderDetailByNum(row.orderNum)
+    // viewOpen.value = true
+    await nextTick()
+    orderViewRef.value?.open(res.data)
+  } catch (e) {
+    proxy.$modal.msgError('获取工单详情失败')
+  }
+}
+
 
 getList()
 </script>

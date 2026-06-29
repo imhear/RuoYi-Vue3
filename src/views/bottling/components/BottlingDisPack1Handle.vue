@@ -138,7 +138,9 @@
           <col style="width: 100px;">
         </colgroup>
         <tr style="height: 188px;">
-          <td class="td-step-label">2.{{ form.s2StepName || '' }}<br>处理</td>
+          <td class="td-step-label">
+            2.<input v-model="form.s2StepName" class="edit-input-short" style="width: 80px;" placeholder="物料名称" /><br>处理
+          </td>
           <td class="td-no-padding">
             <table class="inner-fill-table step2-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
               <tr style="height: 28px;">
@@ -310,7 +312,9 @@
           <col style="width: 100px;">
         </colgroup>
         <tr style="height: 153px;">
-          <td class="td-step-label">3.{{ form.s3StepName || '' }}<br>处理</td>
+          <td class="td-step-label">
+            3.<input v-model="form.s3StepName" class="edit-input-short" style="width: 80px;" placeholder="物料名称" /><br>处理
+          </td>
           <td class="td-no-padding">
             <table class="inner-fill-table step3-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
               <tr style="height: 28px;">
@@ -572,6 +576,7 @@ function handleSubmitStep1() {
 /** Step2 提交：校验 + emit 数据给父组件处理 */
 function handleSubmitStep2() {
   // 去空格处理（文本字段）
+  form.s2StepName = String(form.s2StepName ?? '').replace(/\s/g, '')
   form.s2OzoneGeneratorNumber = String(form.s2OzoneGeneratorNumber ?? '').replace(/\s/g, '')
   form.s2BottleWashingMachineNumber = String(form.s2BottleWashingMachineNumber ?? '').replace(/\s/g, '')
   form.s2BottleBlowingMachineNumber = String(form.s2BottleBlowingMachineNumber ?? '').replace(/\s/g, '')
@@ -584,11 +589,13 @@ function handleSubmitStep2() {
   form.s2HighDryingDesinfectionCost = String(form.s2HighDryingDesinfectionCost ?? '').replace(/\s/g, '')
 
   // 时间字段必填校验
+  if (!form.s2StepName) { proxy.$modal.msgError('物料名称不能为空'); return }
   if (!form.s2StartTime) { proxy.$modal.msgError('请选择开始时间'); return }
   if (!form.s2EndTime) { proxy.$modal.msgError('请选择结束时间'); return }
 
   emit('step2Submit', {
     recordId: currentRecordId.value,
+    s2StepName: form.s2StepName,
     s2StartTime: form.s2StartTime,
     s2EndTime: form.s2EndTime,
     s2OzoneDesinfectionFlag: form.s2OzoneDesinfectionFlag,
@@ -632,17 +639,20 @@ function formatTime(timeStr) {
 /** Step3 提交 */
 function handleSubmitStep3() {
   // 去空格
+  form.s3StepName = String(form.s3StepName ?? '').replace(/\s/g, '')
   form.s3OzoneGeneratorNumber = String(form.s3OzoneGeneratorNumber ?? '').replace(/\s/g, '')
   form.s3BottleWashingMachineNumber = String(form.s3BottleWashingMachineNumber ?? '').replace(/\s/g, '')
   form.s3BottleBlowingMachineNumber = String(form.s3BottleBlowingMachineNumber ?? '').replace(/\s/g, '')
   form.s3AirShowerMachineNumber = String(form.s3AirShowerMachineNumber ?? '').replace(/\s/g, '')
   form.s3OzoneConcentration = String(form.s3OzoneConcentration ?? '').replace(/\s/g, '')
   form.s3OzoneDesinfectionCost = String(form.s3OzoneDesinfectionCost ?? '').replace(/\s/g, '')
+  if (!form.s3StepName) { proxy.$modal.msgError('物料名称不能为空'); return }
   if (!form.s3StartTime) { proxy.$modal.msgError('请选择开始时间'); return }
   if (!form.s3EndTime) { proxy.$modal.msgError('请选择结束时间'); return }
 
   emit('step3Submit', {
     recordId: currentRecordId.value,
+    s3StepName: form.s3StepName,
     s3StartTime: form.s3StartTime,
     s3EndTime: form.s3EndTime,
     s3OzoneDesinfectionFlag: form.s3OzoneDesinfectionFlag,

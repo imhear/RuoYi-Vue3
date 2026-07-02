@@ -1,6 +1,7 @@
 <!--
   领料对话框（纯被动模式）
   接收完整数据，提交时校验并 emit，不调用后端
+  改造：物料名称、规格、单位改为下拉选择，数据字典对应 receiving_material、receiving_spec、pro_unit
 -->
 <template>
   <el-dialog v-model="visible" width="300mm" append-to-body @closed="handleClosed">
@@ -62,14 +63,29 @@
         <el-table-column label="序号" width="45" align="center">
           <template #default="scope">{{ scope.$index + 1 }}</template>
         </el-table-column>
+        <!-- 物料名称改为下拉选择 -->
         <el-table-column label="物料名称" min-width="120" align="center">
-          <template #default="scope"><el-input v-model="scope.row.materialName" size="small" /></template>
+          <template #default="scope">
+            <el-select v-model="scope.row.materialName" size="small" placeholder="请选择" clearable>
+              <el-option v-for="dict in receiving_material" :key="dict.value" :label="dict.label" :value="dict.value" />
+            </el-select>
+          </template>
         </el-table-column>
+        <!-- 规格改为下拉选择 -->
         <el-table-column label="规格" width="90" align="center">
-          <template #default="scope"><el-input v-model="scope.row.spec" size="small" /></template>
+          <template #default="scope">
+            <el-select v-model="scope.row.spec" size="small" placeholder="请选择" clearable>
+              <el-option v-for="dict in receiving_spec" :key="dict.value" :label="dict.label" :value="dict.value" />
+            </el-select>
+          </template>
         </el-table-column>
+        <!-- 单位改为下拉选择 -->
         <el-table-column label="单位" width="60" align="center">
-          <template #default="scope"><el-input v-model="scope.row.unit" size="small" /></template>
+          <template #default="scope">
+            <el-select v-model="scope.row.unit" size="small" placeholder="请选择" clearable>
+              <el-option v-for="dict in pro_unit" :key="dict.value" :label="dict.label" :value="dict.value" />
+            </el-select>
+          </template>
         </el-table-column>
         <el-table-column width="70" align="center">
           <template #header><div style="line-height: 1.2;">计划<br/>领用量</div></template>
@@ -168,6 +184,9 @@ const editForm = reactive({
 })
 
 const displayItems = ref([])
+
+// 引入数据字典
+const { receiving_material, receiving_spec, pro_unit } = proxy.useDict('receiving_material', 'receiving_spec', 'pro_unit')
 
 /** 打开对话框，接收完整数据（含 plan） */
 async function open(data) {

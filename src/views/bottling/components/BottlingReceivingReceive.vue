@@ -80,7 +80,7 @@
           </template>
         </el-table-column>
         <!-- 单位改为下拉选择 -->
-        <el-table-column label="单位" width="60" align="center">
+        <el-table-column label="单位" width="70" align="center">
           <template #default="scope">
             <el-select v-model="scope.row.unit" size="small" placeholder="请选择" clearable>
               <el-option v-for="dict in pro_unit" :key="dict.value" :label="dict.label" :value="dict.value" />

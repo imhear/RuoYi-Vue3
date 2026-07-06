@@ -496,7 +496,7 @@ function handleExport() {
 /** 打开开始对话框 */
 async function handleStart(row) {
   try {
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     res.data.plan = row  // 将排产计划行数据附加到详情中
     startRef.value?.open(res.data)
   } catch (e) {
@@ -518,7 +518,7 @@ function handleConfirmStart({ plan, templateCode }) {
 /** 打开取消对话框 */
 async function handleCancel(row) {
   try {
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     res.data.plan = row  // 将排产计划行数据附加到详情中
     cancelRef.value?.open(res.data)
   } catch (e) {
@@ -541,7 +541,7 @@ function handleConfirmCancel({ plan, reason }) {
 /** 打开完成对话框 */
 async function handleFinish(row) {
   try {
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     res.data.plan = row  // 将排产计划行数据附加到详情中
     finishRef.value?.open(res.data)
   } catch (e) {
@@ -563,7 +563,7 @@ function handleConfirmFinish({ plan, finishQty, batchNumber }) {
 /** 打开删除对话框 */
 async function handlePlanDelete(row) {
   try {
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     res.data.plan = row  // 将排产计划行数据附加到详情中
     deleteRef.value?.open(res.data)
   } catch (e) {

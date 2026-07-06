@@ -1,0 +1,424 @@
+<!--
+  灌装包材处理记录2 复核对话框（纯只读 + 复核按钮）
+  基线：在查看对话框纯内容组件基础上改造
+  改造：签名行增加复核按钮，所有字段只读
+  交互：完全被动模式，emit 数据给父组件处理
+-->
+<template>
+  <el-dialog v-model="visible" width="280mm" append-to-body @closed="handleClosed">
+    <template #header>
+      <div style="display: flex; align-items: center; width: 100%;">
+        <span style="flex: 1; font-size: 18px; font-weight: bold;">灌装包材处理记录2</span>
+      </div>
+    </template>
+
+    <div v-if="form.recordId" class="view-container">
+
+      <!-- ===== 公司名称 + 编号 + 标题 ===== -->
+      <div style="display: flex; align-items: flex-end; margin-bottom: 4px;">
+        <h3 style="flex: 1; text-align: center; margin: 0;">兰树化妆品股份有限公司</h3>
+        <span style="flex-shrink: 0; font-size: 14px;">编号：R-(LS-SOP-S-G-006)-01</span>
+      </div>
+      <div style="text-align: center; margin-bottom: 4px;">
+        灌装包材处理记录
+      </div>
+
+      <!-- ===== 产品信息（只读） ===== -->
+      <table class="row-table info-table" cellspacing="0" cellpadding="0">
+        <colgroup>
+          <col style="width: 102px;">
+          <col style="width: 252px;">
+          <col style="width: 80px;">
+          <col>
+          <col style="width: 125px;">
+          <col style="width: 170px;">
+        </colgroup>
+        <tr>
+          <td class="info-label">产品名称</td>
+          <td class="info-label">{{ form.productName || '' }}</td>
+          <td class="info-label">规格</td>
+          <td class="info-label">{{ form.spec || '' }}</td>
+          <td class="info-label">产品批号</td>
+          <td class="info-label">{{ form.batchNumber || '' }}</td>
+        </tr>
+      </table>
+
+      <!-- ===== 表头 ===== -->
+      <table class="row-table header-table" cellspacing="0" cellpadding="0">
+        <colgroup>
+          <col style="width: 102px;">
+          <col>
+          <col style="width: 170px;">
+        </colgroup>
+        <tr>
+          <td class="header-value">操作项目</td>
+          <td class="header-value">操作记录</td>
+          <td class="header-value">/</td>
+        </tr>
+      </table>
+
+      <!-- ===== Step5 物料储存/周转（只读 + 复核按钮） ===== -->
+      <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
+        <colgroup>
+          <col style="width: 102px;">
+          <col>
+          <col style="width: 170px;">
+        </colgroup>
+        <tr style="height: 100px;">
+          <td class="td-step-label">5.物料<br>储存/周转</td>
+          <td class="td-no-padding">
+            <table class="inner-fill-table step5-inner" style="border-collapse: collapse; font-size: 14px; width: 100%; height: 100%;">
+              <tr style="height: 25px;">
+                <td>1）{{ form.s5MaterialName1 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ form.s5MaterialQty1 || '' }} ；</td>
+              </tr>
+              <tr style="height: 25px;">
+                <td>2）{{ form.s5MaterialName2 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ form.s5MaterialQty2 || '' }} ；</td>
+              </tr>
+              <tr style="height: 25px;">
+                <td>3）{{ form.s5MaterialName3 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ form.s5MaterialQty3 || '' }} ；</td>
+              </tr>
+              <tr style="height: 25px;">
+                <td>4）{{ form.s5MaterialName4 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ form.s5MaterialQty4 || '' }} .</td>
+              </tr>
+            </table>
+          </td>
+          <td class="td-sign">
+            <div v-if="form.s5OperateShowHide !== '1'">操作人：{{ form.s5Operator || '' }}</div>
+            <div v-if="form.s5OperatorTime" style="color: gray; font-size: 12px;">{{ form.s5OperatorTime ? form.s5OperatorTime.substring(0, 16) : '' }}</div>
+            <div v-if="form.s5ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ form.s5Reviewer || '' }}</div>
+            <div v-if="form.s5ReviewerTime" style="color: gray; font-size: 12px;">{{ form.s5ReviewerTime ? form.s5ReviewerTime.substring(0, 16) : '' }}</div>
+            <div v-if="form.s5InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ form.s5Inspector || '' }}</div>
+            <div v-if="form.s5InspectorTime" style="color: gray; font-size: 12px;">{{ form.s5InspectorTime ? form.s5InspectorTime.substring(0, 16) : '' }}</div>
+            <!-- 复核人未提交且显示，或检查按钮显示且检查人未提交时，显示复核按钮 -->
+            <div v-if="(form.s5ReviewShowHide === '0' && !form.s5ReviewerTime) || (form.s5ReviewShowHide === '0' && form.s5InspectShowHide === '0' && !form.s5InspectorTime)" style="margin-top: 8px;">
+              <el-button type="success" size="small" @click="handleReviewStep5">复核</el-button>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ===== Step6 生产过程不合格物料处理（只读 + 复核按钮） ===== -->
+      <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
+        <colgroup>
+          <col style="width: 102px;">
+          <col style="width: 125px;">
+          <col style="width: 70px;">
+          <col style="width: 100px;">
+          <col>
+          <col style="width: 125px;">
+          <col style="width: 170px;">
+        </colgroup>
+        <tr style="height: 28px;">
+          <td class="td-step-label" rowspan="10">6.生产过程不合格物料处理</td>
+          <td class="header-value">不合格物料名称</td>
+          <td class="header-value">单位</td>
+          <td class="header-value">总数量</td>
+          <td class="header-value">不合格原因及对应数量</td>
+          <td class="header-value">处理方式</td>
+          <td class="td-sign" rowspan="10">
+            <div v-if="form.s6OperateShowHide !== '1'">操作人：{{ form.s6Operator || '' }}</div>
+            <div v-if="form.s6OperatorTime" style="color: gray; font-size: 12px;">{{ form.s6OperatorTime ? form.s6OperatorTime.substring(0, 16) : '' }}</div>
+            <div v-if="form.s6ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ form.s6Reviewer || '' }}</div>
+            <div v-if="form.s6ReviewerTime" style="color: gray; font-size: 12px;">{{ form.s6ReviewerTime ? form.s6ReviewerTime.substring(0, 16) : '' }}</div>
+            <div v-if="form.s6InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ form.s6Inspector || '' }}</div>
+            <div v-if="form.s6InspectorTime" style="color: gray; font-size: 12px;">{{ form.s6InspectorTime ? form.s6InspectorTime.substring(0, 16) : '' }}</div>
+            <!-- 复核人未提交且显示，或检查按钮显示且检查人未提交时，显示复核按钮 -->
+            <div v-if="(form.s6ReviewShowHide === '0' && !form.s6ReviewerTime) || (form.s6ReviewShowHide === '0' && form.s6InspectShowHide === '0' && !form.s6InspectorTime)" style="margin-top: 8px;">
+              <el-button type="success" size="small" @click="handleReviewStep6">复核</el-button>
+            </div>
+          </td>
+        </tr>
+        <template v-for="(item, idx) in paddedStep6List" :key="idx">
+          <!-- 破损行 -->
+          <tr style="height: 28px;">
+            <td :rowspan="3">{{ item.materialName || '' }}</td>
+            <td :rowspan="3" class="td-record-cell td-record-center">{{ item.unit || '' }}</td>
+            <td :rowspan="3" class="td-record-cell td-record-center">{{ item.s6NonConformingQty || '' }}</td>
+            <td>
+              <label class="native-checkbox-after">
+                <span>破损</span>
+                <input type="checkbox" :checked="item.s6DamageFlag === 'Y'" disabled />
+              </label>
+              ，&nbsp;&nbsp;&nbsp;&nbsp;数量 {{ item.s6DamageQty || '' }} 个
+            </td>
+            <td :rowspan="3">
+              <label class="native-checkbox-after">
+                <span>销毁</span>
+                <input type="checkbox" :checked="item.s6DestroyFlag === 'Y'" disabled />
+              </label>
+              <br/><br/>
+              <label class="native-checkbox-after">
+                <span>剪毁</span>
+                <input type="checkbox" :checked="item.s6ShearFailureFlag === 'Y'" disabled />
+              </label>
+            </td>
+          </tr>
+          <!-- 色差行 -->
+          <tr style="height: 28px;">
+            <td>
+              <label class="native-checkbox-after">
+                <span>色差</span>
+                <input type="checkbox" :checked="item.s6ColorDifferenceFlag === 'Y'" disabled />
+              </label>
+              ，&nbsp;&nbsp;&nbsp;&nbsp;数量 {{ item.s6ColorDifferenceQty || '' }} 个
+            </td>
+          </tr>
+          <!-- 其他行 -->
+          <tr style="height: 28px;">
+            <td>
+              <label class="native-checkbox-after">
+                <span>其他</span>
+                <input type="checkbox" :checked="item.s6OtherFlag === 'Y'" disabled />
+              </label>
+              ，{{ item.s6OtherReason || '' }}&nbsp;&nbsp;&nbsp;&nbsp;数量 {{ item.s6OtherQty || '' }} 个
+            </td>
+          </tr>
+        </template>
+      </table>
+    </div>
+  </el-dialog>
+</template>
+
+<script setup>
+import { ref, reactive, computed } from 'vue'
+
+const visible = ref(false)
+const currentRecordId = ref(null)
+
+/** 表单数据（由父组件 open(data) 传入，纯只读） */
+const form = reactive({
+  recordId: null,
+  orderNum: '', planCode: '', productName: '', spec: '', batchNumber: '',
+  // Step5 签名及时间
+  s5Operator: '', s5Reviewer: '', s5Inspector: '',
+  s5OperatorTime: null, s5ReviewerTime: null, s5InspectorTime: null,
+  s5OperateShowHide: '', s5ReviewShowHide: '', s5InspectShowHide: '',
+  // Step5 业务字段
+  s5MaterialName1: '', s5MaterialQty1: null,
+  s5MaterialName2: '', s5MaterialQty2: null,
+  s5MaterialName3: '', s5MaterialQty3: null,
+  s5MaterialName4: '', s5MaterialQty4: null,
+  // Step6 签名及时间
+  s6Operator: '', s6Reviewer: '', s6Inspector: '',
+  s6OperatorTime: null, s6ReviewerTime: null, s6InspectorTime: null,
+  s6OperateShowHide: '', s6ReviewShowHide: '', s6InspectShowHide: '',
+  // Step6 子表
+  step6List: []
+})
+
+/** 确保 Step6 至少有 3 行 */
+const paddedStep6List = computed(() => {
+  const list = form.step6List || []
+  if (list.length >= 3) return list
+  const result = [...list]
+  while (result.length < 3) result.push({})
+  return result
+})
+
+/**
+ * 打开对话框，接收父组件传入的完整数据
+ * @param {Object} data - 详情数据（含 step6List）
+ */
+function open(data) {
+  currentRecordId.value = data.recordId
+  // 清空旧数据
+  Object.keys(form).forEach(key => {
+    if (key !== 'step6List') form[key] = null
+  })
+  // 赋值新数据
+  Object.assign(form, data)
+  // 确保子表至少有 3 行
+  if (!form.step6List || form.step6List.length === 0) {
+    form.step6List = []
+    for (let i = 0; i < 3; i++) {
+      form.step6List.push({})
+    }
+  }
+  visible.value = true
+}
+
+/** Step5 复核：emit 给父组件处理 */
+function handleReviewStep5() {
+  emit('step5Review', { recordId: currentRecordId.value })
+}
+
+/** Step6 复核：emit 给父组件处理 */
+function handleReviewStep6() {
+  emit('step6Review', { recordId: currentRecordId.value })
+}
+
+function handleClosed() {
+  currentRecordId.value = null
+}
+
+function close() { visible.value = false }
+
+const emit = defineEmits(['step5Review', 'step6Review', 'submit'])
+defineExpose({ open, close })
+</script>
+
+<style scoped>
+/* ============================================================
+   容器
+   ============================================================ */
+.view-container {
+  max-height: 75vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0 8px;
+  padding-bottom: 2px;
+  box-sizing: border-box;
+  color: #000;
+  transform: translateZ(0);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.view-container::-webkit-scrollbar { display: none; }
+
+/* ============================================================
+   所有一行表格的基础样式
+   ============================================================ */
+.row-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #dcdfe6;
+  table-layout: fixed;
+  margin-bottom: -1px;
+}
+
+/* ============================================================
+   产品信息表格
+   ============================================================ */
+.info-table td {
+  border: 1px solid #dcdfe6;
+  padding: 4px 6px;
+  vertical-align: top;
+  box-sizing: border-box;
+}
+.info-label {
+  font-weight: bold;
+  font-size: 14px;
+  background: #f5f7fa;
+  text-align: center;
+}
+
+/* ============================================================
+   表头表格
+   ============================================================ */
+.header-table td {
+  border: 1px solid #dcdfe6;
+  padding: 4px 6px;
+  vertical-align: top;
+  box-sizing: border-box;
+}
+.header-value {
+  font-weight: normal;
+  font-size: 14px;
+  background: #ffffff;
+  text-align: center;
+  vertical-align: middle !important;
+}
+
+/* ============================================================
+   Step5~Step6 外层单元格通用样式
+   ============================================================ */
+.step-table-native td {
+  border: 1px solid #dcdfe6;
+  padding: 1px 1px;
+  vertical-align: top;
+  box-sizing: border-box;
+}
+
+.td-no-padding { padding: 0 !important; }
+.inner-fill-table {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+}
+.inner-fill-table td, .inner-fill-table th { border: none; }
+
+/* Step5 内部表格下边框 */
+.step5-inner td {
+  border-bottom: 1px solid #dcdfe6;
+  padding: 4px 8px;
+  vertical-align: middle;
+}
+.step5-inner tr:last-child td { border-bottom: none; }
+
+/* ============================================================
+   操作项目列、签名列
+   ============================================================ */
+.td-step-label {
+  font-weight: normal;
+  text-align: left;
+  vertical-align: middle !important;
+  font-size: 14px;
+}
+.td-sign {
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  vertical-align: middle !important;
+}
+
+/* Step6 操作记录列垂直居中 */
+.td-record-cell {
+  vertical-align: middle !important;
+  text-align: left;
+}
+
+/* Step6 操作记录列水平居中 */
+.td-record-center { text-align: center; }
+
+/* ============================================================
+   原生复选框样式（文字在前、复选框在后）
+   ============================================================ */
+.native-checkbox-after {
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
+  font-size: 13px;
+  color: #000;
+  font-weight: normal;
+  user-select: none;
+}
+.native-checkbox-after input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.native-checkbox-after span::after {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #dcdfe6;
+  border-radius: 2px;
+  margin-left: 4px;
+  vertical-align: middle;
+  box-sizing: border-box;
+  background: #fff;
+}
+.native-checkbox-after:has(input:checked) span::after {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+.native-checkbox-after:has(input:checked) span::before {
+  content: '';
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  z-index: 1;
+}
+.native-checkbox-after span {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+</style>

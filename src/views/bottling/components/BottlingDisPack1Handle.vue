@@ -410,7 +410,7 @@
         <colgroup>
           <col style="width: 80px;"><col><col><col style="width: 100px;">
         </colgroup>
-        <tr style="height: 124px;">
+        <tr style="height: 156px;">
           <td class="td-step-label">4.物料使用统计</td>
           <td class="td-no-padding" colspan="2">
             <table class="inner-fill-table step4-inner" style="border-collapse: collapse; font-size: 12px; width: 100%; height: 100%;">
@@ -418,9 +418,21 @@
                 <td>物料名称</td><td>规格</td><td>单位</td><td>领入量</td><td>使用量</td><td>损耗量</td><td>剩余量</td>
               </tr>
               <tr v-for="(item, idx) in paddedStep4List" :key="idx" style="height: 32px;">
-                <td><input v-model="item.materialName" class="edit-input-short" style="width: 80px;" /></td>
-                <td><input v-model="item.spec" class="edit-input-short" style="width: 60px;" /></td>
-                <td><input v-model="item.unit" class="edit-input-short" style="width: 40px;" /></td>
+                <td>
+                  <el-select v-model="item.materialName" clearable placeholder="" size="small" style="width: 80px;">
+                    <el-option v-for="dict in receiving_material" :key="dict.value" :label="dict.label" :value="dict.value" />
+                  </el-select>
+                </td>
+                <td>
+                  <el-select v-model="item.spec" clearable placeholder="" size="small" style="width: 60px;">
+                    <el-option v-for="dict in receiving_spec" :key="dict.value" :label="dict.label" :value="dict.value" />
+                  </el-select>
+                </td>
+                <td>
+                  <el-select v-model="item.unit" clearable placeholder="" size="small" style="width: 60px;">
+                    <el-option v-for="dict in pro_unit" :key="dict.value" :label="dict.label" :value="dict.value" />
+                  </el-select>
+                </td>
                 <td><input v-model="item.receiveQty" class="edit-input-short" style="width: 60px;" /></td>
                 <td><input v-model="item.useQty" class="edit-input-short" style="width: 60px;" /></td>
                 <td><input v-model="item.lossQty" class="edit-input-short" style="width: 60px;" /></td>
@@ -452,6 +464,8 @@ import { ref, reactive, computed } from 'vue'
 import { parseTime } from '@/utils/ruoyi'
 
 const { proxy } = getCurrentInstance()
+// 获取数据字典
+const { receiving_material, receiving_spec, pro_unit } = proxy.useDict('receiving_material', 'receiving_spec', 'pro_unit')
 
 const visible = ref(false)
 const currentRecordId = ref(null)
@@ -500,12 +514,12 @@ const form = reactive({
   step4List: []
 })
 
-/** 确保 Step4 至少有 3 行 */
+/** 确保 Step4 至少有 4 行 */
 const paddedStep4List = computed(() => {
   const list = form.step4List || []
-  if (list.length >= 3) return list
+  if (list.length >= 4) return list
   const result = [...list]
-  while (result.length < 3) result.push({})
+  while (result.length < 4) result.push({})
   return result
 })
 
@@ -513,10 +527,10 @@ const paddedStep4List = computed(() => {
 function open(data) {
   currentRecordId.value = data.recordId
   Object.assign(form, data)
-  // 确保子表至少有3行
+  // 确保子表至少有4行
   if (!form.step4List || form.step4List.length === 0) {
     form.step4List = []
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       form.step4List.push({ materialCode: '', materialName: '', spec: '', unit: '', receiveQty: '', useQty: '', lossQty: '', remainQty: '' })
     }
   }

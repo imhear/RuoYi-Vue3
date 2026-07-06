@@ -419,7 +419,7 @@
         <col>
         <col style="width: 100px;">
       </colgroup>
-      <tr style="height: 124px;">
+      <tr style="height: 156px;">
         <td class="td-step-label">4.物料使用统计</td>
         <td class="td-no-padding" colspan="2">
           <table class="inner-fill-table step4-inner" style="border-collapse: collapse; font-size: 12px; width: 100%; height: 100%;">
@@ -458,12 +458,12 @@ import { ref, computed } from 'vue'
 
 const record = ref(null)
 
-/** 确保 Step4 至少有 3 行 */
+/** 确保 Step4 至少有 4 行 */
 const paddedStep4List = computed(() => {
   const list = record.value?.step4List || []
-  if (list.length >= 3) return list
+  if (list.length >= 4) return list
   const result = [...list]
-  while (result.length < 3) result.push({})
+  while (result.length < 4) result.push({})
   return result
 })
 

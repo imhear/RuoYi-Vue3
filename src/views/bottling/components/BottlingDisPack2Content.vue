@@ -66,16 +66,16 @@
         <td class="td-no-padding">
           <table class="inner-fill-table step5-inner" style="border-collapse: collapse; font-size: 14px; width: 100%; height: 100%;">
             <tr style="height: 25px;">
-              <td>1）{{ record.s5MaterialName1 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 数量：{{ record.s5MaterialQty1 || '' }} ；</td>
+              <td>1）{{ record.s5MaterialName1 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ record.s5MaterialQty1 || '' }} ；</td>
             </tr>
             <tr style="height: 25px;">
-              <td>2）{{ record.s5MaterialName2 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 数量：{{ record.s5MaterialQty2 || '' }} ；</td>
+              <td>2）{{ record.s5MaterialName2 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ record.s5MaterialQty2 || '' }} ；</td>
             </tr>
             <tr style="height: 25px;">
-              <td>3）{{ record.s5MaterialName3 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 数量：{{ record.s5MaterialQty3 || '' }} ；</td>
+              <td>3）{{ record.s5MaterialName3 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ record.s5MaterialQty3 || '' }} ；</td>
             </tr>
             <tr style="height: 25px;">
-              <td>4）{{ record.s5MaterialName4 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 数量：{{ record.s5MaterialQty4 || '' }} .</td>
+              <td>4）{{ record.s5MaterialName4 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ record.s5MaterialQty4 || '' }} .</td>
             </tr>
           </table>
         </td>
@@ -115,15 +115,15 @@
         <!-- 破损行 -->
         <tr style="height: 28px;">
           <td :rowspan="3">{{ item.materialName || '' }}</td>
-          <td :rowspan="3">{{ item.unit || '' }}</td>
-          <td :rowspan="3">{{ item.s6NonConformingQty || '' }}</td>
+          <td :rowspan="3" class="td-record-cell td-record-center">{{ item.unit || '' }}</td>
+          <td :rowspan="3" class="td-record-cell td-record-center">{{ item.s6NonConformingQty || '' }}</td>
           <td>
             <!-- 复选框：文字在前，复选框在后，与处理记录1完全一致 -->
             <label class="native-checkbox-after">
               <span>破损</span>
               <input type="checkbox" :checked="item.s6DamageFlag === 'Y'" disabled />
             </label>
-            ，数量 {{ item.s6DamageQty || '' }} 个
+            ，&nbsp;&nbsp;&nbsp;&nbsp;数量 {{ item.s6DamageQty || '' }} 个
           </td>
           <td :rowspan="3">
             <label class="native-checkbox-after">
@@ -144,7 +144,7 @@
               <span>色差</span>
               <input type="checkbox" :checked="item.s6ColorDifferenceFlag === 'Y'" disabled />
             </label>
-            ，数量 {{ item.s6ColorDifferenceQty || '' }} 个
+            ，&nbsp;&nbsp;&nbsp;&nbsp;数量 {{ item.s6ColorDifferenceQty || '' }} 个
           </td>
         </tr>
         <!-- 其他行 -->
@@ -154,7 +154,7 @@
               <span>其他</span>
               <input type="checkbox" :checked="item.s6OtherFlag === 'Y'" disabled />
             </label>
-            {{ item.s6OtherReason || '' }}，数量 {{ item.s6OtherQty || '' }} 个
+            ，{{ item.s6OtherReason || '' }}&nbsp;&nbsp;&nbsp;&nbsp;数量 {{ item.s6OtherQty || '' }} 个
           </td>
         </tr>
       </template>
@@ -289,6 +289,16 @@ defineExpose({ open, reset })
   vertical-align: middle !important;
 }
 
+/* Step6 操作记录列垂直居中 */
+.td-record-cell {
+  vertical-align: middle !important;
+  text-align: left;
+}
+
+/* Step6 操作记录列水平居中 */
+.td-record-center {
+  text-align: center;
+}
 /* ============================================================
    原生复选框样式（文字在前、复选框在后）
    ============================================================ */

@@ -451,7 +451,7 @@
           <col>
           <col style="width: 100px;">
         </colgroup>
-        <tr style="height: 124px;">
+        <tr style="height: 156px;">
           <td class="td-step-label">4.物料使用统计</td>
           <td class="td-no-padding" colspan="2">
             <table class="inner-fill-table step4-inner" style="border-collapse: collapse; font-size: 12px; width: 100%; height: 100%;">

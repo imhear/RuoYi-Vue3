@@ -139,7 +139,9 @@
         </colgroup>
         <tr style="height: 188px;">
           <td class="td-step-label">
-            2.<input v-model="form.s2StepName" class="edit-input-short" style="width: 80px;" placeholder="物料名称" /><br>处理
+            2.<el-select v-model="form.s2StepName" clearable placeholder="物料名称" size="small" style="width: 75px;">
+                <el-option v-for="dict in receiving_material" :key="dict.value" :label="dict.label" :value="dict.value" />
+              </el-select><br>处理
           </td>
           <td class="td-no-padding">
             <table class="inner-fill-table step2-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
@@ -313,7 +315,9 @@
         </colgroup>
         <tr style="height: 153px;">
           <td class="td-step-label">
-            3.<input v-model="form.s3StepName" class="edit-input-short" style="width: 80px;" placeholder="物料名称" /><br>处理
+            3.<el-select v-model="form.s3StepName" clearable placeholder="物料名称" size="small" style="width: 75px;">
+                <el-option v-for="dict in receiving_material" :key="dict.value" :label="dict.label" :value="dict.value" />
+              </el-select><br>处理
           </td>
           <td class="td-no-padding">
             <table class="inner-fill-table step3-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">

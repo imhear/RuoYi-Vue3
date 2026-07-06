@@ -478,7 +478,7 @@ defineExpose({ open, reset })
    容器
    ============================================================ */
 .view-container {
-  max-height: 70vh;
+  max-height: 80vh;
   overflow-x: hidden;
   overflow-y: auto;
   padding: 0 8px;

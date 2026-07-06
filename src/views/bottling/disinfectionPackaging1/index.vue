@@ -633,7 +633,7 @@
 import { listDisinfectionPackaging1, getDisinfectionPackaging1, delDisinfectionPackaging1, addDisinfectionPackaging1, updateDisinfectionPackaging1 } from "@/api/bottling/disinfectionPackaging1"
 // 新增导入
 import { handleStep1, handleStep2, handleStep3, handleStep4, reviewStep1, reviewStep2, reviewStep3, reviewStep4, inspectStep1, inspectStep2, inspectStep3 } from "@/api/bottling/disinfectionPackaging1"
-import { getOrderDetailByNum } from "@/api/bottling/order"
+import { getOrderDetail } from "@/api/bottling/order"
 
 // 引入查看对话框组件
 import BottlingDisPack1View from '@/views/bottling/components/BottlingDisPack1View.vue'
@@ -1158,7 +1158,7 @@ async function handleStep3Inspect({ recordId }) {
 /** 查看工单详情 */
 async function handleOrderView(row) {
   try {
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     // viewOpen.value = true
     await nextTick()
     orderViewRef.value?.open(res.data)
@@ -1166,7 +1166,6 @@ async function handleOrderView(row) {
     proxy.$modal.msgError('获取工单详情失败')
   }
 }
-
 
 getList()
 </script>

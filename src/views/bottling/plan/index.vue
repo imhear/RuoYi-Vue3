@@ -317,7 +317,7 @@
 <script setup name="Plan">
 import { listPlan, getPlan, delPlan, addPlan, updatePlan, startPlan, cancelPlan, finishPlan, deletePlan  } from "@/api/bottling/plan"
 // 新增导入
-import { getOrderDetailByNum } from "@/api/bottling/order"
+import { getOrderDetail } from "@/api/bottling/order"
 import BottlingPlanStart from '@/views/bottling/components/BottlingPlanStart.vue'
 import BottlingPlanCancel from '@/views/bottling/components/BottlingPlanCancel.vue'
 import BottlingPlanFinish from '@/views/bottling/components/BottlingPlanFinish.vue'
@@ -585,7 +585,7 @@ function handleConfirmDelete({ plan, remark }) {
 /** 查看工单详情 */
 async function handleOrderView(row) {
   try {
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     // viewOpen.value = true
     await nextTick()
     orderViewRef.value?.open(res.data)

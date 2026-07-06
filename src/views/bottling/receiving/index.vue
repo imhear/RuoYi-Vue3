@@ -262,7 +262,7 @@
 
 <script setup name="Receiving">
 import { listReceiving, getReceiving, delReceiving, addReceiving, updateReceiving, receiveReceiving, reviewReceiving} from "@/api/bottling/receiving"
-import { getOrderDetailByNum } from "@/api/bottling/order"
+import { getOrderDetail } from "@/api/bottling/order"
 import { getPlan } from '@/api/bottling/plan' // 导入 getPlan
 // 引入领料单查看组件
 import BottlingReceivingView from '@/views/bottling/components/BottlingReceivingView.vue'
@@ -479,7 +479,7 @@ async function handleView(row) {
 /** 查看工单详情 */
 async function handleOrderView(row) {
   try {
-    const res = await getOrderDetailByNum(row.orderNum)
+    const res = await getOrderDetail(row.orderId)
     // viewOpen.value = true
     await nextTick()
     orderViewRef.value?.open(res.data)

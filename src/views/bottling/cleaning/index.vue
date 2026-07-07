@@ -163,6 +163,7 @@ const data = reactive({
     operator: undefined,
     reviewer: undefined,
     inspector: undefined,
+    status: '0,1,2', // 默认排除已取消
     delFlag: '0',   // 默认查询未删除的工单
     orderByColumn: 'create_time',
     isAsc: 'desc'

@@ -356,6 +356,7 @@ const data = reactive({
     batchNumber: undefined,
     planStart: undefined,
     planEnd: undefined,
+    // status: '0,1,2', // 默认排除已取消
     delFlag: '0',   // 默认查询未删除的任务
     orderByColumn: 'create_time',
     isAsc: 'desc'

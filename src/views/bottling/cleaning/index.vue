@@ -1,58 +1,26 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="关联排产计划" prop="planId">
+      <el-form-item label="工单号" prop="orderNum">
         <el-input
-          v-model="queryParams.planId"
-          placeholder="请输入关联排产计划"
+          v-model="queryParams.orderNum"
+          placeholder="请输入工单号"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="车间" prop="workshop">
+      <el-form-item label="排产单号" prop="planCode">
         <el-input
-          v-model="queryParams.workshop"
-          placeholder="请输入车间"
+          v-model="queryParams.planCode"
+          placeholder="请输入排产单号"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="清场日期" prop="cleaningDate">
-        <el-date-picker clearable
-          v-model="queryParams.cleaningDate"
-          type="date"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择清场日期">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="操作人" prop="operator">
+      <el-form-item label="产品批号" prop="batchNumber">
         <el-input
-          v-model="queryParams.operator"
-          placeholder="请输入操作人"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="复核人" prop="reviewer">
-        <el-input
-          v-model="queryParams.reviewer"
-          placeholder="请输入复核人"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="检查人" prop="inspector">
-        <el-input
-          v-model="queryParams.inspector"
-          placeholder="请输入检查人"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="检查结果" prop="checkResult">
-        <el-input
-          v-model="queryParams.checkResult"
-          placeholder="请输入检查结果"
+          v-model="queryParams.batchNumber"
+          placeholder="请输入产品批号"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -63,69 +31,41 @@
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="Plus"
-          @click="handleAdd"
-          v-hasPermi="['bottling:cleaning:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="Edit"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['bottling:cleaning:edit']"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['bottling:cleaning:remove']"
-        >删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="Download"
-          @click="handleExport"
-          v-hasPermi="['bottling:cleaning:export']"
-        >导出</el-button>
-      </el-col>
-      <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-
     <el-table v-loading="loading" :data="cleaningList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="清场记录主键" align="center" prop="cleaningId" />
-      <el-table-column label="关联排产计划" align="center" prop="planId" />
-      <el-table-column label="车间" align="center" prop="workshop" />
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <template #default="scope">
+          <el-button link type="primary" @click="handleHandle(scope.row)">处理</el-button>
+          <el-button link type="primary" @click="handleReview(scope.row)">复核</el-button>
+          <el-button link type="primary" @click="handleInspect(scope.row)">检查</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" align="center" prop="status">
+        <template #default="scope">
+          <dict-tag :options="disinfection_packaging_status" :value="scope.row.status"/>
+        </template>
+      </el-table-column>
+      <!-- 任务单号改为超链接，点击触发查看 -->
+      <el-table-column label="任务单号" align="center" min-width="120">
+        <template #default="scope">
+          <el-button link type="primary" @click="handleView(scope.row)">{{ scope.row.planCode }}</el-button>
+        </template>
+      </el-table-column>
+      <!-- 工单号改为超链接，点击触发查看 -->
+      <el-table-column label="工单号" align="center" min-width="120">
+        <template #default="scope">
+          <el-button link type="primary" @click="handleOrderView(scope.row)">{{ scope.row.orderNum }}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="产品名称" align="center" prop="productName" />
+      <el-table-column label="规格" align="center" prop="spec" />
+      <el-table-column label="产品批号" align="center" prop="batchNumber" />
       <el-table-column label="清场日期" align="center" prop="cleaningDate" width="180">
         <template #default="scope">
           <span>{{ parseTime(scope.row.cleaningDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作人" align="center" prop="operator" />
-      <el-table-column label="复核人" align="center" prop="reviewer" />
-      <el-table-column label="检查人" align="center" prop="inspector" />
-      <el-table-column label="检查结果" align="center" prop="checkResult" />
-      <el-table-column label="备注" align="center" prop="remark" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['bottling:cleaning:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['bottling:cleaning:remove']">删除</el-button>
-        </template>
-      </el-table-column>
+      
     </el-table>
     
     <pagination
@@ -136,74 +76,61 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改清场记录对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="cleaningRef" :model="form" :rules="rules" label-width="100px">
-        <el-row>
-          <el-col :span="24">
-            <el-form-item label="关联排产计划" prop="planId">
-              <el-input v-model="form.planId" placeholder="请输入关联排产计划" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="车间" prop="workshop">
-              <el-input v-model="form.workshop" placeholder="请输入车间" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="清场日期" prop="cleaningDate">
-              <el-date-picker clearable
-                v-model="form.cleaningDate"
-                type="date"
-                value-format="YYYY-MM-DD"
-                placeholder="请选择清场日期">
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="操作人" prop="operator">
-              <el-input v-model="form.operator" placeholder="请输入操作人" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="复核人" prop="reviewer">
-              <el-input v-model="form.reviewer" placeholder="请输入复核人" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="检查人" prop="inspector">
-              <el-input v-model="form.inspector" placeholder="请输入检查人" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="检查结果" prop="checkResult">
-              <el-input v-model="form.checkResult" placeholder="请输入检查结果" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" placeholder="请输入备注" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="删除标志" prop="delFlag">
-              <el-input v-model="form.delFlag" placeholder="请输入删除标志" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
-        </div>
-      </template>
-    </el-dialog>
+    <!-- 查看工单对话框组件 -->
+    <BottlingOrderView ref="orderViewRef" />
+
+    <!-- 查看对话框组件 -->
+    <BottlingCleaningView ref="cleaningViewRef" />
+
+    <!-- 处理对话框 -->
+    <BottlingCleaningHandle ref="cleaningHandleRef"
+      @cleaningSubmit="handleCleaningSubmit"
+      @submit="getList" />
+
+    <!-- 复核对话框 -->
+    <BottlingCleaningReview ref="cleaningReviewRef"
+      @cleaningReview="handleCleaningReview"
+      @submit="getList" />
+
+    <!-- 检查对话框 -->
+    <BottlingCleaningInspect ref="cleaningInspectRef"
+      @cleaningInspect="handleCleaningInspect"
+      @submit="getList" />
+
   </div>
 </template>
 
 <script setup name="Cleaning">
 import { listCleaning, getCleaning, delCleaning, addCleaning, updateCleaning } from "@/api/bottling/cleaning"
+import { getOrderDetail } from "@/api/bottling/order"
+// 引入处理 API
+import { handleCleaning } from "@/api/bottling/cleaning"
+// 引入复核 API
+import { reviewCleaning } from "@/api/bottling/cleaning"
+// 引入检查 API
+import { inspectCleaning } from "@/api/bottling/cleaning"
+
+// 引入查看对话框组件
+import BottlingCleaningView from '@/views/bottling/components/BottlingCleaningView.vue'
+// 引入处理对话框组件
+import BottlingCleaningHandle from '@/views/bottling/components/BottlingCleaningHandle.vue'
+// 引入复核对话框组件
+import BottlingCleaningReview from '@/views/bottling/components/BottlingCleaningReview.vue'
+// 引入检查对话框组件
+import BottlingCleaningInspect from '@/views/bottling/components/BottlingCleaningInspect.vue'
+// 引入工单查看组件
+import BottlingOrderView from '@/views/bottling/components/BottlingOrderView.vue'
+
+// 查看工单组件引用
+const orderViewRef = ref(null)
+// 查看对话框组件引用
+const cleaningViewRef = ref(null)
+// 处理对话框组件引用
+const cleaningHandleRef = ref(null)
+// 复核对话框组件引用
+const cleaningReviewRef = ref(null)
+// 检查对话框组件引用
+const cleaningInspectRef = ref(null)
 
 const route = useRoute() // 获取当前路由信息
 
@@ -211,6 +138,7 @@ const route = useRoute() // 获取当前路由信息
 const currentWorkshop = computed(() => route.query.workshop || 'D')
 
 const { proxy } = getCurrentInstance()
+const { sys_yes_no, disinfection_packaging_status } = useDict('sys_yes_no', 'disinfection_packaging_status')
 
 const cleaningList = ref([])
 const open = ref(false)
@@ -227,13 +155,14 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    planId: undefined,
+    orderNum: undefined,
+    planCode: undefined,
+    batchNumber: undefined,
     // workshop 不再需要，由 currentWorkshop 自动注入
-    cleaningDate: undefined,
+    receiveDate: undefined,
     operator: undefined,
     reviewer: undefined,
     inspector: undefined,
-    checkResult: undefined,
     delFlag: '0',   // 默认查询未删除的工单
     orderByColumn: 'create_time',
     isAsc: 'desc'
@@ -242,9 +171,9 @@ const data = reactive({
     planId: [
       { required: true, message: "关联排产计划不能为空", trigger: "blur" }
     ],
-    // workshop: [
-    //   { required: true, message: "车间不能为空", trigger: "blur" }
-    // ],
+    workshop: [
+      { required: true, message: "车间不能为空", trigger: "blur" }
+    ],
   }
 })
 
@@ -263,15 +192,6 @@ function getList() {
     loading.value = false
   })
 }
-/** 查询清场记录列表 */
-// function getList() {
-//   loading.value = true
-//   listCleaning(queryParams.value).then(response => {
-//     cleaningList.value = response.rows
-//     total.value = response.total
-//     loading.value = false
-//   })
-// }
 
 /** 取消按钮 */
 function cancel() {
@@ -283,13 +203,37 @@ function cancel() {
 function reset() {
   form.value = {
     cleaningId: null,
+    orderId: null,
     planId: null,
-    workshop: currentWorkshop.value,   // 自动填充当前车间
+    status: null,
+    orderNum: null,
+    planCode: null,
+    productName: null,
+    spec: null,
+    batchNumber: null,
+    workshop: null,
     cleaningDate: null,
+    operateShowHide: null,
+    reviewShowHide: null,
+    inspectShowHide: null,
     operator: null,
     reviewer: null,
     inspector: null,
-    checkResult: null,
+    operatorTime: null,
+    reviewerTime: null,
+    inspectorTime: null,
+    statusLabelReplaceFlag: [],
+    materialRemoveProductFlag: [],
+    materialRemoveResidualFlag: [],
+    materialRemoveBatchResidueFlag: [],
+    siteCleanFloorFlag: [],
+    siteCleanStructureFlag: [],
+    equipCleanDustOilFlag: [],
+    equipCleanOriginalColorFlag: [],
+    toolCleanDustDirtFlag: [],
+    facilityCleanDustDirtFlag: [],
+    facilityCleanArrangementFlag: [],
+    otherCleanStatusFlag: [],
     remark: null,
     delFlag: null,
     createBy: null,
@@ -332,6 +276,18 @@ function handleUpdate(row) {
   const _cleaningId = row.cleaningId || ids.value
   getCleaning(_cleaningId).then(response => {
     form.value = response.data
+    form.value.statusLabelReplaceFlag = form.value.statusLabelReplaceFlag.split(",")
+    form.value.materialRemoveProductFlag = form.value.materialRemoveProductFlag.split(",")
+    form.value.materialRemoveResidualFlag = form.value.materialRemoveResidualFlag.split(",")
+    form.value.materialRemoveBatchResidueFlag = form.value.materialRemoveBatchResidueFlag.split(",")
+    form.value.siteCleanFloorFlag = form.value.siteCleanFloorFlag.split(",")
+    form.value.siteCleanStructureFlag = form.value.siteCleanStructureFlag.split(",")
+    form.value.equipCleanDustOilFlag = form.value.equipCleanDustOilFlag.split(",")
+    form.value.equipCleanOriginalColorFlag = form.value.equipCleanOriginalColorFlag.split(",")
+    form.value.toolCleanDustDirtFlag = form.value.toolCleanDustDirtFlag.split(",")
+    form.value.facilityCleanDustDirtFlag = form.value.facilityCleanDustDirtFlag.split(",")
+    form.value.facilityCleanArrangementFlag = form.value.facilityCleanArrangementFlag.split(",")
+    form.value.otherCleanStatusFlag = form.value.otherCleanStatusFlag.split(",")
     open.value = true
     title.value = "修改清场记录"
   })
@@ -341,6 +297,18 @@ function handleUpdate(row) {
 function submitForm() {
   proxy.$refs["cleaningRef"].validate(valid => {
     if (valid) {
+      form.value.statusLabelReplaceFlag = form.value.statusLabelReplaceFlag.join(",")
+      form.value.materialRemoveProductFlag = form.value.materialRemoveProductFlag.join(",")
+      form.value.materialRemoveResidualFlag = form.value.materialRemoveResidualFlag.join(",")
+      form.value.materialRemoveBatchResidueFlag = form.value.materialRemoveBatchResidueFlag.join(",")
+      form.value.siteCleanFloorFlag = form.value.siteCleanFloorFlag.join(",")
+      form.value.siteCleanStructureFlag = form.value.siteCleanStructureFlag.join(",")
+      form.value.equipCleanDustOilFlag = form.value.equipCleanDustOilFlag.join(",")
+      form.value.equipCleanOriginalColorFlag = form.value.equipCleanOriginalColorFlag.join(",")
+      form.value.toolCleanDustDirtFlag = form.value.toolCleanDustDirtFlag.join(",")
+      form.value.facilityCleanDustDirtFlag = form.value.facilityCleanDustDirtFlag.join(",")
+      form.value.facilityCleanArrangementFlag = form.value.facilityCleanArrangementFlag.join(",")
+      form.value.otherCleanStatusFlag = form.value.otherCleanStatusFlag.join(",")
       if (form.value.cleaningId != null) {
         updateCleaning(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
@@ -374,6 +342,105 @@ function handleExport() {
   proxy.download('bottling/cleaning/export', {
     ...queryParams.value
   }, `cleaning_${new Date().getTime()}.xlsx`)
+}
+
+/**
+ * 查看详情（完全被动模式）
+ * 调用 API 获取详情，打开查看对话框
+ */
+function handleView(row) {
+  getCleaning(row.cleaningId).then(res => {
+    cleaningViewRef.value?.open(res.data)
+  }).catch(() => {
+    proxy.$modal.msgError('获取详情失败')
+  })
+}
+
+/** 打开处理对话框 */
+function handleHandle(row) {
+  getCleaning(row.cleaningId).then(res => {
+    cleaningHandleRef.value?.open(res.data)
+  }).catch(() => {
+    proxy.$modal.msgError('获取详情失败')
+  })
+}
+
+/**
+ * 处理提交（完全被动模式）
+ * 父组件二次确认后调 API
+ */
+async function handleCleaningSubmit(formData) {
+  try {
+    await proxy.$modal.confirm('是否确认提交清场处理记录？')
+    await handleCleaning(formData.cleaningId, formData)
+    proxy.$modal.msgSuccess('清场处理提交成功')
+    cleaningHandleRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('清场处理提交失败')
+  }
+}
+
+/** 打开复核对话框 */
+function handleReview(row) {
+  getCleaning(row.cleaningId).then(res => {
+    cleaningReviewRef.value?.open(res.data)
+  }).catch(() => {
+    proxy.$modal.msgError('获取详情失败')
+  })
+}
+
+/**
+ * 复核提交（完全被动模式）
+ * 父组件二次确认后调 API
+ */
+async function handleCleaningReview({ cleaningId }) {
+  try {
+    await proxy.$modal.confirm('是否确认复核清场记录？')
+    await reviewCleaning(cleaningId)
+    proxy.$modal.msgSuccess('清场复核成功')
+    cleaningReviewRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('清场复核失败')
+  }
+}
+
+/** 打开检查对话框 */
+function handleInspect(row) {
+  getCleaning(row.cleaningId).then(res => {
+    cleaningInspectRef.value?.open(res.data)
+  }).catch(() => {
+    proxy.$modal.msgError('获取详情失败')
+  })
+}
+
+/**
+ * 检查提交（完全被动模式）
+ * 父组件二次确认后调 API
+ */
+async function handleCleaningInspect({ cleaningId }) {
+  try {
+    await proxy.$modal.confirm('是否确认检查清场记录？')
+    await inspectCleaning(cleaningId)
+    proxy.$modal.msgSuccess('清场检查成功')
+    cleaningInspectRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('清场检查失败')
+  }
+}
+
+/** 查看工单详情 */
+async function handleOrderView(row) {
+  try {
+    const res = await getOrderDetail(row.orderId)
+    // viewOpen.value = true
+    await nextTick()
+    orderViewRef.value?.open(res.data)
+  } catch (e) {
+    proxy.$modal.msgError('获取工单详情失败')
+  }
 }
 
 getList()

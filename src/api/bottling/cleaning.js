@@ -42,3 +42,30 @@ export function delCleaning(cleaningId) {
     method: 'delete'
   })
 }
+
+// ========== 手工新增方法 ==========
+
+// 清场处理提交
+export function handleCleaning(cleaningId, data) {
+  return request({
+    url: '/bottling/cleaning/handle/' + cleaningId,
+    method: 'post',
+    data: data
+  })
+}
+
+// 清场复核提交
+export function reviewCleaning(cleaningId) {
+  return request({
+    url: '/bottling/cleaning/handleReview/' + cleaningId,
+    method: 'post'
+  })
+}
+
+// 清场检查提交
+export function inspectCleaning(cleaningId) {
+  return request({
+    url: '/bottling/cleaning/handleInspect/' + cleaningId,
+    method: 'post'
+  })
+}

@@ -66,16 +66,28 @@
         <td class="td-no-padding">
           <table class="inner-fill-table step5-inner" style="border-collapse: collapse; font-size: 14px; width: 100%; height: 100%;">
             <tr style="height: 25px;">
-              <td>1）{{ record.s5MaterialName1 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ record.s5MaterialQty1 || '' }} ；</td>
+              <td class="split-td">
+                <span class="str-left">1）{{ record.s5MaterialName1 || '' }}</span>
+                <span class="str-right">数量：{{ record.s5MaterialQty1 || '' }} ；</span>
+              </td>
             </tr>
             <tr style="height: 25px;">
-              <td>2）{{ record.s5MaterialName2 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ record.s5MaterialQty2 || '' }} ；</td>
+              <td class="split-td">
+                <span class="str-left">2）{{ record.s5MaterialName2 || '' }}</span>
+                <span class="str-right">数量：{{ record.s5MaterialQty2 || '' }} ；</span>
+              </td>
             </tr>
             <tr style="height: 25px;">
-              <td>3）{{ record.s5MaterialName3 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ record.s5MaterialQty3 || '' }} ；</td>
+              <td class="split-td">
+                <span class="str-left">3）{{ record.s5MaterialName3 || '' }}</span>
+                <span class="str-right">数量：{{ record.s5MaterialQty3 || '' }} ；</span>
+              </td>
             </tr>
             <tr style="height: 25px;">
-              <td>4）{{ record.s5MaterialName4 || '' }} &nbsp;&nbsp;&nbsp;&nbsp;数量：{{ record.s5MaterialQty4 || '' }} .</td>
+              <td class="split-td">
+                <span class="str-left">4）{{ record.s5MaterialName4 || '' }}</span>
+                <span class="str-right">数量：{{ record.s5MaterialQty4 || '' }} ；</span>
+              </td>
             </tr>
           </table>
         </td>
@@ -245,6 +257,34 @@ defineExpose({ open, reset })
   text-align: center;
   vertical-align: middle !important;
 }
+
+/* ============================================================
+   Step5单元格样式
+   ============================================================ */
+  /* 1. 让 td 成为 flex 容器 */
+  .split-td {
+    display: flex;
+    width: 100%; /* 确保占满单元格宽度 */
+    padding: 0;  /* 可选：去除默认内边距以精确控制 */
+  }
+
+  /* 2. 左侧字符串占 30% */
+  .str-left {
+    flex: 0 0 20%; /* 不放大、不缩小、基准宽度 30% */
+    width: 20%;    /* 兼容性备份 */
+    overflow: hidden; /* 防止内容溢出破坏布局 */
+    text-overflow: ellipsis; /* 超出显示省略号 */
+    white-space: nowrap; /* 不换行 */
+  }
+
+  /* 3. 右侧字符串占 70% */
+  .str-right {
+    flex: 0 0 80%; /* 不放大、不缩小、基准宽度 70% */
+    width: 80%;    /* 兼容性备份 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
 /* ============================================================
    Step5~Step6 外层单元格通用样式

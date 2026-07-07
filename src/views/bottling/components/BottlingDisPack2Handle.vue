@@ -149,7 +149,7 @@
           <!-- 破损行 -->
           <tr style="height: 28px;">
             <td :rowspan="3" class="td-record-cell">
-                <el-select v-model="item.materialName" clearable placeholder="物料名称" size="small" style="width: 80px;">
+                <el-select v-model="item.materialName" clearable placeholder="物料名称" size="small" style="width: 100px;">
                     <el-option v-for="dict in receiving_material" :key="dict.value" :label="dict.label" :value="dict.value" />
                 </el-select>
             </td>

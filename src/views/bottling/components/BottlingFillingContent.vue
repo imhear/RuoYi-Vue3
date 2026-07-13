@@ -233,7 +233,9 @@
         </td>
         <td class="td-sign">
           <div v-if="record.s3OperateShowHide !== '1'">操作人：{{ record.s3Operator && record.s3OperatorTime ? record.s3Operator : '' }}</div>
+          <br/>
           <div v-if="record.s3ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s3Reviewer && record.s3ReviewerTime ? record.s3Reviewer : '' }}</div>
+          <br/>
           <div v-if="record.s3InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s3Inspector && record.s3InspectorTime ? record.s3Inspector : '' }}</div>
         </td>
       </tr>

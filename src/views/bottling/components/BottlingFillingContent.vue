@@ -145,9 +145,11 @@
             <span>超过清洁效期:重新清洁消毒&nbsp;&nbsp;&nbsp;&nbsp;清洁方式：{{ record.s2CleaningMethod || '' }}，消毒方式：{{ record.s2DesinfectionMethod || '' }}</span> 
           </label>
         </td>
+        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign">
           <div v-if="record.s2OperateShowHide !== '1'">操作人：{{ record.s2Operator && record.s2OperatorTime ? record.s2Operator : '' }}</div>
           <div v-if="record.s2ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s2Reviewer && record.s2ReviewerTime ? record.s2Reviewer : '' }}</div>
+          <div v-if="record.s2InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s2Inspector && record.s2InspectorTime ? record.s2Inspector : '' }}</div>
         </td>
       </tr>
     </table>
@@ -237,6 +239,7 @@
             </tbody>
           </table>
         </td>
+        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign">
           <div v-if="record.s3OperateShowHide !== '1'">操作人：{{ record.s3Operator && record.s3OperatorTime ? record.s3Operator : '' }}</div>
           <div v-if="record.s3ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s3Reviewer && record.s3ReviewerTime ? record.s3Reviewer : '' }}</div>

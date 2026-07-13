@@ -87,12 +87,13 @@
           <label class="native-checkbox-after"><span>是</span><input type="checkbox" :checked="record.statusLabelReplaceFlag === 'Y'" disabled /></label>
           <label class="native-checkbox-after"><span>否</span><input type="checkbox" :checked="record.statusLabelReplaceFlag === 'N'" disabled /></label>
         </td>
+        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign" rowspan="13" style="border-top-color: #fff;">
-          <div v-if="record.operateShowHide !== '1'">操作人：{{ record.operator || '' }}</div>
-          <br><br>
-          <div v-if="record.reviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.reviewer || '' }}</div>
-          <br><br>
-          <div v-if="record.inspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.inspector || '' }}</div>
+          <div v-if="record.operateShowHide !== '1'">操作人：{{ record.operator && record.OperatorTime ? record.operator : '' }}</div>
+          <br/>
+          <div v-if="record.reviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.reviewer && record.ReviewerTime ? record.reviewer : '' }}</div>
+          <br/>
+          <div v-if="record.inspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.inspector && record.InspectorTime ? record.inspector : '' }}</div>
         </td>
       </tr>
 

@@ -98,10 +98,11 @@
           </table>
         </td>
         <td></td>
+        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign">
-          <div v-if="record.s1OperateShowHide !== '1'">操作人：{{ record.s1Operator || '' }}</div>
-          <div v-if="record.s1ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s1Reviewer || '' }}</div>
-          <div v-if="record.s1InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s1Inspector || '' }}</div>
+          <div v-if="record.s1OperateShowHide !== '1'">操作人：{{ record.s1Operator && record.s1OperatorTime ? record.s1Operator : '' }}</div>
+          <div v-if="record.s1ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s1Reviewer && record.s1ReviewerTime ? record.s1Reviewer : '' }}</div>
+          <div v-if="record.s1InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s1Inspector && record.s1InspectorTime ? record.s1Inspector : '' }}</div>
         </td>
       </tr>
     </table>
@@ -263,9 +264,9 @@
           </div>
         </td>
         <td class="td-sign">
-          <div v-if="record.s2OperateShowHide !== '1'">操作人：{{ record.s2Operator || '' }}</div>
-          <div v-if="record.s2ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s2Reviewer || '' }}</div>
-          <div v-if="record.s2InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s2Inspector || '' }}</div>
+          <div v-if="record.s2OperateShowHide !== '1'">操作人：{{ record.s2Operator && record.s2OperatorTime ? record.s2Operator : '' }}</div>
+          <div v-if="record.s2ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s2Reviewer && record.s2ReviewerTime ? record.s2Reviewer : '' }}</div>
+          <div v-if="record.s2InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s2Inspector && record.s2InspectorTime ? record.s2Inspector : '' }}</div>
         </td>
       </tr>
     </table>
@@ -404,9 +405,9 @@
           </div>
         </td>
         <td class="td-sign">
-          <div v-if="record.s3OperateShowHide !== '1'">操作人：{{ record.s3Operator || '' }}</div>
-          <div v-if="record.s3ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s3Reviewer || '' }}</div>
-          <div v-if="record.s3InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s3Inspector || '' }}</div>
+          <div v-if="record.s3OperateShowHide !== '1'">操作人：{{ record.s3Operator && record.s3OperatorTime ? record.s3Operator : '' }}</div>
+          <div v-if="record.s3ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s3Reviewer && record.s3ReviewerTime ? record.s3Reviewer : '' }}</div>
+          <div v-if="record.s3InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s3Inspector && record.s3InspectorTime ? record.s3Inspector : '' }}</div>
         </td>
       </tr>
     </table>
@@ -444,9 +445,9 @@
           </table>
         </td>
         <td class="td-sign">
-          <div v-if="record.s4OperateShowHide !== '1'">操作人：{{ record.s4Operator || '' }}</div>
-          <div v-if="record.s4ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s4Reviewer || '' }}</div>
-          <div v-if="record.s4InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s4Inspector || '' }}</div>
+          <div v-if="record.s4OperateShowHide !== '1'">操作人：{{ record.s4Operator && record.s4OperatorTime ? record.s4Operator : '' }} </div>
+          <div v-if="record.s4ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s4Reviewer && record.s4ReviewerTime ? record.s4Reviewer : '' }} </div>
+          <div v-if="record.s4InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s4Inspector && record.s4InspectorTime ? record.s4Inspector : '' }} </div>
         </td>
       </tr>
     </table>

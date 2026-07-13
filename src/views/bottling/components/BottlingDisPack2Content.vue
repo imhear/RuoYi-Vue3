@@ -91,10 +91,11 @@
             </tr>
           </table>
         </td>
+        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign">
-          <div v-if="record.s5OperateShowHide !== '1'">操作人：{{ record.s5Operator || '' }}</div>
-          <div v-if="record.s5ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s5Reviewer || '' }}</div>
-          <div v-if="record.s5InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s5Inspector || '' }}</div>
+          <div v-if="record.s5OperateShowHide !== '1'">操作人：{{ record.s5Operator && record.s5OperatorTime ? record.s5Operator : '' }}</div>
+          <div v-if="record.s5ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s5Reviewer && record.s5ReviewerTime ? record.s5Reviewer : '' }}</div>
+          <div v-if="record.s5InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s5Inspector && record.s5InspectorTime ? record.s5Inspector : '' }}</div>
         </td>
       </tr>
     </table>
@@ -117,10 +118,11 @@
         <td class="header-value">总数量</td>
         <td class="header-value">不合格原因及对应数量</td>
         <td class="header-value">处理方式</td>
+        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign" rowspan="10">
-          <div v-if="record.s6OperateShowHide !== '1'">操作人：{{ record.s6Operator || '' }}</div>
-          <div v-if="record.s6ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s6Reviewer || '' }}</div>
-          <div v-if="record.s6InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s6Inspector || '' }}</div>
+          <div v-if="record.s6OperateShowHide !== '1'">操作人：{{ record.s6Operator && record.s6OperatorTime ? record.s6Operator : '' }}</div>
+          <div v-if="record.s6ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s6Reviewer && record.s6ReviewerTime ? record.s6Reviewer : '' }}</div>
+          <div v-if="record.s6InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.s6Inspector && record.s6InspectorTime ? record.s6Inspector : '' }}</div>
         </td>
       </tr>
       <template v-for="(item, idx) in paddedStep6List" :key="idx">

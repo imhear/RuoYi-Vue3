@@ -1,5 +1,5 @@
 <!--
-  灌装生产记录1 纯内容组件（字体优化 + 行间距调整 + 复选框字体）
+  灌装生产记录1 纯内容组件（前置复选框勾号居中修复）
 -->
 <template>
   <div v-if="record" class="view-container">
@@ -28,8 +28,7 @@
       </tr>
     </table>
 
-
-    <!-- 起止时间 + 灌装首件确认（所有文本 font-weight: normal） -->
+    <!-- 起止时间 + 灌装首件确认 -->
     <table class="row-table header-table" cellspacing="0" cellpadding="0">
       <colgroup>
         <col style="width: 80px;">
@@ -56,7 +55,7 @@
           </label>
           <span style="margin-left: 10px;">
             检查人：<template v-if="record.firstQualifiedInspector && record.firstQualifiedInspectorTime">{{ record.firstQualifiedInspector }}</template>
-         </span>
+          </span>
         </td>
       </tr>
     </table>
@@ -75,7 +74,7 @@
       </tr>
     </table>
 
-    <!-- Step1 开工前检查（回显文字 12px） -->
+    <!-- Step1 开工前检查 -->
     <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
       <colgroup>
         <col style="width: 80px;"><col style="width: 350px;">
@@ -91,7 +90,6 @@
           5）岗位操作规程、设备操作规程、灌包工艺规程齐全；<br/>
           6）物料准备齐全。
         </td>
-        <!-- 操作记录列：字体 12px -->
         <td class="td-record" style="text-align: left; vertical-align: middle; font-size: 14px;">
           温湿度：{{ record.s1CleanAreaTemperature || '' }}℃ ， {{ record.s1CleanAreaHumidity || '' }}% ；检查是否合格：
           <label class="native-checkbox-after" style="font-size: 12px;">
@@ -106,7 +104,6 @@
           不合格情况说明及处理方式：<br/>
           {{ record.s1Remark || '' }}
         </td>
-        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign">
           <div v-if="record.s1OperateShowHide !== '1'">操作人：{{ record.s1Operator && record.s1OperatorTime ? record.s1Operator : '' }}</div>
           <div v-if="record.s1ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s1Reviewer && record.s1ReviewerTime ? record.s1Reviewer : '' }}</div>
@@ -115,7 +112,7 @@
       </tr>
     </table>
 
-    <!-- Step2 设备、容器、工具处理（回显文字 12px） -->
+    <!-- Step2 设备、容器、工具处理（使用 native-checkbox-before） -->
     <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
       <colgroup>
         <col style="width: 80px;"><col style="width: 350px;">
@@ -129,23 +126,21 @@
           纯化水清洁后，再用75%酒精或其他消毒液或CIP热水<br/>
           消毒。
         </td>
-        <!-- 操作记录列：字体 12px -->
         <td class="td-record" style="text-align: left; vertical-align: middle; font-size: 12px; line-height: 2.0;">
           &nbsp;&nbsp;&nbsp;&nbsp;1) 主要设备名称/编码：{{ record.s2MainEquipName || '' }} / {{ record.s2MainEquipNo || '' }}<br/>
           &nbsp;&nbsp;&nbsp;&nbsp;2) 检查是否在清洁消毒有效期内：<br/>
           &nbsp;&nbsp;&nbsp;&nbsp;
-          <label class="native-checkbox" style="font-size: 12px;">
+          <label class="native-checkbox-before" style="font-size: 12px;">
             <input type="checkbox" :checked="record.s2PurifiedWaterFlag === 'Y'" disabled />
             <span>在清洁效期内:使用纯化水清洗</span>
           </label>
           <br/>
           &nbsp;&nbsp;&nbsp;&nbsp;
-          <label class="native-checkbox" style="font-size: 12px;">
+          <label class="native-checkbox-before" style="font-size: 12px;">
             <input type="checkbox" :checked="record.s2ReCleanDisinfectFlag === 'Y'" disabled />
             <span>超过清洁效期:重新清洁消毒&nbsp;&nbsp;&nbsp;&nbsp;清洁方式：{{ record.s2CleaningMethod || '' }}，消毒方式：{{ record.s2DesinfectionMethod || '' }}</span> 
           </label>
         </td>
-        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign">
           <div v-if="record.s2OperateShowHide !== '1'">操作人：{{ record.s2Operator && record.s2OperatorTime ? record.s2Operator : '' }}</div>
           <div v-if="record.s2ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s2Reviewer && record.s2ReviewerTime ? record.s2Reviewer : '' }}</div>
@@ -154,7 +149,7 @@
       </tr>
     </table>
 
-    <!-- Step3 灌装（复选框文字 11px） -->
+    <!-- Step3 灌装 -->
     <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
       <colgroup>
         <col style="width: 80px;"><col style="width: 350px;">
@@ -162,7 +157,6 @@
       </colgroup>
       <tr style="height: auto;">
         <td class="td-step-label">3.灌装</td>
-        <!-- 工艺要求列，行间距 2.0 -->
         <td class="td-requirement" style="text-align: left; vertical-align: middle; line-height: 2.0;">
           1) 先用少量料液冲洗设备;<br/>
           2) 装量调节:按照产品规格/净含量，设定装量，称量、<br/>
@@ -172,9 +166,7 @@
           5) 开始灌装;<br/>
           6) 随时检查装量和外观，每2小时记录一次。
         </td>
-        <!-- 操作记录列：字体 11px -->
         <td class="td-no-padding" style="vertical-align: top;">
-          <!-- 上方控件区域，字体 11px，复选框也设为 11px -->
           <div style="padding: 6px 6px 0 6px; font-size: 11px;">
             <div style="display: flex; align-items: center; margin-bottom: 6px;">
               <span style="white-space: nowrap; margin-right: 8px;">1) 是否用料液冲洗:</span>
@@ -208,7 +200,7 @@
             </div>
           </div>
 
-          <!-- 灌装量记录表格（固定高度） -->
+          <!-- 灌装量记录表格 -->
           <table class="inner-fill-table filling-inner" style="border-collapse: collapse; font-size: 12px; width: 100%;">
             <thead>
               <tr>
@@ -239,7 +231,6 @@
             </tbody>
           </table>
         </td>
-        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign">
           <div v-if="record.s3OperateShowHide !== '1'">操作人：{{ record.s3Operator && record.s3OperatorTime ? record.s3Operator : '' }}</div>
           <div v-if="record.s3ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s3Reviewer && record.s3ReviewerTime ? record.s3Reviewer : '' }}</div>
@@ -279,7 +270,7 @@ defineExpose({ open, reset })
 </script>
 
 <style scoped>
-/* 容器 + 隐藏滚动条 */
+/* 容器与基础表格 */
 .view-container {
   max-height: 80vh;
   overflow-x: hidden;
@@ -373,14 +364,11 @@ defineExpose({ open, reset })
   font-size: 14px;
 }
 
-/* 原生复选框 */
-.native-checkbox input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.native-checkbox {
+/* ============================================================
+   复选框（前置）- native-checkbox-before
+   勾号垂直居中，top 设为 2px 与后置保持一致
+   ============================================================ */
+.native-checkbox-before {
   display: inline-flex;
   align-items: center;
   cursor: default;
@@ -389,7 +377,13 @@ defineExpose({ open, reset })
   font-weight: normal;
   user-select: none;
 }
-.native-checkbox span::before {
+.native-checkbox-before input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.native-checkbox-before span::before {
   content: '';
   display: inline-block;
   width: 14px;
@@ -401,27 +395,30 @@ defineExpose({ open, reset })
   box-sizing: border-box;
   background: #fff;
 }
-.native-checkbox input:checked + span::before {
+.native-checkbox-before input:checked + span::before {
   background-color: #409eff;
   border-color: #409eff;
 }
-.native-checkbox input:checked + span::after {
+.native-checkbox-before input:checked + span::after {
   content: '';
   position: absolute;
-  left: 4px;
-  top: 2px;
+  left: 5px;
+  top: 6px;        /* 与后置复选框的 top 保持一致 */
   width: 5px;
   height: 9px;
   border: solid #fff;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
-.native-checkbox span {
+.native-checkbox-before span {
   position: relative;
   display: inline-flex;
   align-items: center;
 }
 
+/* ============================================================
+   复选框（后置）- native-checkbox-after
+   ============================================================ */
 .native-checkbox-after {
   display: inline-flex;
   align-items: center;
@@ -474,7 +471,9 @@ defineExpose({ open, reset })
   margin-left: 10px;
 }
 
-/* ===== 灌装量表格专用样式（顶框+右框，固定高度） ===== */
+/* ============================================================
+   灌装量记录表格样式
+   ============================================================ */
 .filling-inner td,
 .filling-inner th {
   border-top: 1px solid #dcdfe6;
@@ -486,28 +485,23 @@ defineExpose({ open, reset })
   line-height: 1;
 }
 
-/* 表头行稍高一点 */
 .filling-inner thead td {
   height: 28px;
 }
 
-/* 时间列合并单元格高度自适应 */
 .filling-inner td[rowspan] {
   height: auto;
 }
 
-/* 最后一列无右边框 */
 .filling-inner td:last-child,
 .filling-inner th:last-child {
   border-right: none;
 }
 
-/* 表格自身无任何外框 */
 .filling-inner {
   border: none !important;
 }
 
-/* 修正 box-sizing 干扰 */
 .filling-inner,
 .filling-inner *,
 .filling-inner *:before,

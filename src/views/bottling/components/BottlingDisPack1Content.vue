@@ -63,7 +63,6 @@
         <td class="td-no-padding" >
           <table class="inner-fill-table step1-inner" style="border-collapse: collapse; font-size: 14px; width: 100%; height: 100%;">
             <tr style="height: 28px;">
-              <!-- <td colspan="2">{{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}-{m}-{d} {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}-{m}-{d} {h}:{i}') : '' }}</td> -->
               <td colspan="2">{{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}</td>
             </tr>
             <tr style="height: 92px;">
@@ -98,7 +97,6 @@
           </table>
         </td>
         <td></td>
-        <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign">
           <div v-if="record.s1OperateShowHide !== '1'">操作人：{{ record.s1Operator && record.s1OperatorTime ? record.s1Operator : '' }}</div>
           <div v-if="record.s1ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.s1Reviewer && record.s1ReviewerTime ? record.s1Reviewer : '' }}</div>
@@ -124,13 +122,13 @@
             </tr>
             <tr style="height: 28px;">
               <td class="split-left">
-                <label class="native-checkbox">
+                <label class="native-checkbox-before">
                   <input type="checkbox" :checked="record.s2OzoneDesinfectionFlag === 'Y'" disabled />
                   <span>臭氧</span>
                 </label>
               </td>
               <td class="split-right">
-                <label class="native-checkbox">
+                <label class="native-checkbox-before">
                   <input type="checkbox" :checked="record.s2HighDesinfectionTemperatureFlag === 'Y'" disabled />
                   <span>高温</span>
                 </label>
@@ -158,38 +156,38 @@
           <div style="padding: 0px 16px;">
             <div class="step-text">
               1）设备/编码：
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s2OzoneGeneratorFlag === 'Y'" disabled />
                 <span>臭氧机</span>
               </label>
               （{{ record.s2OzoneGeneratorNumber || '' }}）
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s2BottleWashingMachineFlag === 'Y'" disabled />
                 <span>洗瓶机</span>
               </label>
               （{{ record.s2BottleWashingMachineNumber || '' }}）
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s2BottleBlowingMachineFlag === 'Y'" disabled />
                 <span>吹瓶机</span>
               </label>
               （{{ record.s2BottleBlowingMachineNumber || '' }}）
               <br>
-              <label class="native-checkbox" style="margin-left: 92px;">
+              <label class="native-checkbox-before" style="margin-left: 92px;">
                 <input type="checkbox" :checked="record.s2AirGunFlag === 'Y'" disabled />
                 <span>气枪</span>
               </label>
-              <label class="native-checkbox" style="margin-left: 25px;">
+              <label class="native-checkbox-before" style="margin-left: 25px;">
                 <input type="checkbox" :checked="record.s2ManualWashingFlag === 'Y'" disabled />
                 <span>手动洗</span>
               </label>
-              <label class="native-checkbox" style="margin-left: 25px;">
+              <label class="native-checkbox-before" style="margin-left: 25px;">
                 <input type="checkbox" :checked="record.s2WasherDryerComboFlag === 'Y'" disabled />
                 <span>洗烘一体机</span>
               </label>
               （{{ record.s2WasherDryerComboNumber || '' }}）
               <br>
               2）
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s2OzoneDesinfectionFlag === 'Y'" disabled />
                 <span>臭氧</span>
               </label>
@@ -201,7 +199,7 @@
                 ，共{{ record.s2OzoneDesinfectionCost || '' }}分钟
               </span>
               <br/>
-              <label class="native-checkbox" style="margin-left: 25px;">
+              <label class="native-checkbox-before" style="margin-left: 25px;">
                 <input type="checkbox" :checked="record.s2HighDesinfectionTemperatureFlag === 'Y'" disabled />
                 <span>高温</span>
               </label>
@@ -213,7 +211,7 @@
                 ，共{{ record.s2DryingDesinfectionCost || '' }}分钟
               </span>
               <br/>
-              <label class="native-checkbox" style="margin-left: 25px;">
+              <label class="native-checkbox-before" style="margin-left: 25px;">
                 <input type="checkbox" :checked="record.s2WasherDryerComboFlag === 'Y'" disabled />
                 <span>洗烘一体机</span>
               </label>
@@ -285,17 +283,16 @@
           <table class="inner-fill-table step3-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
             <tr style="height: 28px;">
               <td colspan="2">{{ record.s3StartTime ? parseTime(record.s3StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s3EndTime ? parseTime(record.s3EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}</td>
-              <!-- <td colspan="2">年 月 日 ： 至 月 日 ：</td> -->
             </tr>
             <tr style="height: 28px;">
               <td class="split-left">
-                <label class="native-checkbox">
+                <label class="native-checkbox-before">
                   <input type="checkbox" :checked="record.s3OzoneDesinfectionFlag === 'Y'" disabled />
                   <span>臭氧</span>
                 </label>
               </td>
               <td class="split-right">
-                <label class="native-checkbox">
+                <label class="native-checkbox-before">
                   <input type="checkbox" :checked="record.s3AirShowerFlag === 'Y'" disabled />
                   <span>风淋</span>
                 </label>
@@ -320,23 +317,23 @@
           <div style="padding: 0px 16px;">
             <div class="step-text">
               1）设备/编码：
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s3OzoneGeneratorFlag === 'Y'" disabled />
                 <span>臭氧机</span>
               </label>
               （{{ record.s3OzoneGeneratorNumber || '' }}）
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s3BottleWashingMachineFlag === 'Y'" disabled />
                 <span>洗瓶机</span>
               </label>
               （{{ record.s3BottleWashingMachineNumber || '' }}）
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s3BottleBlowingMachineFlag === 'Y'" disabled />
                 <span>吹瓶机</span>
               </label>
               （{{ record.s3BottleBlowingMachineNumber || '' }}）
               <br>
-              <label class="native-checkbox" style="margin-left: 92px;">
+              <label class="native-checkbox-before" style="margin-left: 92px;">
                 <input type="checkbox" :checked="record.s3AirShowerMachineFlag === 'Y'" disabled />
                 <span>风淋室</span>
               </label>
@@ -344,17 +341,17 @@
               <br>
               <span>2）消毒</span>
               <br>
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s3OzoneDesinfectionFlag === 'Y'" disabled />
                 <span>臭氧</span>
               </label>
               ：臭氧浓度
               {{ record.s3OzoneConcentration || '' }}ppm，
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s3AlcoholDesinfectionFlag === 'Y'" disabled />
                 <span>75%酒精消毒；</span>
               </label>
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s3UvDesinfectionFlag === 'Y'" disabled />
                 <span>紫外线消毒</span>
               </label>
@@ -364,7 +361,7 @@
                   ，共{{ record.s3OzoneDesinfectionCost || '' }}分钟
               </span>
               <br/>
-              <label class="native-checkbox">
+              <label class="native-checkbox-before">
                 <input type="checkbox" :checked="record.s3AirShowerFlag === 'Y'" disabled />
                 <span>风淋</span>
               </label>
@@ -396,7 +393,6 @@
                 <span>是</span>
                 <input type="checkbox" :checked="record.s3CleanBagFlag === 'Y'" disabled />
               </label>
-              <!-- <span style="margin-left: 18px;">,</span> -->
               <label class="native-checkbox-after">
                 <span>否</span>
                 <input type="checkbox" :checked="record.s3CleanBagFlag === 'N'" disabled />
@@ -604,15 +600,13 @@ defineExpose({ open, reset })
   /* width: 400px; */
 }
 
-/* ============================================================
-   左右分栏单元格（通用）
-   ============================================================ */
 .split-left {
   width: 52%;
 }
 .split-right {
   width: 48%;
 }
+
 /* ============================================================
    Step2/Step3 内部样式
    ============================================================ */
@@ -657,27 +651,25 @@ defineExpose({ open, reset })
 }
 
 /* ============================================================
-   原生复选框样式（替代 el-checkbox）
+   原生复选框样式（复选框在前，文字在后）
+   类名：native-checkbox-before
    ============================================================ */
-/* 隐藏原生 input */
-.native-checkbox input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-/* 标签整体样式 */
-.native-checkbox {
+.native-checkbox-before {
   display: inline-flex;
   align-items: center;
   cursor: default;
   font-size: 13px;
   color: #000;
-  font-weight: normal; /* 新增：取消粗体 */
+  font-weight: normal;
   user-select: none;
 }
-/* 自定义复选框外观 */
-.native-checkbox span::before {
+.native-checkbox-before input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.native-checkbox-before span::before {
   content: '';
   display: inline-block;
   width: 14px;
@@ -689,25 +681,22 @@ defineExpose({ open, reset })
   box-sizing: border-box;
   background: #fff;
 }
-/* 选中状态 */
-.native-checkbox input:checked + span::before {
+.native-checkbox-before input:checked + span::before {
   background-color: #409eff;
   border-color: #409eff;
 }
-/* 选中对勾 */
-.native-checkbox input:checked + span::after {
+.native-checkbox-before input:checked + span::after {
   content: '';
   position: absolute;
-  left: 4px;
-  top: 2px;
+  left: 5px;
+  top: 3px;            /* 已验证的垂直居中值 */
   width: 5px;
   height: 9px;
   border: solid #fff;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
-/* 让 span 相对定位以承载对勾 */
-.native-checkbox span {
+.native-checkbox-before span {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -756,7 +745,7 @@ defineExpose({ open, reset })
   content: '';
   position: absolute;
   right: 4px;
-  top: 2px;
+  top: 4px;
   width: 5px;
   height: 9px;
   border: solid #fff;
@@ -774,6 +763,7 @@ defineExpose({ open, reset })
 .native-checkbox-after + .native-checkbox-after {
   margin-left: 20px;
 }
+
 /* ============================================================
    共用单元格样式
    ============================================================ */

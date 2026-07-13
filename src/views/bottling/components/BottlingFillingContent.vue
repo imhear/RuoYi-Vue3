@@ -44,16 +44,16 @@
           {{ record.fillingEndTime ? parseTime(record.fillingEndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
         </td>
         <td class="info-label" style="font-weight: normal;">灌装首件确认</td>
-        <td class="info-label" style="text-align: left; font-weight: normal;">
-          <label class="native-checkbox-after">
-            <span>符合规定</span>
+        <td class="info-label" style="text-align: left; font-weight: normal; ">
+          <label class="native-checkbox-before" style="vertical-align: middle;">
             <input type="checkbox" :checked="record.firstQualifiedFlag === 'Y'" disabled />
+            <span>符合规定</span>
           </label>
-          <label class="native-checkbox-after" style="margin-left: 20px;">
-            <span>不符合规定</span>
+          <label class="native-checkbox-before" style="margin-left: 20px; vertical-align: middle;">
             <input type="checkbox" :checked="record.firstQualifiedFlag === 'N'" disabled />
+            <span>不符合规定</span>
           </label>
-          <span style="margin-left: 10px;">
+          <span style="margin-left: 10px; vertical-align: middle;">
             检查人：<template v-if="record.firstQualifiedInspector && record.firstQualifiedInspectorTime">{{ record.firstQualifiedInspector }}</template>
           </span>
         </td>
@@ -126,17 +126,17 @@
           纯化水清洁后，再用75%酒精或其他消毒液或CIP热水<br/>
           消毒。
         </td>
-        <td class="td-record" style="text-align: left; vertical-align: middle; font-size: 12px; line-height: 2.0;">
+        <td class="td-record" style="text-align: left; vertical-align: middle; font-size: 13px; line-height: 2.0;">
           &nbsp;&nbsp;&nbsp;&nbsp;1) 主要设备名称/编码：{{ record.s2MainEquipName || '' }} / {{ record.s2MainEquipNo || '' }}<br/>
           &nbsp;&nbsp;&nbsp;&nbsp;2) 检查是否在清洁消毒有效期内：<br/>
           &nbsp;&nbsp;&nbsp;&nbsp;
-          <label class="native-checkbox-before" style="font-size: 12px;">
+          <label class="native-checkbox-before" style="font-size: 13px;">
             <input type="checkbox" :checked="record.s2PurifiedWaterFlag === 'Y'" disabled />
             <span>在清洁效期内:使用纯化水清洗</span>
           </label>
           <br/>
           &nbsp;&nbsp;&nbsp;&nbsp;
-          <label class="native-checkbox-before" style="font-size: 12px;">
+          <label class="native-checkbox-before" style="font-size: 13px;">
             <input type="checkbox" :checked="record.s2ReCleanDisinfectFlag === 'Y'" disabled />
             <span>超过清洁效期:重新清洁消毒&nbsp;&nbsp;&nbsp;&nbsp;清洁方式：{{ record.s2CleaningMethod || '' }}，消毒方式：{{ record.s2DesinfectionMethod || '' }}</span> 
           </label>
@@ -167,7 +167,7 @@
           6) 随时检查装量和外观，每2小时记录一次。
         </td>
         <td class="td-no-padding" style="vertical-align: top;">
-          <div style="padding: 6px 6px 0 6px; font-size: 11px;">
+          <div style="padding: 6px 6px 0 6px; font-size: 12px;">
             <div style="display: flex; align-items: center; margin-bottom: 6px;">
               <span style="white-space: nowrap; margin-right: 8px;">1) 是否用料液冲洗:</span>
               <label class="native-checkbox-after" style="font-size: 11px;">
@@ -178,25 +178,25 @@
                 <span>否</span>
                 <input type="checkbox" :checked="record.s3UseMaterialLiquidRinseFlag === 'N'" disabled />
               </label>
-              <span style="margin-left: 40px; white-space: nowrap; margin-right: 8px;">2) 净含量范围:</span>
-              <span>{{ record.s3NetContentRangeLower }} - {{ record.s3NetContentRangeUpper }} {{ record.s3NetContentUnit }}</span>
+              <span style="margin-left: 30px; white-space: nowrap; margin-right: 8px;">2) 净含量范围:</span>
+              <span>{{ record.s3NetContentRangeLower }} - {{ record.s3NetContentRangeUpper }} {{ record.s3NetContentUnit || 'g'  }}</span>
             </div>
             <div style="display: flex; align-items: center; margin-bottom: 8px;">
               <span style="white-space: nowrap; margin-right: 8px;">3) 打码方式:</span>
-              <label class="native-checkbox-after" style="font-size: 11px;">
-                <span>油墨码,</span>
+              <label class="native-checkbox-before" style="font-size: 12px;">
                 <input type="checkbox" :checked="record.s3InkPrintCodeFlag === 'Y'" disabled />
+                <span>油墨码</span>
               </label>
-              <label class="native-checkbox-after" style="font-size: 11px;">
-                <span>激光码,</span>
+              <label class="native-checkbox-before" style="font-size: 12px; margin-left: 5px;">
                 <input type="checkbox" :checked="record.s3LaserPrintCodeFlag === 'Y'" disabled />
+                <span>激光码</span>
               </label>
-              <label class="native-checkbox-after" style="font-size: 11px;">
-                <span>钢印码</span>
+              <label class="native-checkbox-before" style="font-size: 12px; margin-left: 5px;">
                 <input type="checkbox" :checked="record.s3StampPrintCodeFlag === 'Y'" disabled />
+                <span>钢印码</span>
               </label>
-              <span style="margin-left: 10px; white-space: nowrap; margin-right: 8px;">;4) 打码信息:</span>
-              <span>{{ record.s3CodingInfo || '' }}</span>
+              <span style="margin-left: 15px; white-space: nowrap;">4) 打码信息</span>
+              <span style="margin-left: 5px; white-space: nowrap;">{{ record.s3CodingInfo || '' }}</span>
             </div>
           </div>
 
@@ -403,7 +403,7 @@ defineExpose({ open, reset })
   content: '';
   position: absolute;
   left: 5px;
-  top: 6px;        /* 与后置复选框的 top 保持一致 */
+  top: 2px;        /* 与后置复选框的 top 保持一致 */
   width: 5px;
   height: 9px;
   border: solid #fff;
@@ -414,6 +414,7 @@ defineExpose({ open, reset })
   position: relative;
   display: inline-flex;
   align-items: center;
+  line-height: 1;          /* ← 新增，防止继承父元素 line-height 导致勾号偏位 */
 }
 
 /* ============================================================

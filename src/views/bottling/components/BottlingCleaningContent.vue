@@ -89,11 +89,11 @@
         </td>
         <!-- 签名列：固定文本始终显示，名字仅当对应时间非空时显示 -->
         <td class="td-sign" rowspan="13" style="border-top-color: #fff;">
-          <div v-if="record.operateShowHide !== '1'">操作人：{{ record.operator && record.OperatorTime ? record.operator : '' }}</div>
+          <div v-if="record.operateShowHide !== '1'">操作人：{{ record.operator && record.operatorTime ? record.operator : '' }}</div>
           <br/>
-          <div v-if="record.reviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.reviewer && record.ReviewerTime ? record.reviewer : '' }}</div>
+          <div v-if="record.reviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ record.reviewer && record.reviewerTime ? record.reviewer : '' }}</div>
           <br/>
-          <div v-if="record.inspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.inspector && record.InspectorTime ? record.inspector : '' }}</div>
+          <div v-if="record.inspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ record.inspector && record.inspectorTime ? record.inspector : '' }}</div>
         </td>
       </tr>
 

@@ -274,15 +274,157 @@
               </tbody>
             </table>
           </td>
+                    <!-- 签名列：显示签名及编辑/提交按钮 -->
           <td class="td-sign">
+            <div v-if="form.s3OperateShowHide !== '1'">操作人：{{ form.s3Operator || '' }}</div>
+            <div v-if="form.s3OperatorTime" style="color: gray; font-size: 12px;">{{ form.s3OperatorTime ? form.s3OperatorTime.substring(0, 16) : '' }}</div>
+            <br/>
+            <div v-if="form.s3ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ form.s3Reviewer || '' }}</div>
+            <div v-if="form.s3ReviewerTime" style="color: gray; font-size: 12px;">{{ form.s3ReviewerTime ? form.s3ReviewerTime.substring(0, 16) : '' }}</div>
+            <br/>
+            <div v-if="form.s3InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ form.s3Inspector || '' }}</div>
+            <div v-if="form.s3InspectorTime" style="color: gray; font-size: 12px;">{{ form.s3InspectorTime ? form.s3InspectorTime.substring(0, 16) : '' }}</div>
+            <!-- 检查人未提交时显示编辑按钮，点击打开抽屉 -->
+            <div v-if="!form.s3InspectorTime" style="margin-top: 8px;">
+              <el-button type="primary" size="small" @click="openStep3Drawer">编辑</el-button>
+            </div>
+          </td>
+          <!-- <td class="td-sign">
             <div v-if="form.s3OperateShowHide !== '1'">操作人：{{ form.s3Operator && form.s3OperatorTime ? form.s3Operator : '' }}</div>
             <br/>
             <div v-if="form.s3ReviewShowHide !== '1'" style="margin-top: 8px;">复核人：{{ form.s3Reviewer && form.s3ReviewerTime ? form.s3Reviewer : '' }}</div>
             <br/>
             <div v-if="form.s3InspectShowHide !== '1'" style="margin-top: 8px;">检查人：{{ form.s3Inspector && form.s3InspectorTime ? form.s3Inspector : '' }}</div>
-          </td>
+          </td> -->
         </tr>
       </table>
+
+           <!-- Step3 编辑抽屉（独立样式，列宽固定，字体14px） -->
+      <el-drawer
+        v-model="drawerVisible"
+        title="灌装步骤编辑"
+        direction="rtl"
+        size="90%"
+        :modal="false"
+        append-to-body
+        @closed="handleDrawerClosed"
+      >
+        <div class="drawer-content" style="padding: 16px; font-size: 14px;">
+          <!-- 上方控件区域（字体14px） -->
+          <div style="margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+              <span style="white-space: nowrap; margin-right: 8px;">1) 是否用料液冲洗:</span>
+              <label class="native-checkbox-after" style="font-size: 14px;">
+                <span>是</span>
+                <input type="checkbox" v-model="form.s3UseMaterialLiquidRinseFlag" true-value="Y" false-value="" />
+              </label>
+              <label class="native-checkbox-after" style="font-size: 14px;">
+                <span>否</span>
+                <input type="checkbox" v-model="form.s3UseMaterialLiquidRinseFlag" true-value="N" false-value="" />
+              </label>
+              <span style="margin-left: 30px; white-space: nowrap; margin-right: 8px;">2) 净含量范围:</span>
+              <input v-model="form.s3NetContentRangeLower" class="drawer-input" style="width: 80px;" placeholder="下限" />
+              <span style="margin: 0 4px;">-</span>
+              <input v-model="form.s3NetContentRangeUpper" class="drawer-input" style="width: 80px;" placeholder="上限" />
+              <span style="margin-left: 4px;">{{ form.s3NetContentUnit || 'g' }}</span>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+              <span style="white-space: nowrap; margin-right: 8px;">3) 打码方式:</span>
+              <label class="native-checkbox-before" style="font-size: 14px;">
+                <input type="checkbox" v-model="form.s3InkPrintCodeFlag" true-value="Y" false-value="" />
+                <span>油墨码</span>
+              </label>
+              <label class="native-checkbox-before" style="font-size: 14px; margin-left: 8px;">
+                <input type="checkbox" v-model="form.s3LaserPrintCodeFlag" true-value="Y" false-value="" />
+                <span>激光码</span>
+              </label>
+              <label class="native-checkbox-before" style="font-size: 14px; margin-left: 8px;">
+                <input type="checkbox" v-model="form.s3StampPrintCodeFlag" true-value="Y" false-value="" />
+                <span>钢印码</span>
+              </label>
+              <span style="margin-left: 15px; white-space: nowrap;">4) 打码信息</span>
+              <input v-model="form.s3CodingInfo" class="drawer-input" style="width: 200px; margin-left: 8px;" />
+            </div>
+          </div>
+
+          <!-- 灌装量记录表格（独立样式，列宽固定） -->
+          <table class="drawer-table" style="border-collapse: collapse; width: 100%; font-size: 14px;">
+            <colgroup>
+              <col style="width: 40px;">
+              <col style="width: 145px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+              <col style="width: 45px;">
+            </colgroup>
+            <thead>
+              <tr>
+                <td rowspan="2" class="drawer-cell drawer-header">项目</td>
+                <td colspan="13" class="drawer-cell drawer-header">（灌装量记录）灌装头编号</td>
+              </tr>
+              <tr>
+                <td class="drawer-cell drawer-header">时间</td>
+                <td v-for="n in 12" :key="n" class="drawer-cell drawer-header">{{ n }}</td>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-for="(main, idx) in form.fillingMainList" :key="idx">
+                <tr>
+                  <td class="drawer-cell">装量</td>
+                  <td rowspan="2" class="drawer-cell" style="padding: 2px;">
+                    <el-date-picker
+                      v-model="main.sampleTime"
+                      type="datetime"
+                      placeholder="选择时间"
+                      format="YYYY-MM-DD HH:mm:ss"
+                      value-format="YYYY-MM-DD HH:mm:ss"
+                      size="small"
+                      style="width: 100%;"
+                    />
+                  </td>
+                  <td v-for="n in 12" :key="'w'+n" class="drawer-cell" style="padding: 2px;">
+                    <input
+                      v-if="main.subMap && main.subMap[n]"
+                      v-model="main.subMap[n].fillingWeight"
+                      class="drawer-input"
+                      style="width: 100%;"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="drawer-cell">外观</td>
+                  <td v-for="n in 12" :key="'a'+n" class="drawer-cell" style="padding: 2px;">
+                    <el-select
+                      v-if="main.subMap && main.subMap[n]"
+                      v-model="main.subMap[n].appearance"
+                      size="small"
+                      style="width: 100%;"
+                      clearable
+                    >
+                      <el-option label="√" value="√" />
+                      <el-option label="×" value="×" />
+                    </el-select>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <!-- 提交按钮（点击后弹出二次确认，确认后关闭抽屉并emit） -->
+          <div style="text-align: center; margin-top: 20px;">
+            <el-button type="primary" @click="handleSubmitStep3">提交</el-button>
+          </div>
+        </div>
+      </el-drawer>
+
     </div>
 
   </el-dialog>
@@ -296,6 +438,9 @@ const { proxy } = getCurrentInstance()
 const { pro_cleaning_method, pro_desinfection_method } = proxy.useDict('pro_cleaning_method', 'pro_desinfection_method')
 
 const visible = ref(false)
+// 抽屉显示状态
+const drawerVisible = ref(false)
+
 const form = reactive({})
 const step1Submitting = ref(false)
 
@@ -391,6 +536,74 @@ function handleSubmitStep2() {
     recordId: form.recordId,
     form: form
   })
+}
+
+/** 打开 Step3 编辑抽屉 */
+function openStep3Drawer() {
+  drawerVisible.value = true
+}
+
+/** 关闭抽屉回调（非必须，可省略） */
+function handleDrawerClosed() {
+  // 可在此重置部分状态
+}
+
+/** Step3 提交：校验主表字段 + 子表孙表数据，emit 给父组件 */
+function handleSubmitStep3() {
+  // 去空格（主表字段）
+  form.s3NetContentRangeLower = String(form.s3NetContentRangeLower ?? '').replace(/\s/g, '')
+  form.s3NetContentRangeUpper = String(form.s3NetContentRangeUpper ?? '').replace(/\s/g, '')
+  form.s3CodingInfo = form.s3CodingInfo.trim()
+
+  // 校验净含量范围
+  const lower = parseFloat(form.s3NetContentRangeLower)
+  const upper = parseFloat(form.s3NetContentRangeUpper)
+  if (isNaN(lower) || lower <= 0) {
+    proxy.$modal.msgError('净含量范围下限必须为正数')
+    return
+  }
+  if (isNaN(upper) || upper <= 0) {
+    proxy.$modal.msgError('净含量范围上限必须为正数')
+    return
+  }
+  if (lower > upper) {
+    proxy.$modal.msgError('净含量范围下限不能大于上限')
+    return
+  }
+
+  // 校验每个灌装头的装量（若填写则必须为正数）
+  if (form.fillingMainList) {
+    for (let i = 0; i < form.fillingMainList.length; i++) {
+      const main = form.fillingMainList[i]
+      if (main.subMap) {
+        for (let n = 1; n <= 12; n++) {
+          const sub = main.subMap[n]
+          if (sub) {
+            const weight = String(sub.fillingWeight ?? '').replace(/\s/g, '')
+            if (weight === '') continue // 允许为空
+            const num = parseFloat(weight)
+            if (isNaN(num) || num <= 0) {
+              proxy.$modal.msgError(`第${i + 1}时段灌装头${n}装量必须为正数`)
+              return
+            }
+            sub.fillingWeight = weight // 回写去空格后的值
+          }
+        }
+      }
+    }
+  }
+
+  // 弹出二次确认，确认后关闭抽屉并emit给父组件
+  proxy.$modal.confirm('是否确认提交灌装操作记录？')
+    .then(() => {
+      drawerVisible.value = false
+      emit('step3Submit', {
+        recordId: form.recordId,
+        form: form,
+        needConfirm: false   // 抽屉内已完成确认，父组件无需再次弹框
+      })
+    })
+    .catch(() => {})
 }
 
 function handleClosed() {
@@ -665,6 +878,48 @@ defineExpose({ open, close })
 /* 输入框获得焦点时高亮背景色 */
 .edit-input-short:focus,
 .edit-textarea:focus {
+  background-color: #e6f7ff; /* 浅蓝色，辨识度高 */
+  outline: none;             /* 移除默认外边框，保持风格统一 */
+}
+
+/* ===== 抽屉独立样式（不与弹窗共用） ===== */
+.drawer-content {
+  font-size: 14px;
+  color: #000;
+}
+
+.drawer-table {
+  border: 1px solid #dcdfe6;
+  table-layout: fixed;
+}
+.drawer-table td,
+.drawer-table th {
+  border: 1px solid #dcdfe6;
+  padding: 4px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.drawer-cell {
+  /* 可覆盖部分共用样式 */
+}
+
+.drawer-header {
+  background-color: #f5f7fa;
+  font-weight: normal;
+}
+
+.drawer-input {
+  border: 1px solid #dcdfe6;
+  border-radius: 2px;
+  padding: 4px 8px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ===== 新增：可编辑组件样式 ===== */
+/* 输入框获得焦点时高亮背景色 */
+.drawer-input:focus {
   background-color: #e6f7ff; /* 浅蓝色，辨识度高 */
   outline: none;             /* 移除默认外边框，保持风格统一 */
 }

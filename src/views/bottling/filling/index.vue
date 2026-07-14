@@ -96,6 +96,7 @@
     <BottlingFillingHandle ref="fillingHandleRef"
       @step1Submit="handleStep1Submit"
       @step2Submit="handleStep2Submit"
+      @step3Submit="handleStep3Submit"
       @submit="getList" />
 
   </div>
@@ -104,7 +105,7 @@
 <script setup name="Filling">
 import { listFilling, getFilling, delFilling, addFilling, updateFilling, addPage } from "@/api/bottling/filling"
 // 新增导入：step1 处理接口
-import { handleStep1, handleStep2 } from "@/api/bottling/filling"
+import { handleStep1, handleStep2, handleStep3 } from "@/api/bottling/filling"
 import { getPlan } from "@/api/bottling/plan"
 import { getOrderDetail } from "@/api/bottling/order"
 // 引入工单查看组件
@@ -410,6 +411,21 @@ async function handleStep2Submit({ recordId, form }) {
     getList()
   } catch (e) {
     if (e !== 'cancel') proxy.$modal.msgError('Step2 提交失败')
+  }
+}
+
+/** Step3 提交处理（二次确认后调用接口） */
+async function handleStep3Submit({ recordId, form, needConfirm = true  }) {
+  try {
+    if (needConfirm) {
+      await proxy.$modal.confirm('是否确认提交 Step3 灌装操作记录？')
+    }
+    await handleStep3(recordId, form)
+    proxy.$modal.msgSuccess('Step3 提交成功')
+    fillingHandleRef.value?.close?.()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step3 提交失败')
   }
 }
 

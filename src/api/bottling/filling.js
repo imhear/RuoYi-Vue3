@@ -71,3 +71,12 @@ export function handleStep2(recordId, data) {
     data: data
   })
 }
+
+// 处理 Step3
+export function handleStep3(recordId, data) {
+  return request({
+    url: '/bottling/filling/handleStep3/' + recordId,
+    method: 'post',
+    data: data
+  })
+}

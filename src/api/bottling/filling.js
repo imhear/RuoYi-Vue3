@@ -53,3 +53,21 @@ export function addPage(planId, data) {
     data: data
   })
 }
+
+// 处理 Step1
+export function handleStep1(recordId, data) {
+  return request({
+    url: '/bottling/filling/handleStep1/' + recordId,
+    method: 'post',
+    data: data
+  })
+}
+
+// 处理 Step2
+export function handleStep2(recordId, data) {
+  return request({
+    url: '/bottling/filling/handleStep2/' + recordId,
+    method: 'post',
+    data: data
+  })
+}

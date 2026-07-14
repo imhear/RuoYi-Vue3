@@ -46,11 +46,32 @@
           <el-button link type="primary" icon="" @click="handleHandle(scope.row)">处理</el-button>
           <el-button link type="primary" icon="" @click="handleReview(scope.row)">复核</el-button>
           <el-button link type="primary" icon="" @click="handleInspect(scope.row)">检查</el-button>
+          <!-- 新增：首件确认按钮 -->
+          <el-button link type="primary" @click="handleFirstConfirm(scope.row)">首件确认</el-button>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
           <dict-tag :options="disinfection_packaging_status" :value="scope.row.status"/>
+        </template>
+      </el-table-column>
+      <!-- 新增：开始时间列 -->
+      <el-table-column label="开始时间" align="center" prop="fillingStartTime" min-width="100">
+        <template #default="scope">
+          <span>{{ scope.row.fillingStartTime ? parseTime(scope.row.fillingStartTime, '{y}-{m}-{d} {h}:{i}') : '' }}</span>
+          <!-- 设置按钮，仅状态为0或1时显示 -->
+          <el-button
+            v-if="scope.row.status === '0' || scope.row.status === '1'"
+            v-hasPermi="['bottling:filling:update']"
+            link type="primary" icon=""
+            @click="handleSetDateTime(scope.row)"
+          >设置</el-button>
+        </template>
+      </el-table-column>
+      <!-- 新增：结束时间列 -->
+      <el-table-column label="结束时间" align="center" prop="fillingEndTime" min-width="100">
+        <template #default="scope">
+          <span>{{ scope.row.fillingEndTime ? parseTime(scope.row.fillingEndTime, '{y}-{m}-{d} {h}:{i}') : '' }}</span>
         </template>
       </el-table-column>
       <!-- 任务单号改为超链接，点击触发查看 -->
@@ -113,6 +134,12 @@
       @step3Inspect="handleStep3Inspect"
       @submit="getList" />
 
+    <!-- 设置起止时间对话框 -->
+    <BottlingFillingSetDateTime ref="fillingSetDateTimeRef" @submit="handleConfirmSetDateTime" />
+
+    <!-- 灌装首件确认对话框 -->
+    <BottlingFillingFirstConfirm ref="fillingFirstConfirmRef" @submit="handleConfirmFirstQualified" />
+
   </div>
 </template>
 
@@ -122,6 +149,11 @@ import { listFilling, getFilling, delFilling, addFilling, updateFilling, addPage
 import { handleStep1, handleStep2, handleStep3, reviewStep1, reviewStep2, reviewStep3, inspectStep1, inspectStep2, inspectStep3 } from "@/api/bottling/filling"
 import { getPlan } from "@/api/bottling/plan"
 import { getOrderDetail } from "@/api/bottling/order"
+// 导入更新起止时间 API
+import { updateFillingDateTime } from "@/api/bottling/filling"
+// 导入首件确认 API
+import { updateFirstQualified } from "@/api/bottling/filling"
+
 // 引入工单查看组件
 import BottlingOrderView from '@/views/bottling/components/BottlingOrderView.vue'
 // 引入加页对话框组件
@@ -135,6 +167,11 @@ import BottlingFillingReview from '@/views/bottling/components/BottlingFillingRe
 // 引入检查对话框组件
 import BottlingFillingInspect from '@/views/bottling/components/BottlingFillingInspect.vue'
 
+// 引入设置起止时间对话框组件
+import BottlingFillingSetDateTime from '@/views/bottling/components/BottlingFillingSetDateTime.vue'
+// 引入灌装首件确认对话框组件
+import BottlingFillingFirstConfirm from '@/views/bottling/components/BottlingFillingFirstConfirm.vue'
+
 // 加页对话框组件引用
 const addPageRef = ref(null)
 // 查看工单组件引用
@@ -147,6 +184,10 @@ const fillingHandleRef = ref(null)
 const fillingReviewRef = ref(null)
 // 检查对话框组件引用
 const fillingInspectRef = ref(null)
+// 设置起止时间对话框组件引用
+const fillingSetDateTimeRef = ref(null)
+// 灌装首件确认对话框组件引用
+const fillingFirstConfirmRef = ref(null)
 
 const { proxy } = getCurrentInstance()
 const { sys_yes_no, disinfection_packaging_status } = useDict('sys_yes_no', 'disinfection_packaging_status')
@@ -533,6 +574,42 @@ async function handleStep3Inspect({ recordId }) {
     getList()
   } catch (e) {
     if (e !== 'cancel') proxy.$modal.msgError('Step3 检查失败')
+  }
+}
+
+/** 打开设置起止时间对话框 */
+function handleSetDateTime(row) {
+  fillingSetDateTimeRef.value?.open(row)
+}
+
+/** 确认设置起止时间：二次确认后调用后端接口 */
+async function handleConfirmSetDateTime({ recordId, fillingStartTime, fillingEndTime }) {
+  try {
+    await proxy.$modal.confirm('是否确认设置起止时间？')
+    await updateFillingDateTime(recordId, { fillingStartTime, fillingEndTime })
+    proxy.$modal.msgSuccess('设置成功')
+    fillingSetDateTimeRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('设置失败')
+  }
+}
+
+/** 打开灌装首件确认对话框 */
+function handleFirstConfirm(row) {
+  fillingFirstConfirmRef.value?.open(row.recordId)
+}
+
+/** 确认首件确认：二次确认后调用后端接口 */
+async function handleConfirmFirstQualified({ recordId, firstQualifiedFlag }) {
+  try {
+    await proxy.$modal.confirm('是否确认提交灌装首件确认？')
+    await updateFirstQualified(recordId, { firstQualifiedFlag })
+    proxy.$modal.msgSuccess('首件确认成功')
+    fillingFirstConfirmRef.value?.close()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('首件确认失败')
   }
 }
 

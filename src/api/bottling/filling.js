@@ -128,3 +128,21 @@ export function inspectStep3(recordId) {
     method: 'post'
   })
 }
+
+// 更新灌装起止时间
+export function updateFillingDateTime(recordId, data) {
+  return request({
+    url: '/bottling/filling/updateDateTime/' + recordId,
+    method: 'put',
+    data: data
+  })
+}
+
+// 灌装首件确认
+export function updateFirstQualified(recordId, data) {
+  return request({
+    url: '/bottling/filling/updateFirstQualified/' + recordId,
+    method: 'put',
+    data: data
+  })
+}

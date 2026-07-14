@@ -6,17 +6,20 @@
 
     <!-- 公司名称 + 编号 + 标题 -->
     <div style="display: flex; align-items: flex-end; margin-bottom: 4px;">
-      <h3 style="flex: 1; text-align: center; margin: 0;">兰树化妆品股份有限公司</h3>
+      <h2 style="flex: 1; text-align: center; margin: 0;">兰树化妆品股份有限公司</h2>
       <span style="flex-shrink: 0; font-size: 14px;">编号：R-(LS-SOP-S-G-004)-01</span>
     </div>
-    <div style="text-align: center; margin-bottom: 4px;">灌装生产记录</div>
+    <div style="font-size: 18px;text-align: center; margin-bottom: 4px; margin-left: -100px;">灌装生产记录</div>
 
     <!-- 产品信息 -->
     <table class="row-table info-table" cellspacing="0" cellpadding="0">
       <colgroup>
-        <col style="width: 80px;"><col style="width: 280px;">
-        <col style="width: 70px;"><col>
-        <col style="width: 100px;"><col>
+        <col style="width: 80px;">
+        <col style="width: 280px;">
+        <col style="width: 70px;">
+        <col>
+        <col style="width: 210px;">
+        <col style="width: 100px;">
       </colgroup>
       <tr>
         <td class="info-label">产品名称</td>
@@ -32,9 +35,9 @@
     <table class="row-table header-table" cellspacing="0" cellpadding="0">
       <colgroup>
         <col style="width: 80px;">
-        <col style="width: 450px;">
+        <col style="width: 500px;">
         <col>
-        <col style="width: 340px;">
+        <col style="width: 310px;">
       </colgroup>
       <tr style="height: 28px;">
         <td class="info-label" style="font-weight: normal;">起止时间</td>
@@ -127,18 +130,18 @@
           消毒。
         </td>
         <td class="td-record" style="text-align: left; vertical-align: middle; font-size: 13px; line-height: 2.0;">
-          &nbsp;&nbsp;&nbsp;&nbsp;1) 主要设备名称/编码：{{ record.s2MainEquipName || '' }} / {{ record.s2MainEquipNo || '' }}<br/>
-          &nbsp;&nbsp;&nbsp;&nbsp;2) 检查是否在清洁消毒有效期内：<br/>
-          &nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;1） 主要设备名称/编码：{{ record.s2MainEquipName || '' }} / {{ record.s2MainEquipNo || '' }}<br/>
+          &nbsp;&nbsp;&nbsp;2） 检查是否在清洁消毒有效期内：<br/>
+          &nbsp;&nbsp;
           <label class="native-checkbox-before" style="font-size: 13px;">
             <input type="checkbox" :checked="record.s2PurifiedWaterFlag === 'Y'" disabled />
-            <span>在清洁效期内:使用纯化水清洗</span>
+            <span>在清洁效期内:使用纯化水清洗；</span>
           </label>
           <br/>
-          &nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;
           <label class="native-checkbox-before" style="font-size: 13px;">
             <input type="checkbox" :checked="record.s2ReCleanDisinfectFlag === 'Y'" disabled />
-            <span>超过清洁效期:重新清洁消毒&nbsp;&nbsp;&nbsp;&nbsp;清洁方式：{{ record.s2CleaningMethod || '' }}，消毒方式：{{ record.s2DesinfectionMethod || '' }}</span> 
+            <span style="font-size: 13px;">超过清洁效期:重新清洁消毒。清洁方式：{{ record.s2CleaningMethod || '' }}，消毒方式：{{ record.s2DesinfectionMethod || '' }}</span> 
           </label>
         </td>
         <td class="td-sign">
@@ -158,13 +161,13 @@
       <tr style="height: auto;">
         <td class="td-step-label">3.灌装</td>
         <td class="td-requirement" style="text-align: left; vertical-align: middle; line-height: 2.0;">
-          1) 先用少量料液冲洗设备;<br/>
-          2) 装量调节:按照产品规格/净含量，设定装量，称量、<br/>
-          微调校正至合格范围;<br/>
-          3) 检查每个灌装头对应外包半成品的装量和外观;<br/>
-          4) 有打码的产品，需按照生产指令，调整打印内容;<br/>
-          5) 开始灌装;<br/>
-          6) 随时检查装量和外观，每2小时记录一次。
+          1）先用少量料液冲洗设备；<br/>
+          2） 装量调节:按照产品规格/净含量，设定装量，称量、<br/>
+          微调校正至合格范围；<br/>
+          3）检查每个灌装头对应外包半成品的装量和外观；<br/>
+          4） 有打码的产品，需按照生产指令，调整打印内容。<br/>
+          5）开始灌装；<br/>
+          6）随时检查装量和外观，每2小时记录一次。
         </td>
         <td class="td-no-padding" style="vertical-align: top;">
           <div style="padding: 6px 6px 0 6px; font-size: 12px;">
@@ -205,7 +208,7 @@
             <thead>
               <tr>
                 <td rowspan="2" class="filling-cell">项目</td>
-                <td colspan="13" class="filling-cell">(灌装量记录)灌装头编号</td>
+                <td colspan="13" class="filling-cell">（灌装量记录）灌装头编号</td>
               </tr>
               <tr>
                 <td class="filling-cell">时间</td>
@@ -489,7 +492,7 @@ defineExpose({ open, reset })
 }
 
 .filling-inner thead td {
-  height: 28px;
+  height: 24px;
 }
 
 .filling-inner td[rowspan] {

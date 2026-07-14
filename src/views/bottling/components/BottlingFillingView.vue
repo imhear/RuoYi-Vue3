@@ -3,7 +3,7 @@
   完全对齐包材处理记录查看组件风格
 -->
 <template>
-  <el-dialog v-model="visible" title="灌装生产记录" width="280mm" append-to-body @closed="handleClosed">
+  <el-dialog v-model="visible" title="" width="300mm" append-to-body @closed="handleClosed">
     <BottlingFillingContent ref="contentRef" />
   </el-dialog>
 </template>

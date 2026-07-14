@@ -99,13 +99,27 @@
       @step3Submit="handleStep3Submit"
       @submit="getList" />
 
+    <!-- 复核对话框 -->
+    <BottlingFillingReview ref="fillingReviewRef"
+      @step1Review="handleStep1Review"
+      @step2Review="handleStep2Review"
+      @step3Review="handleStep3Review"
+      @submit="getList" />
+
+    <!-- 检查对话框 -->
+    <BottlingFillingInspect ref="fillingInspectRef"
+      @step1Inspect="handleStep1Inspect"
+      @step2Inspect="handleStep2Inspect"
+      @step3Inspect="handleStep3Inspect"
+      @submit="getList" />
+
   </div>
 </template>
 
 <script setup name="Filling">
 import { listFilling, getFilling, delFilling, addFilling, updateFilling, addPage } from "@/api/bottling/filling"
 // 新增导入：step1 处理接口
-import { handleStep1, handleStep2, handleStep3 } from "@/api/bottling/filling"
+import { handleStep1, handleStep2, handleStep3, reviewStep1, reviewStep2, reviewStep3, inspectStep1, inspectStep2, inspectStep3 } from "@/api/bottling/filling"
 import { getPlan } from "@/api/bottling/plan"
 import { getOrderDetail } from "@/api/bottling/order"
 // 引入工单查看组件
@@ -114,8 +128,12 @@ import BottlingOrderView from '@/views/bottling/components/BottlingOrderView.vue
 import BottlingFillingAddPage from '@/views/bottling/components/BottlingFillingAddPage.vue'
 // 引入查看对话框组件
 import BottlingFillingView from '@/views/bottling/components/BottlingFillingView.vue'
-// 新增：引入处理对话框组件
+// 引入处理对话框组件
 import BottlingFillingHandle from '@/views/bottling/components/BottlingFillingHandle.vue'
+// 引入复核对话框组件
+import BottlingFillingReview from '@/views/bottling/components/BottlingFillingReview.vue'
+// 引入检查对话框组件
+import BottlingFillingInspect from '@/views/bottling/components/BottlingFillingInspect.vue'
 
 // 加页对话框组件引用
 const addPageRef = ref(null)
@@ -125,6 +143,10 @@ const orderViewRef = ref(null)
 const fillingViewRef = ref(null)
 // 新增：处理对话框组件引用
 const fillingHandleRef = ref(null)
+// 复核对话框组件引用
+const fillingReviewRef = ref(null)
+// 检查对话框组件引用
+const fillingInspectRef = ref(null)
 
 const { proxy } = getCurrentInstance()
 const { sys_yes_no, disinfection_packaging_status } = useDict('sys_yes_no', 'disinfection_packaging_status')
@@ -378,14 +400,22 @@ function handleHandle(row) {
   })
 }
 
-/** 打开复核对话框（暂未实现） */
+/** 打开复核对话框（全部只读，可复核） */
 function handleReview(row) {
-  // TODO 后续实现
+  getFilling(row.recordId).then(res => {
+    fillingReviewRef.value?.open(res.data)
+  }).catch(() => {
+    proxy.$modal.msgError('获取详情失败')
+  })
 }
 
-/** 打开检查对话框（暂未实现） */
+/** 打开检查对话框（全部只读，可检查） */
 function handleInspect(row) {
-  // TODO 后续实现
+  getFilling(row.recordId).then(res => {
+    fillingInspectRef.value?.open(res.data)
+  }).catch(() => {
+    proxy.$modal.msgError('获取详情失败')
+  })
 }
 
 /** Step1 提交处理（二次确认后调用接口） */
@@ -426,6 +456,83 @@ async function handleStep3Submit({ recordId, form, needConfirm = true  }) {
     getList()
   } catch (e) {
     if (e !== 'cancel') proxy.$modal.msgError('Step3 提交失败')
+  }
+}
+
+/** Step1 复核处理（二次确认后调用接口） */
+async function handleStep1Review({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认复核 Step1？')
+    await reviewStep1(recordId)
+    proxy.$modal.msgSuccess('Step1 复核成功')
+    fillingReviewRef.value?.close?.()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step1 复核失败')
+  }
+}
+
+/** Step2 复核处理 */
+async function handleStep2Review({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认复核 Step2？')
+    await reviewStep2(recordId)
+    proxy.$modal.msgSuccess('Step2 复核成功')
+    fillingReviewRef.value?.close?.()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step2 复核失败')
+  }
+}
+
+/** Step3 复核处理 */
+async function handleStep3Review({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认复核 Step3？')
+    await reviewStep3(recordId)
+    proxy.$modal.msgSuccess('Step3 复核成功')
+    fillingReviewRef.value?.close?.()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step3 复核失败')
+  }
+}
+/** Step1 检查处理（二次确认后调用接口） */
+async function handleStep1Inspect({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认检查 Step1？')
+    await inspectStep1(recordId)
+    proxy.$modal.msgSuccess('Step1 检查成功')
+    fillingInspectRef.value?.close?.()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step1 检查失败')
+  }
+}
+
+/** Step2 检查处理 */
+async function handleStep2Inspect({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认检查 Step2？')
+    await inspectStep2(recordId)
+    proxy.$modal.msgSuccess('Step2 检查成功')
+    fillingInspectRef.value?.close?.()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step2 检查失败')
+  }
+}
+
+/** Step3 检查处理 */
+async function handleStep3Inspect({ recordId }) {
+  try {
+    await proxy.$modal.confirm('是否确认检查 Step3？')
+    await inspectStep3(recordId)
+    proxy.$modal.msgSuccess('Step3 检查成功')
+    fillingInspectRef.value?.close?.()
+    getList()
+  } catch (e) {
+    if (e !== 'cancel') proxy.$modal.msgError('Step3 检查失败')
   }
 }
 

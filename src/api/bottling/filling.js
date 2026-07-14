@@ -80,3 +80,51 @@ export function handleStep3(recordId, data) {
     data: data
   })
 }
+
+// 复核 Step1
+export function reviewStep1(recordId) {
+  return request({
+    url: '/bottling/filling/handleStep1Review/' + recordId,
+    method: 'post'
+  })
+}
+
+// 复核 Step2
+export function reviewStep2(recordId) {
+  return request({
+    url: '/bottling/filling/handleStep2Review/' + recordId,
+    method: 'post'
+  })
+}
+
+// 复核 Step3
+export function reviewStep3(recordId) {
+  return request({
+    url: '/bottling/filling/handleStep3Review/' + recordId,
+    method: 'post'
+  })
+}
+
+// 检查 Step1
+export function inspectStep1(recordId) {
+  return request({
+    url: '/bottling/filling/handleStep1Inspect/' + recordId,
+    method: 'post'
+  })
+}
+
+// 检查 Step2
+export function inspectStep2(recordId) {
+  return request({
+    url: '/bottling/filling/handleStep2Inspect/' + recordId,
+    method: 'post'
+  })
+}
+
+// 检查 Step3
+export function inspectStep3(recordId) {
+  return request({
+    url: '/bottling/filling/handleStep3Inspect/' + recordId,
+    method: 'post'
+  })
+}

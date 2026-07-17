@@ -1,686 +1,712 @@
 <template>
-  <div>
-    <h3 style="text-align: center">植本清方光感修护精华水 120ml FE1802</h3>
+  <el-dialog v-model="visible" width="280mm" append-to-body @closed="handleClosed">
+    <div>
+      <h3 style="text-align: center">植本清方光感修护精华水 120ml FE1802</h3>
 
-    <div class="app-container">
-      <!-- ===== 第一层：车间 Tabs（硬编码三个车间） ===== -->
-      <el-tabs v-model="activeWorkshop" type="card" tab-position="top" class="workshop-tabs">
-        <!-- 消毒车间 -->
-        <el-tab-pane label="消毒车间" name="消毒车间">
-          <!-- ===== 第二层：表单 Tabs ===== -->
-          <el-tabs v-model="activeForm" type="" tab-position="left" class="form-tabs">
-            <!-- “全部”标签页 -->
-            <el-tab-pane label="全部" name="全部">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getAllCards('消毒车间')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;">已归档</span>
-                    </template>
-                  </el-card>
-                </div>
+      <div class="app-container">
+        <!-- ===== 第一层：车间 Tabs（硬编码三个车间 + 全部） ===== -->
+        <el-tabs v-model="activeWorkshop" type="card" tab-position="top" class="workshop-tabs">
+          <!-- 【新增】全部标签页：显示所有车间的所有卡片，无内嵌tabs，无加页按钮 -->
+          <el-tab-pane label="全部" name="全部车间">
+            <div class="card-scroll-wrapper all-workshop-scroll-wrapper">
+              <div class="card-list">
+                <el-card
+                  v-for="card in getAllWorkshopCards()"
+                  :key="card.id"
+                  class="placeholder-card all-workshop-card"
+                  shadow="hover"
+                >
+                  <template #header>
+                    <span style="text-align: center;">{{ card.formName }} <el-tag type="success" size="small">已归档</el-tag></span>
+                  </template>
+                  <div class="card-actions">
+                    <span>{{ card.workshopName }}</span>
+                    <span style="margin-left: 0px;">{{ card.date }}</span>
+                  </div>
+                </el-card>
               </div>
-            </el-tab-pane>
+            </div>
+          </el-tab-pane>
 
-            <!-- 领料单 -->
-            <el-tab-pane label="领料单" name="领料单">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('消毒车间', '领料单')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+          <!-- 消毒车间 -->
+          <el-tab-pane label="消毒车间" name="消毒车间">
+            <el-tabs v-model="activeForm" type="" tab-position="left" class="form-tabs">
+              <!-- “全部”标签页 -->
+              <el-tab-pane label="全部" name="全部">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getAllCards('消毒车间')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }} [消毒]</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;">已归档</span>
+                      </template>
+                    </el-card>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 处理记录1 -->
-            <el-tab-pane label="处理记录1" name="处理记录1">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('消毒车间', '处理记录1')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 领料单 -->
+              <el-tab-pane label="领料单" name="领料单">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('消毒车间', '领料单')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 处理记录2 -->
-            <el-tab-pane label="处理记录2" name="处理记录2">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('消毒车间', '处理记录2')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 处理记录1 -->
+              <el-tab-pane label="处理记录1" name="处理记录1">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('消毒车间', '处理记录1')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 清场记录 -->
-            <el-tab-pane label="清场记录" name="清场记录">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('消毒车间', '清场记录')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 处理记录2 -->
+              <el-tab-pane label="处理记录2" name="处理记录2">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('消毒车间', '处理记录2')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
-          </el-tabs>
-        </el-tab-pane>
+              </el-tab-pane>
 
-        <!-- 灌装车间 -->
-        <el-tab-pane label="灌装车间" name="灌装车间">
-          <el-tabs v-model="activeForm" type="" tab-position="left" class="form-tabs">
-            <el-tab-pane label="全部" name="全部">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getAllCards('灌装车间')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;">已归档</span>
-                    </template>
-                  </el-card>
+              <!-- 清场记录 -->
+              <el-tab-pane label="清场记录" name="清场记录">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('消毒车间', '清场记录')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
+            </el-tabs>
+          </el-tab-pane>
 
-            <!-- 领料单 -->
-            <el-tab-pane label="领料单" name="领料单">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('灌装车间', '领料单')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+          <!-- 灌装车间 -->
+          <el-tab-pane label="灌装车间" name="灌装车间">
+            <el-tabs v-model="activeForm" type="" tab-position="left" class="form-tabs">
+              <el-tab-pane label="全部" name="全部">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getAllCards('灌装车间')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }} [灌装]</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;">已归档</span>
+                      </template>
+                    </el-card>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 灌装生产记录1 -->
-            <el-tab-pane label="灌装生产记录1" name="灌装生产记录1">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('灌装车间', '灌装生产记录1')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 领料单 -->
+              <el-tab-pane label="领料单" name="领料单">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('灌装车间', '领料单')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 灌装生产记录2 -->
-            <el-tab-pane label="灌装生产记录2" name="灌装生产记录2">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('灌装车间', '灌装生产记录2')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 灌装生产记录1 -->
+              <el-tab-pane label="灌装生产记录1" name="灌装生产记录1">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('灌装车间', '灌装生产记录1')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 清场记录 -->
-            <el-tab-pane label="清场记录" name="清场记录">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('灌装车间', '清场记录')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 灌装生产记录2 -->
+              <el-tab-pane label="灌装生产记录2" name="灌装生产记录2">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('灌装车间', '灌装生产记录2')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 退料单 -->
-            <el-tab-pane label="退料单" name="退料单">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('灌装车间', '退料单')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 清场记录 -->
+              <el-tab-pane label="清场记录" name="清场记录">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('灌装车间', '清场记录')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 物料平衡表 -->
-            <el-tab-pane label="物料平衡表" name="物料平衡表">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('灌装车间', '物料平衡表')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 退料单 -->
+              <el-tab-pane label="退料单" name="退料单">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('灌装车间', '退料单')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
-          </el-tabs>
-        </el-tab-pane>
+              </el-tab-pane>
 
-        <!-- 包装车间 -->
-        <el-tab-pane label="包装车间" name="包装车间">
-          <el-tabs v-model="activeForm" type="" tab-position="left" class="form-tabs">
-            <el-tab-pane label="全部" name="全部">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getAllCards('包装车间')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;">已归档</span>
-                    </template>
-                  </el-card>
+              <!-- 物料平衡表 -->
+              <el-tab-pane label="物料平衡表" name="物料平衡表">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('灌装车间', '物料平衡表')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
+            </el-tabs>
+          </el-tab-pane>
 
-            <!-- 领料单 -->
-            <el-tab-pane label="领料单" name="领料单">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('包装车间', '领料单')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+          <!-- 包装车间 -->
+          <el-tab-pane label="包装车间" name="包装车间">
+            <el-tabs v-model="activeForm" type="" tab-position="left" class="form-tabs">
+              <el-tab-pane label="全部" name="全部">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getAllCards('包装车间')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }} [包装]</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;">已归档</span>
+                      </template>
+                    </el-card>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 外包生产记录1 -->
-            <el-tab-pane label="外包生产记录1" name="外包生产记录1">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('包装车间', '外包生产记录1')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 领料单 -->
+              <el-tab-pane label="领料单" name="领料单">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('包装车间', '领料单')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 外包生产记录2 -->
-            <el-tab-pane label="外包生产记录2" name="外包生产记录2">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('包装车间', '外包生产记录2')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 外包生产记录1 -->
+              <el-tab-pane label="外包生产记录1" name="外包生产记录1">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('包装车间', '外包生产记录1')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 外包生产记录3 -->
-            <el-tab-pane label="外包生产记录3" name="外包生产记录3">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('包装车间', '外包生产记录3')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 外包生产记录2 -->
+              <el-tab-pane label="外包生产记录2" name="外包生产记录2">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('包装车间', '外包生产记录2')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 清场记录 -->
-            <el-tab-pane label="清场记录" name="清场记录">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('包装车间', '清场记录')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 外包生产记录3 -->
+              <el-tab-pane label="外包生产记录3" name="外包生产记录3">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('包装车间', '外包生产记录3')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 入库单 -->
-            <el-tab-pane label="入库单" name="入库单">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('包装车间', '入库单')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 清场记录 -->
+              <el-tab-pane label="清场记录" name="清场记录">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('包装车间', '清场记录')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 退料单 -->
-            <el-tab-pane label="退料单" name="退料单">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('包装车间', '退料单')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 入库单 -->
+              <el-tab-pane label="入库单" name="入库单">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('包装车间', '入库单')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
+              </el-tab-pane>
 
-            <!-- 物料平衡表 -->
-            <el-tab-pane label="物料平衡表" name="物料平衡表">
-              <div class="card-scroll-wrapper">
-                <div class="card-list">
-                  <el-card
-                    v-for="card in getFormCards('包装车间', '物料平衡表')"
-                    :key="card.id"
-                    class="placeholder-card"
-                    shadow="hover"
-                  >
-                    <template #header>
-                      <span style="text-align: center;">{{ card.formName }}</span>
-                    </template>
-                    <div>{{ card.content }}</div>
-                    <div class="card-actions">
-                      <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                      <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                      <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                    </div>
-                    <template #footer>
-                      <span>{{ card.date }}</span>
-                      <span style="margin-left: 10px;"></span>
-                    </template>
-                  </el-card>
-                  <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+              <!-- 退料单 -->
+              <el-tab-pane label="退料单" name="退料单">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('包装车间', '退料单')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
                 </div>
-              </div>
-            </el-tab-pane>
-          </el-tabs>
-        </el-tab-pane>
-      </el-tabs>
-    </div>
+              </el-tab-pane>
 
-    <!-- ===== 操作区域 ===== -->
-    <div v-if="operationArea.card" class="operation-area">
-      <div class="operation-header">
-        <span>{{ operationArea.card.date }}</span>
-        <el-button type="text" @click="clearOperation">关闭</el-button>
+              <!-- 物料平衡表 -->
+              <el-tab-pane label="物料平衡表" name="物料平衡表">
+                <div class="card-scroll-wrapper">
+                  <div class="card-list">
+                    <el-card
+                      v-for="card in getFormCards('包装车间', '物料平衡表')"
+                      :key="card.id"
+                      class="placeholder-card"
+                      shadow="hover"
+                    >
+                      <template #header>
+                        <span style="text-align: center;">{{ card.formName }}</span>
+                      </template>
+                      <div>{{ card.content }}</div>
+                      <div class="card-actions">
+                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
+                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
+                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
+                      </div>
+                      <template #footer>
+                        <span>{{ card.date }}</span>
+                        <span style="margin-left: 10px;"></span>
+                      </template>
+                    </el-card>
+                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                  </div>
+                </div>
+              </el-tab-pane>
+            </el-tabs>
+          </el-tab-pane>
+        </el-tabs>
       </div>
-      <div class="operation-body">
-        <div v-if="operationArea.mode === 'edit'">
-          <el-input
-            v-model="editContent"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入内容"
-          />
-          <el-button type="primary" @click="submitEdit">提交</el-button>
+
+      <!-- ===== 操作区域 ===== -->
+      <div v-if="operationArea.card" class="operation-area">
+        <div class="operation-header">
+          <span>{{ operationArea.card.date }}</span>
+          <el-button type="text" @click="clearOperation">关闭</el-button>
         </div>
-        <div v-else>
-          <p>{{ operationArea.card.content }}</p>
-          <el-button type="primary" @click="submitReviewOrCheck">
-            {{ operationArea.mode === 'review' ? '复核' : '检查' }}
-          </el-button>
+        <div class="operation-body">
+          <div v-if="operationArea.mode === 'edit'">
+            <el-input
+              v-model="editContent"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入内容"
+            />
+            <el-button type="primary" @click="submitEdit">提交</el-button>
+          </div>
+          <div v-else>
+            <p>{{ operationArea.card.content }}</p>
+            <el-button type="primary" @click="submitReviewOrCheck">
+              {{ operationArea.mode === 'review' ? '复核' : '检查' }}
+            </el-button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- ===== 加页对话框 ===== -->
-    <el-dialog v-model="addDialogVisible" title="添加日期" width="400px" append-to-body>
-      <el-form :model="addForm" :rules="addRules" ref="addFormRef" label-width="80px">
-        <el-form-item label="日期" prop="date">
-          <el-date-picker
-            v-model="addForm.date"
-            type="date"
-            value-format="YYYY-MM-DD"
-            placeholder="请选择日期"
-            style="width: 100%"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="addDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleAddSubmit">确定</el-button>
-      </template>
-    </el-dialog>
-  </div>
+      <!-- ===== 加页对话框 ===== -->
+      <el-dialog v-model="addDialogVisible" title="添加日期" width="400px" append-to-body>
+        <el-form :model="addForm" :rules="addRules" ref="addFormRef" label-width="80px">
+          <el-form-item label="日期" prop="date">
+            <el-date-picker
+              v-model="addForm.date"
+              type="date"
+              value-format="YYYY-MM-DD"
+              placeholder="请选择日期"
+              style="width: 100%"
+            />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="addDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleAddSubmit">确定</el-button>
+        </template>
+      </el-dialog>
+    </div>
+  </el-dialog>
 </template>
-
 
 <script>
 export default {
   name: 'Workspace',
   data() {
     return {
-      activeWorkshop: '消毒车间',
+      // 当前选中的车间标签（第一层）
+      activeWorkshop: '全部车间',
+      // 当前选中的表单标签（第二层）
       activeForm: '全部',
+
+      // ===== 卡片数据（按车间、表单组织） =====
       cardsData: {
         '消毒车间': {
           '领料单': [
@@ -746,25 +772,39 @@ export default {
           ],
         },
       },
+
+      // 操作区域状态
       operationArea: {
         mode: null,
         card: null,
       },
       editContent: '',
+
+      // 加页对话框
       addDialogVisible: false,
       addForm: { date: null },
       addFormRef: null,
       addRules: {
         date: [{ required: true, message: '请选择日期', trigger: 'change' }],
       },
+
+      // 控制弹窗显示的响应式属性
+      visible: false,
     };
   },
   methods: {
+    /**
+     * 获取某个车间下某个表单的卡片列表
+     */
     getFormCards(workshopName, formName) {
       const workshop = this.cardsData[workshopName];
       if (!workshop) return [];
       return workshop[formName] || [];
     },
+
+    /**
+     * 获取某个车间下所有卡片（用于第二层"全部"标签页）
+     */
     getAllCards(workshopName) {
       const workshop = this.cardsData[workshopName];
       if (!workshop) return [];
@@ -772,16 +812,45 @@ export default {
       Object.keys(workshop).forEach(formName => {
         all.push(...workshop[formName]);
       });
+      return all;
+    },
+
+    /**
+     * 【新增】获取所有车间的所有卡片（用于第一层"全部"标签页）
+     * 为每个卡片添加 workshopName 属性，便于在卡片头部显示车间来源
+     */
+    getAllWorkshopCards() {
+      const all = [];
+      const workshopNames = Object.keys(this.cardsData);
+      workshopNames.forEach(workshopName => {
+        const workshop = this.cardsData[workshopName];
+        Object.keys(workshop).forEach(formName => {
+          workshop[formName].forEach(card => {
+            all.push({
+              ...card,
+              workshopName: workshopName, // 添加车间名称属性
+            });
+          });
+        });
+      });
       // 可按日期排序（可选）
       // all.sort((a, b) => new Date(a.date) - new Date(b.date));
       return all;
     },
+
+    /**
+     * 获取当前选中的表单对象（用于加页操作）
+     */
     getCurrentForm() {
       if (this.activeForm === '全部') return null;
       const workshop = this.cardsData[this.activeWorkshop];
       if (!workshop) return null;
       return workshop[this.activeForm] || null;
     },
+
+    /**
+     * 处理卡片操作按钮点击（编辑/复核/检查）
+     */
     handleAction(mode, card) {
       this.operationArea.mode = mode;
       this.operationArea.card = card;
@@ -789,11 +858,19 @@ export default {
         this.editContent = card.content;
       }
     },
+
+    /**
+     * 清空操作区域
+     */
     clearOperation() {
       this.operationArea.mode = null;
       this.operationArea.card = null;
       this.editContent = '';
     },
+
+    /**
+     * 提交编辑
+     */
     submitEdit() {
       this.$confirm('确认提交修改？', '提示', {
         confirmButtonText: '确定',
@@ -809,6 +886,10 @@ export default {
         })
         .catch(() => {});
     },
+
+    /**
+     * 提交复核 / 检查
+     */
     submitReviewOrCheck() {
       const action = this.operationArea.mode === 'review' ? '复核' : '检查';
       this.$confirm(`确认${action}通过？`, '提示', {
@@ -822,7 +903,16 @@ export default {
         })
         .catch(() => {});
     },
+
+    /**
+     * 打开加页对话框
+     */
     openAddDialog() {
+      // 在第一层"全部车间"标签页中，不允许加页（该标签页无加页按钮，此方法不会被调用）
+      if (this.activeWorkshop === '全部车间') {
+        this.$message.warning('全部车间视图不支持加页，请切换到具体车间');
+        return;
+      }
       if (this.activeForm === '全部') {
         this.$message.warning('请先切换到具体表单再添加日期');
         return;
@@ -836,6 +926,10 @@ export default {
         }
       });
     },
+
+    /**
+     * 处理加页提交
+     */
     handleAddSubmit() {
       const formRef = this.$refs.addFormRef;
       if (!formRef) {
@@ -869,13 +963,45 @@ export default {
         this.$message.success('添加成功');
       });
     },
+
+    /**
+     * 滚动到新添加的卡片位置
+     */
     scrollToNewCard() {
       const wrapper = this.$el.querySelector('.card-scroll-wrapper');
       if (wrapper) {
         wrapper.scrollTop = wrapper.scrollHeight;
       }
     },
+
+    /**
+     * 打开弹窗（供父组件调用）
+     */
+    open(data) {
+      this.visible = true;
+      // 如果有传入数据，可在此处理
+      // 例如：this.orderData = data;
+    },
+
+    /**
+     * 关闭弹窗（供父组件调用）
+     */
+    close() {
+      this.visible = false;
+    },
+
+    /**
+     * 弹窗关闭后的清理钩子
+     */
+    handleClosed() {
+      // 可在此执行清理操作，如重置表单状态等
+    },
   },
+
+  /**
+   * 暴露方法给父组件
+   */
+  expose: ['open', 'close'],
 };
 </script>
 
@@ -895,12 +1021,17 @@ export default {
 
 /* ===== 滚动容器：垂直滚动 ===== */
 .card-scroll-wrapper {
-  height: 450px;
+  height: 600px;
   width: 100% !important;
   max-width: 100% !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   padding: 8px 0;
+}
+
+/* ===== 第一层"全部"标签页专用滚动容器（适配小卡片高度） ===== */
+.all-workshop-scroll-wrapper {
+  height: 600px; /* 小卡片高度，减少容器高度 */
 }
 
 /* ===== 卡片列表：flex 换行 ===== */
@@ -913,7 +1044,7 @@ export default {
   align-content: flex-start;
 }
 
-/* ===== 卡片：固定宽高 190px ===== */
+/* ===== 默认卡片样式（其他标签页使用） ===== */
 .placeholder-card {
   flex: 0 0 188px;          /* 固定宽度 */
   height: 190px;            /* 固定高度 */
@@ -924,14 +1055,31 @@ export default {
   transform: translateY(-4px);
 }
 
+/* ===== 第一层"全部"标签页专用卡片样式（覆盖默认样式） ===== */
+.all-workshop-card {
+  flex: 0 0 188px !important;  /* 固定宽度，与默认一致 */
+  height: 100px !important;    /* 固定高度 100px，覆盖默认的 190px */
+  min-width: 0;
+  transition: transform 0.2s;
+}
+.all-workshop-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ===== 【关键修复】隐藏所有卡片内容区域的垂直滚动条 ===== */
+/* 使用 :deep() 穿透 scoped 样式，覆盖 Element Plus 默认的 overflow:auto */
+.placeholder-card :deep(.el-card__body) {
+  overflow: hidden !important;      /* 强制隐藏溢出，不显示滚动条 */
+}
+
 /* ===== 加页按钮：固定宽高 190px ===== */
 .add-page-btn {
-  flex: 0 0 190px;          /* 固定宽度 */
+  flex: 0 0 188px;          /* 固定宽度 */
   height: 190px;            /* 固定高度 */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 26px;
   color: #409eff;
   border: 1px dashed #dcdfe6;
   border-radius: 4px;
@@ -984,6 +1132,9 @@ export default {
   padding: 0;
 }
 </style>
+
+
+
 
 
 

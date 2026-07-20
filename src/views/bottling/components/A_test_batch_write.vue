@@ -1,29 +1,18 @@
 <template>
-  <el-dialog v-model="visible" width="280mm" append-to-body @closed="handleClosed">
+  <el-dialog v-model="visible" title="植本清方光感修护精华水 120ml FE1802" width="260mm" append-to-body @closed="handleClosed">
     <div>
-      <h3 style="text-align: center">植本清方光感修护精华水 120ml FE1802</h3>
-
       <div class="app-container">
-        <!-- ===== 第一层：车间 Tabs（硬编码三个车间 + 全部） ===== -->
+        <!-- ===== 第一层：车间 Tabs ===== -->
         <el-tabs v-model="activeWorkshop" type="card" tab-position="top" class="workshop-tabs">
-          <!-- 【新增】全部标签页：显示所有车间的所有卡片，无内嵌tabs，无加页按钮 -->
-          <el-tab-pane label="全部" name="全部车间">
+          <!-- 全览标签页 -->
+          <el-tab-pane label="全览" name="全部车间">
             <div class="card-scroll-wrapper all-workshop-scroll-wrapper">
               <div class="card-list">
-                <el-card
+                <FullViewCard
                   v-for="card in getAllWorkshopCards()"
                   :key="card.id"
-                  class="placeholder-card all-workshop-card"
-                  shadow="hover"
-                >
-                  <template #header>
-                    <span style="text-align: center;">{{ card.formName }} <el-tag type="success" size="small">已归档</el-tag></span>
-                  </template>
-                  <div class="card-actions">
-                    <span>{{ card.workshopName }}</span>
-                    <span style="margin-left: 0px;">{{ card.date }}</span>
-                  </div>
-                </el-card>
+                  :card="card"
+                />
               </div>
             </div>
           </el-tab-pane>
@@ -31,30 +20,16 @@
           <!-- 消毒车间 -->
           <el-tab-pane label="消毒车间" name="消毒车间">
             <el-tabs v-model="activeForm" type="" tab-position="left" class="form-tabs">
-              <!-- “全部”标签页 -->
+              <!-- 全部 -->
               <el-tab-pane label="全部" name="全部">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getAllCards('消毒车间')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }} [消毒]</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;">已归档</span>
-                      </template>
-                    </el-card>
+                      :card="card"
+                      @action="handleAction"
+                    />
                   </div>
                 </div>
               </el-tab-pane>
@@ -63,27 +38,13 @@
               <el-tab-pane label="领料单" name="领料单">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('消毒车间', '领料单')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -92,27 +53,13 @@
               <el-tab-pane label="处理记录1" name="处理记录1">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('消毒车间', '处理记录1')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -121,27 +68,13 @@
               <el-tab-pane label="处理记录2" name="处理记录2">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('消毒车间', '处理记录2')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -150,27 +83,13 @@
               <el-tab-pane label="清场记录" name="清场记录">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('消毒车间', '清场记录')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -183,26 +102,12 @@
               <el-tab-pane label="全部" name="全部">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getAllCards('灌装车间')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }} [灌装]</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;">已归档</span>
-                      </template>
-                    </el-card>
+                      :card="card"
+                      @action="handleAction"
+                    />
                   </div>
                 </div>
               </el-tab-pane>
@@ -211,27 +116,13 @@
               <el-tab-pane label="领料单" name="领料单">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('灌装车间', '领料单')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -240,27 +131,13 @@
               <el-tab-pane label="灌装生产记录1" name="灌装生产记录1">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('灌装车间', '灌装生产记录1')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -269,27 +146,13 @@
               <el-tab-pane label="灌装生产记录2" name="灌装生产记录2">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('灌装车间', '灌装生产记录2')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -298,27 +161,13 @@
               <el-tab-pane label="清场记录" name="清场记录">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('灌装车间', '清场记录')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -327,27 +176,13 @@
               <el-tab-pane label="退料单" name="退料单">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('灌装车间', '退料单')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -356,27 +191,13 @@
               <el-tab-pane label="物料平衡表" name="物料平衡表">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('灌装车间', '物料平衡表')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -389,26 +210,12 @@
               <el-tab-pane label="全部" name="全部">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getAllCards('包装车间')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }} [包装]</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;">已归档</span>
-                      </template>
-                    </el-card>
+                      :card="card"
+                      @action="handleAction"
+                    />
                   </div>
                 </div>
               </el-tab-pane>
@@ -417,27 +224,13 @@
               <el-tab-pane label="领料单" name="领料单">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('包装车间', '领料单')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -446,27 +239,13 @@
               <el-tab-pane label="外包生产记录1" name="外包生产记录1">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('包装车间', '外包生产记录1')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -475,27 +254,13 @@
               <el-tab-pane label="外包生产记录2" name="外包生产记录2">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('包装车间', '外包生产记录2')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -504,27 +269,13 @@
               <el-tab-pane label="外包生产记录3" name="外包生产记录3">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('包装车间', '外包生产记录3')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -533,27 +284,13 @@
               <el-tab-pane label="清场记录" name="清场记录">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('包装车间', '清场记录')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -562,27 +299,13 @@
               <el-tab-pane label="入库单" name="入库单">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('包装车间', '入库单')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -591,27 +314,13 @@
               <el-tab-pane label="退料单" name="退料单">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('包装车间', '退料单')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -620,27 +329,13 @@
               <el-tab-pane label="物料平衡表" name="物料平衡表">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
-                    <el-card
+                    <CardItem
                       v-for="card in getFormCards('包装车间', '物料平衡表')"
                       :key="card.id"
-                      class="placeholder-card"
-                      shadow="hover"
-                    >
-                      <template #header>
-                        <span style="text-align: center;">{{ card.formName }}</span>
-                      </template>
-                      <div>{{ card.content }}</div>
-                      <div class="card-actions">
-                        <el-button type="text" @click="handleAction('edit', card)">编辑</el-button>
-                        <el-button type="text" @click="handleAction('review', card)">复核</el-button>
-                        <el-button type="text" @click="handleAction('check', card)">检查</el-button>
-                      </div>
-                      <template #footer>
-                        <span>{{ card.date }}</span>
-                        <span style="margin-left: 10px;"></span>
-                      </template>
-                    </el-card>
-                    <el-button type="text" class="add-page-btn" @click="openAddDialog">加页</el-button>
+                      :card="card"
+                      @action="handleAction"
+                    />
+                    <el-button type="primary" link class="add-page-btn" @click="openAddDialog">加页</el-button>
                   </div>
                 </div>
               </el-tab-pane>
@@ -653,16 +348,11 @@
       <div v-if="operationArea.card" class="operation-area">
         <div class="operation-header">
           <span>{{ operationArea.card.date }}</span>
-          <el-button type="text" @click="clearOperation">关闭</el-button>
+          <el-button type="primary" link @click="clearOperation">关闭</el-button>
         </div>
         <div class="operation-body">
           <div v-if="operationArea.mode === 'edit'">
-            <el-input
-              v-model="editContent"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入内容"
-            />
+            <el-input v-model="editContent" type="textarea" :rows="4" placeholder="请输入内容" />
             <el-button type="primary" @click="submitEdit">提交</el-button>
           </div>
           <div v-else>
@@ -678,13 +368,7 @@
       <el-dialog v-model="addDialogVisible" title="添加日期" width="400px" append-to-body>
         <el-form :model="addForm" :rules="addRules" ref="addFormRef" label-width="80px">
           <el-form-item label="日期" prop="date">
-            <el-date-picker
-              v-model="addForm.date"
-              type="date"
-              value-format="YYYY-MM-DD"
-              placeholder="请选择日期"
-              style="width: 100%"
-            />
+            <el-date-picker v-model="addForm.date" type="date" value-format="YYYY-MM-DD" placeholder="请选择日期" style="width: 100%" />
           </el-form-item>
         </el-form>
         <template #footer>
@@ -696,317 +380,271 @@
   </el-dialog>
 </template>
 
-<script>
-export default {
-  name: 'Workspace',
-  data() {
-    return {
-      // 当前选中的车间标签（第一层）
-      activeWorkshop: '全部车间',
-      // 当前选中的表单标签（第二层）
-      activeForm: '全部',
+<script setup>
+import { ref, reactive, computed, nextTick } from 'vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import CardItem from './CardItem.vue';
+import FullViewCard from './FullViewCard.vue';
 
-      // ===== 卡片数据（按车间、表单组织） =====
-      cardsData: {
-        '消毒车间': {
-          '领料单': [
-            { id: 'd1_f1_c1', date: '2026-07-13', content: '领料单内容示例', formName: '领料单' },
-          ],
-          '处理记录1': [
-            { id: 'd1_f2_c1', date: '2026-07-13', content: '处理记录1内容示例', formName: '处理记录1' },
-          ],
-          '处理记录2': [
-            { id: 'd1_f3_c1', date: '2026-07-13', content: '处理记录2内容示例', formName: '处理记录2' },
-          ],
-          '清场记录': [
-            { id: 'd1_f4_c1', date: '2026-07-13', content: '清场记录内容示例', formName: '清场记录' },
-          ],
-        },
-        '灌装车间': {
-          '领料单': [
-            { id: 'g1_f1_c1', date: '2026-07-13', content: '领料单内容示例', formName: '领料单' },
-          ],
-          '灌装生产记录1': [
-            { id: 'g1_f2_c1', date: '2026-07-13', content: '灌装生产记录1内容示例', formName: '灌装生产记录1' },
-          ],
-          '灌装生产记录2': [
-            { id: 'g1_f3_c1', date: '2026-07-13', content: '灌装生产记录2内容示例', formName: '灌装生产记录2' },
-          ],
-          '清场记录': [
-            { id: 'g1_f5_c1', date: '2026-07-13', content: '清场记录内容示例', formName: '清场记录' },
-          ],
-          '退料单': [
-            { id: 'g1_f4_c1', date: '2026-07-13', content: '退料单内容示例', formName: '退料单' },
-            { id: 'g1_f4_c2', date: '2026-07-13', content: '退料单内容示例', formName: '退料单' },
-          ],
-          '物料平衡表': [
-            { id: 'g1_f6_c1', date: '2026-07-13', content: '物料平衡表内容示例', formName: '物料平衡表' },
-          ],
-        },
-        '包装车间': {
-          '领料单': [
-            { id: 'b1_f1_c1', date: '2026-07-13', content: '领料单内容示例', formName: '领料单' },
-            { id: 'b1_f1_c2', date: '2026-07-13', content: '领料单内容示例', formName: '领料单' },
-          ],
-          '外包生产记录1': [
-            { id: 'b1_f2_c1', date: '2026-07-13', content: '外包生产记录1内容示例', formName: '外包生产记录1' },
-          ],
-          '外包生产记录2': [
-            { id: 'b1_f3_c1', date: '2026-07-13', content: '外包生产记录2内容示例', formName: '外包生产记录2' },
-          ],
-          '外包生产记录3': [
-            { id: 'b1_f4_c1', date: '2026-07-13', content: '外包生产记录3内容示例', formName: '外包生产记录3' },
-          ],
-          '清场记录': [
-            { id: 'b1_f7_c1', date: '2026-07-13', content: '清场记录内容示例', formName: '清场记录' },
-          ],
-          '入库单': [
-            { id: 'b1_f5_c1', date: '2026-07-13', content: '入库单内容示例', formName: '入库单' },
-          ],
-          '退料单': [
-            { id: 'b1_f6_c1', date: '2026-07-13', content: '退料单内容示例', formName: '退料单' },
-            { id: 'b1_f6_c2', date: '2026-07-14', content: '退料单内容示例', formName: '退料单' },
-          ],
-          '物料平衡表': [
-            { id: 'b1_f8_c1', date: '2026-07-13', content: '物料平衡表内容示例', formName: '物料平衡表' },
-          ],
-        },
-      },
+// ===== 状态定义 =====
+const activeWorkshop = ref('全部车间');
+const activeForm = ref('全部');
 
-      // 操作区域状态
-      operationArea: {
-        mode: null,
-        card: null,
-      },
-      editContent: '',
-
-      // 加页对话框
-      addDialogVisible: false,
-      addForm: { date: null },
-      addFormRef: null,
-      addRules: {
-        date: [{ required: true, message: '请选择日期', trigger: 'change' }],
-      },
-
-      // 控制弹窗显示的响应式属性
-      visible: false,
-    };
+// 卡片数据（完整示例，状态值：0=已完成，1=未完成）
+const cardsData = reactive({
+  '消毒车间': {
+    '领料单': [
+      { id: 'd1_f1_c1', date: '2026-07-13', content: '领料单内容示例', formName: '领料单', edited: '0', reviewed: '1', checked: '1', archived: '1', editedTime: '2026-07-13 11:20', reviewedTime: null, checkedTime: null, archivedTime: null }
+    ],
+    '处理记录1': [
+      { id: 'd1_f2_c1', date: '2026-07-13', content: '处理记录1内容示例', formName: '处理记录1', edited: '1', reviewed: '0', checked: '1', archived: '1', editedTime: null, reviewedTime: '2026-07-13 14:30', checkedTime: null, archivedTime: null }
+    ],
+    '处理记录2': [
+      { id: 'd1_f3_c1', date: '2026-07-13', content: '处理记录2内容示例', formName: '处理记录2', edited: '0', reviewed: '0', checked: '0', archived: '0', editedTime: '2026-07-13 09:00', reviewedTime: '2026-07-13 10:00', checkedTime: '2026-07-13 11:00', archivedTime: '2026-07-13 12:00' }
+    ],
+    '清场记录': [
+      { id: 'd1_f4_c1', date: '2026-07-13', content: '清场记录内容示例', formName: '清场记录', edited: '1', reviewed: '1', checked: '1', archived: '1', editedTime: null, reviewedTime: null, checkedTime: null, archivedTime: null }
+    ]
   },
-  methods: {
-    /**
-     * 获取某个车间下某个表单的卡片列表
-     */
-    getFormCards(workshopName, formName) {
-      const workshop = this.cardsData[workshopName];
-      if (!workshop) return [];
-      return workshop[formName] || [];
-    },
-
-    /**
-     * 获取某个车间下所有卡片（用于第二层"全部"标签页）
-     */
-    getAllCards(workshopName) {
-      const workshop = this.cardsData[workshopName];
-      if (!workshop) return [];
-      const all = [];
-      Object.keys(workshop).forEach(formName => {
-        all.push(...workshop[formName]);
-      });
-      return all;
-    },
-
-    /**
-     * 【新增】获取所有车间的所有卡片（用于第一层"全部"标签页）
-     * 为每个卡片添加 workshopName 属性，便于在卡片头部显示车间来源
-     */
-    getAllWorkshopCards() {
-      const all = [];
-      const workshopNames = Object.keys(this.cardsData);
-      workshopNames.forEach(workshopName => {
-        const workshop = this.cardsData[workshopName];
-        Object.keys(workshop).forEach(formName => {
-          workshop[formName].forEach(card => {
-            all.push({
-              ...card,
-              workshopName: workshopName, // 添加车间名称属性
-            });
-          });
-        });
-      });
-      // 可按日期排序（可选）
-      // all.sort((a, b) => new Date(a.date) - new Date(b.date));
-      return all;
-    },
-
-    /**
-     * 获取当前选中的表单对象（用于加页操作）
-     */
-    getCurrentForm() {
-      if (this.activeForm === '全部') return null;
-      const workshop = this.cardsData[this.activeWorkshop];
-      if (!workshop) return null;
-      return workshop[this.activeForm] || null;
-    },
-
-    /**
-     * 处理卡片操作按钮点击（编辑/复核/检查）
-     */
-    handleAction(mode, card) {
-      this.operationArea.mode = mode;
-      this.operationArea.card = card;
-      if (mode === 'edit') {
-        this.editContent = card.content;
-      }
-    },
-
-    /**
-     * 清空操作区域
-     */
-    clearOperation() {
-      this.operationArea.mode = null;
-      this.operationArea.card = null;
-      this.editContent = '';
-    },
-
-    /**
-     * 提交编辑
-     */
-    submitEdit() {
-      this.$confirm('确认提交修改？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-        .then(() => {
-          alert('提交成功！修改内容：' + this.editContent);
-          if (this.operationArea.card) {
-            this.operationArea.card.content = this.editContent;
-          }
-          this.clearOperation();
-        })
-        .catch(() => {});
-    },
-
-    /**
-     * 提交复核 / 检查
-     */
-    submitReviewOrCheck() {
-      const action = this.operationArea.mode === 'review' ? '复核' : '检查';
-      this.$confirm(`确认${action}通过？`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      })
-        .then(() => {
-          alert(`${action}成功！`);
-          this.clearOperation();
-        })
-        .catch(() => {});
-    },
-
-    /**
-     * 打开加页对话框
-     */
-    openAddDialog() {
-      // 在第一层"全部车间"标签页中，不允许加页（该标签页无加页按钮，此方法不会被调用）
-      if (this.activeWorkshop === '全部车间') {
-        this.$message.warning('全部车间视图不支持加页，请切换到具体车间');
-        return;
-      }
-      if (this.activeForm === '全部') {
-        this.$message.warning('请先切换到具体表单再添加日期');
-        return;
-      }
-      this.addForm.date = null;
-      this.addDialogVisible = true;
-      this.$nextTick(() => {
-        const formRef = this.$refs.addFormRef;
-        if (formRef) {
-          formRef.resetFields();
-        }
-      });
-    },
-
-    /**
-     * 处理加页提交
-     */
-    handleAddSubmit() {
-      const formRef = this.$refs.addFormRef;
-      if (!formRef) {
-        this.$message.error('表单未加载，请重试');
-        return;
-      }
-      formRef.validate((valid) => {
-        if (!valid) return;
-        const selectedDate = this.addForm.date;
-        const formCards = this.getCurrentForm();
-        if (!formCards) {
-          this.$message.error('未找到当前表单数据');
-          return;
-        }
-        const exists = formCards.some((c) => c.date === selectedDate);
-        if (exists) {
-          this.$message.warning('该日期已存在，请选择其他日期');
-          return;
-        }
-        const newCard = {
-          id: `card_${Date.now()}`,
-          date: selectedDate,
-          content: '待填写',
-          formName: this.activeForm,
-        };
-        formCards.push(newCard);
-        this.$nextTick(() => {
-          this.scrollToNewCard();
-        });
-        this.addDialogVisible = false;
-        this.$message.success('添加成功');
-      });
-    },
-
-    /**
-     * 滚动到新添加的卡片位置
-     */
-    scrollToNewCard() {
-      const wrapper = this.$el.querySelector('.card-scroll-wrapper');
-      if (wrapper) {
-        wrapper.scrollTop = wrapper.scrollHeight;
-      }
-    },
-
-    /**
-     * 打开弹窗（供父组件调用）
-     */
-    open(data) {
-      this.visible = true;
-      // 如果有传入数据，可在此处理
-      // 例如：this.orderData = data;
-    },
-
-    /**
-     * 关闭弹窗（供父组件调用）
-     */
-    close() {
-      this.visible = false;
-    },
-
-    /**
-     * 弹窗关闭后的清理钩子
-     */
-    handleClosed() {
-      // 可在此执行清理操作，如重置表单状态等
-    },
+  '灌装车间': {
+    '领料单': [
+      { id: 'g1_f1_c1', date: '2026-07-13', content: '领料单内容示例', formName: '领料单', edited: '0', reviewed: '1', checked: '1', archived: '1', editedTime: '2026-07-13 11:20', reviewedTime: null, checkedTime: null, archivedTime: null }
+    ],
+    '灌装生产记录1': [
+      { id: 'g1_f2_c1', date: '2026-07-13', content: '灌装生产记录1内容示例', formName: '灌装生产记录1', edited: '1', reviewed: '1', checked: '0', archived: '1', editedTime: null, reviewedTime: null, checkedTime: '2026-07-13 15:00', archivedTime: null }
+    ],
+    '灌装生产记录2': [
+      { id: 'g1_f3_c1', date: '2026-07-13', content: '灌装生产记录2内容示例', formName: '灌装生产记录2', edited: '0', reviewed: '0', checked: '0', archived: '0', editedTime: '2026-07-13 08:30', reviewedTime: '2026-07-13 09:30', checkedTime: '2026-07-13 10:30', archivedTime: '2026-07-13 11:30' }
+    ],
+    '清场记录': [
+      { id: 'g1_f5_c1', date: '2026-07-13', content: '清场记录内容示例', formName: '清场记录', edited: '1', reviewed: '1', checked: '1', archived: '1', editedTime: null, reviewedTime: null, checkedTime: null, archivedTime: null }
+    ],
+    '退料单': [
+      { id: 'g1_f4_c1', date: '2026-07-13', content: '退料单内容示例', formName: '退料单', edited: '1', reviewed: '0', checked: '1', archived: '1', editedTime: null, reviewedTime: '2026-07-13 16:00', checkedTime: null, archivedTime: null },
+      { id: 'g1_f4_c2', date: '2026-07-13', content: '退料单内容示例2', formName: '退料单', edited: '1', reviewed: '1', checked: '1', archived: '1', editedTime: null, reviewedTime: null, checkedTime: null, archivedTime: null }
+    ],
+    '物料平衡表': [
+      { id: 'g1_f6_c1', date: '2026-07-13', content: '物料平衡表内容示例', formName: '物料平衡表', edited: '0', reviewed: '0', checked: '0', archived: '1', editedTime: '2026-07-13 07:00', reviewedTime: '2026-07-13 08:00', checkedTime: '2026-07-13 09:00', archivedTime: null }
+    ]
   },
+  '包装车间': {
+    '领料单': [
+      { id: 'b1_f1_c1', date: '2026-07-13', content: '领料单内容示例', formName: '领料单', edited: '0', reviewed: '1', checked: '1', archived: '1', editedTime: '2026-07-13 11:20', reviewedTime: null, checkedTime: null, archivedTime: null },
+      { id: 'b1_f1_c2', date: '2026-07-13', content: '领料单内容示例2', formName: '领料单', edited: '1', reviewed: '1', checked: '1', archived: '1', editedTime: null, reviewedTime: null, checkedTime: null, archivedTime: null }
+    ],
+    '外包生产记录1': [
+      { id: 'b1_f2_c1', date: '2026-07-13', content: '外包生产记录1内容示例', formName: '外包生产记录1', edited: '0', reviewed: '0', checked: '1', archived: '1', editedTime: '2026-07-13 10:00', reviewedTime: '2026-07-13 11:00', checkedTime: null, archivedTime: null }
+    ],
+    '外包生产记录2': [
+      { id: 'b1_f3_c1', date: '2026-07-13', content: '外包生产记录2内容示例', formName: '外包生产记录2', edited: '1', reviewed: '1', checked: '1', archived: '1', editedTime: null, reviewedTime: null, checkedTime: null, archivedTime: null }
+    ],
+    '外包生产记录3': [
+      { id: 'b1_f4_c1', date: '2026-07-13', content: '外包生产记录3内容示例', formName: '外包生产记录3', edited: '0', reviewed: '0', checked: '0', archived: '0', editedTime: '2026-07-13 09:00', reviewedTime: '2026-07-13 10:00', checkedTime: '2026-07-13 11:00', archivedTime: '2026-07-13 12:00' }
+    ],
+    '清场记录': [
+      { id: 'b1_f7_c1', date: '2026-07-13', content: '清场记录内容示例', formName: '清场记录', edited: '1', reviewed: '1', checked: '1', archived: '1', editedTime: null, reviewedTime: null, checkedTime: null, archivedTime: null }
+    ],
+    '入库单': [
+      { id: 'b1_f5_c1', date: '2026-07-13', content: '入库单内容示例', formName: '入库单', edited: '0', reviewed: '1', checked: '1', archived: '1', editedTime: '2026-07-13 14:00', reviewedTime: null, checkedTime: null, archivedTime: null }
+    ],
+    '退料单': [
+      { id: 'b1_f6_c1', date: '2026-07-13', content: '退料单内容示例', formName: '退料单', edited: '1', reviewed: '0', checked: '1', archived: '1', editedTime: null, reviewedTime: '2026-07-13 15:00', checkedTime: null, archivedTime: null },
+      { id: 'b1_f6_c2', date: '2026-07-14', content: '退料单内容示例2', formName: '退料单', edited: '0', reviewed: '0', checked: '0', archived: '0', editedTime: '2026-07-14 08:00', reviewedTime: '2026-07-14 09:00', checkedTime: '2026-07-14 10:00', archivedTime: '2026-07-14 11:00' }
+    ],
+    '物料平衡表': [
+      { id: 'b1_f8_c1', date: '2026-07-13', content: '物料平衡表内容示例', formName: '物料平衡表', edited: '1', reviewed: '1', checked: '1', archived: '1', editedTime: null, reviewedTime: null, checkedTime: null, archivedTime: null }
+    ]
+  }
+});
 
-  /**
-   * 暴露方法给父组件
-   */
-  expose: ['open', 'close'],
+// 操作区域状态
+const operationArea = ref({
+  mode: null,   // 'edit' | 'review' | 'check'
+  card: null
+});
+const editContent = ref('');
+
+// 加页对话框
+const addDialogVisible = ref(false);
+const addForm = reactive({ date: null });
+const addFormRef = ref(null);
+const addRules = {
+  date: [{ required: true, message: '请选择日期', trigger: 'change' }]
 };
+
+// 弹窗可见性
+const visible = ref(false);
+
+// ===== 方法 =====
+function getFormCards(workshopName, formName) {
+  const workshop = cardsData[workshopName];
+  if (!workshop) return [];
+  return workshop[formName] || [];
+}
+
+function getAllCards(workshopName) {
+  const workshop = cardsData[workshopName];
+  if (!workshop) return [];
+  const all = [];
+  Object.keys(workshop).forEach(formName => {
+    all.push(...workshop[formName]);
+  });
+  return all;
+}
+
+function getAllWorkshopCards() {
+  const all = [];
+  const workshopNames = Object.keys(cardsData);
+  workshopNames.forEach(workshopName => {
+    const workshop = cardsData[workshopName];
+    Object.keys(workshop).forEach(formName => {
+      workshop[formName].forEach(card => {
+        all.push({
+          ...card,
+          workshopName: workshopName
+        });
+      });
+    });
+  });
+  return all;
+}
+
+function getCurrentForm() {
+  if (activeForm.value === '全部') return null;
+  const workshop = cardsData[activeWorkshop.value];
+  if (!workshop) return null;
+  return workshop[activeForm.value] || null;
+}
+
+function handleAction(mode, card) {
+  operationArea.value.mode = mode;
+  operationArea.value.card = card;
+  if (mode === 'edit') {
+    editContent.value = card.content;
+  }
+}
+
+function clearOperation() {
+  operationArea.value.mode = null;
+  operationArea.value.card = null;
+  editContent.value = '';
+}
+
+function submitEdit() {
+  ElMessageBox.confirm('确认提交修改？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  })
+    .then(() => {
+      alert('提交成功！修改内容：' + editContent.value);
+      if (operationArea.value.card) {
+        operationArea.value.card.content = editContent.value;
+      }
+      clearOperation();
+    })
+    .catch(() => {});
+}
+
+function submitReviewOrCheck() {
+  const action = operationArea.value.mode === 'review' ? '复核' : '检查';
+  ElMessageBox.confirm(`确认${action}通过？`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  })
+    .then(() => {
+      alert(`${action}成功！`);
+      clearOperation();
+    })
+    .catch(() => {});
+}
+
+function openAddDialog() {
+  if (activeWorkshop.value === '全部车间') {
+    ElMessage.warning('全部车间视图不支持加页，请切换到具体车间');
+    return;
+  }
+  if (activeForm.value === '全部') {
+    ElMessage.warning('请先切换到具体表单再添加日期');
+    return;
+  }
+  addForm.date = null;
+  addDialogVisible.value = true;
+  nextTick(() => {
+    if (addFormRef.value) addFormRef.value.resetFields();
+  });
+}
+
+function handleAddSubmit() {
+  const formRef = addFormRef.value;
+  if (!formRef) {
+    ElMessage.error('表单未加载，请重试');
+    return;
+  }
+  formRef.validate((valid) => {
+    if (!valid) return;
+    const selectedDate = addForm.date;
+    const formCards = getCurrentForm();
+    if (!formCards) {
+      ElMessage.error('未找到当前表单数据');
+      return;
+    }
+    const exists = formCards.some((c) => c.date === selectedDate);
+    if (exists) {
+      ElMessage.warning('该日期已存在，请选择其他日期');
+      return;
+    }
+    const newCard = {
+      id: `card_${Date.now()}`,
+      date: selectedDate,
+      content: '待填写',
+      formName: activeForm.value,
+      edited: '1',
+      reviewed: '1',
+      checked: '1',
+      archived: '1',
+      editedTime: null,
+      reviewedTime: null,
+      checkedTime: null,
+      archivedTime: null
+    };
+    formCards.push(newCard);
+    nextTick(() => scrollToNewCard());
+    addDialogVisible.value = false;
+    ElMessage.success('添加成功');
+  });
+}
+
+function scrollToNewCard() {
+  const wrapper = document.querySelector('.card-scroll-wrapper');
+  if (wrapper) {
+    wrapper.scrollTop = wrapper.scrollHeight;
+  }
+}
+
+function open(data) {
+  visible.value = true;
+  // 处理传入数据
+}
+
+function close() {
+  visible.value = false;
+}
+
+function handleClosed() {
+  // 清理操作
+}
+
+// 暴露方法
+defineExpose({ open, close });
 </script>
 
 <style scoped>
-/* ===== 强制所有父容器宽度固定 ===== */
+/* ===== 布局容器 ===== */
+.app-container {
+  padding: 0;
+}
 .app-container,
 .workshop-tabs,
 .workshop-tabs .el-tabs__content,
@@ -1019,9 +657,9 @@ export default {
   max-width: 100% !important;
 }
 
-/* ===== 滚动容器：垂直滚动 ===== */
+/* ===== 滚动容器 ===== */
 .card-scroll-wrapper {
-  height: 600px;
+  height: 585px;
   width: 100% !important;
   max-width: 100% !important;
   overflow-y: auto !important;
@@ -1029,12 +667,12 @@ export default {
   padding: 8px 0;
 }
 
-/* ===== 第一层"全部"标签页专用滚动容器（适配小卡片高度） ===== */
+/* 全览页面专用滚动容器（高度适配小卡片） */
 .all-workshop-scroll-wrapper {
-  height: 600px; /* 小卡片高度，减少容器高度 */
+  height: 538px;
 }
 
-/* ===== 卡片列表：flex 换行 ===== */
+/* ===== 卡片列表（flex 换行布局） ===== */
 .card-list {
   display: flex;
   flex-wrap: wrap;
@@ -1044,38 +682,10 @@ export default {
   align-content: flex-start;
 }
 
-/* ===== 默认卡片样式（其他标签页使用） ===== */
-.placeholder-card {
-  flex: 0 0 188px;          /* 固定宽度 */
-  height: 190px;            /* 固定高度 */
-  min-width: 0;
-  transition: transform 0.2s;
-}
-.placeholder-card:hover {
-  transform: translateY(-4px);
-}
-
-/* ===== 第一层"全部"标签页专用卡片样式（覆盖默认样式） ===== */
-.all-workshop-card {
-  flex: 0 0 188px !important;  /* 固定宽度，与默认一致 */
-  height: 100px !important;    /* 固定高度 100px，覆盖默认的 190px */
-  min-width: 0;
-  transition: transform 0.2s;
-}
-.all-workshop-card:hover {
-  transform: translateY(-4px);
-}
-
-/* ===== 【关键修复】隐藏所有卡片内容区域的垂直滚动条 ===== */
-/* 使用 :deep() 穿透 scoped 样式，覆盖 Element Plus 默认的 overflow:auto */
-.placeholder-card :deep(.el-card__body) {
-  overflow: hidden !important;      /* 强制隐藏溢出，不显示滚动条 */
-}
-
-/* ===== 加页按钮：固定宽高 190px ===== */
+/* ===== 加页按钮 ===== */
 .add-page-btn {
-  flex: 0 0 188px;          /* 固定宽度 */
-  height: 190px;            /* 固定高度 */
+  flex: 0 0 188px;
+  height: 175px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1089,17 +699,6 @@ export default {
 .add-page-btn:hover {
   background: #ecf5ff;
   border-color: #409eff;
-}
-
-/* ===== 卡片底部按钮 ===== */
-.card-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-start;
-}
-.card-actions .el-button--text {
-  padding: 0;
-  margin: 0;
 }
 
 /* ===== 操作区域 ===== */
@@ -1126,15 +725,7 @@ export default {
 .operation-body .el-textarea {
   margin-bottom: 12px;
 }
-
-/* ===== 覆盖默认样式 ===== */
-.app-container {
-  padding: 0;
-}
 </style>
-
-
-
 
 
 

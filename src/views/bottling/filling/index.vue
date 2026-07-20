@@ -48,6 +48,7 @@
           <el-button link type="primary" icon="" @click="handleInspect(scope.row)">检查</el-button>
           <!-- 新增：首件确认按钮 -->
           <el-button link type="primary" @click="handleFirstConfirm(scope.row)">首件确认</el-button>
+          <el-button link type="primary" @click="handleTest(scope.row)">聚合入口</el-button>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center" prop="status">
@@ -140,6 +141,10 @@
     <!-- 灌装首件确认对话框 -->
     <BottlingFillingFirstConfirm ref="fillingFirstConfirmRef" @submit="handleConfirmFirstQualified" />
 
+
+    <!-- 查看聚合入口对话框组件 -->
+    <TestView ref="testViewRef" />
+
   </div>
 </template>
 
@@ -171,6 +176,13 @@ import BottlingFillingInspect from '@/views/bottling/components/BottlingFillingI
 import BottlingFillingSetDateTime from '@/views/bottling/components/BottlingFillingSetDateTime.vue'
 // 引入灌装首件确认对话框组件
 import BottlingFillingFirstConfirm from '@/views/bottling/components/BottlingFillingFirstConfirm.vue'
+
+
+// 引入聚合入口查看组件
+import TestView from '@/views/bottling/components/A_test_batch_write.vue'
+// 聚合入口对话框组件引用
+const testViewRef = ref(null)
+
 
 // 加页对话框组件引用
 const addPageRef = ref(null)
@@ -624,6 +636,17 @@ async function handleOrderView(row) {
   }
 }
 
+
+/** 查看聚合入口 */
+async function handleTest(row) {
+  try {
+    const res = await getOrderDetail(row.orderId)
+    await nextTick()
+    testViewRef.value?.open(res.data)
+  } catch (e) {
+    proxy.$modal.msgError('获取工单详情失败')
+  }
+}
 
 getList()
 </script>

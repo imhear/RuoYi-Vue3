@@ -9,7 +9,7 @@
       <el-row :gutter="16">
         <el-col :span="12">
           <el-form-item label="生产批号" prop="batchNumber">
-            <el-input v-model="form.batchNumber" placeholder="请输入生产批号" />
+            <el-input v-model="form.batchNumber" placeholder="请输入生产批号" disabled/>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -20,6 +20,7 @@
               :max="maxPlanQty" 
               placeholder="请输入排产数量" 
               style="width: 100%" 
+              disabled
             />
           </el-form-item>
         </el-col>
@@ -142,8 +143,8 @@ onMounted(async () => {
 async function open(data) {
   currentDetail.value = data.detail
   // 初始化表单
-  form.batchNumber =  ''
-  form.planQty = null
+  form.batchNumber =  currentDetail.value.batchNumber // 改为只读并设置默认值
+  form.planQty = currentDetail.value.requireNum // 改为只读并设置默认值
   form.planStart = null
   form.planEnd = null
   form.remark = ''

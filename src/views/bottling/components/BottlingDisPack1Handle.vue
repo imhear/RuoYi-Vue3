@@ -228,7 +228,7 @@
                 <span style="margin-left: 30px;">
                   消毒时间 <el-time-picker v-model="form.s2OzoneDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
                   至 <el-time-picker v-model="form.s2OzoneDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  ，共 <input v-model="form.s2OzoneDesinfectionCost" class="edit-input-short" /> 分钟
+                  ，共 <input v-model="form.s2OzoneDesinfectionCost" disabled class="edit-input-short" /> 分钟
                 </span>
                 <br/>
                 <label class="native-checkbox" style="margin-left: 25px;">
@@ -240,7 +240,7 @@
                 <span style="margin-left: 30px;">
                   消毒时间 <el-time-picker v-model="form.s2DryingDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
                   至 <el-time-picker v-model="form.s2DryingDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  ，共 <input v-model="form.s2DryingDesinfectionCost" class="edit-input-short" /> 分钟
+                  ，共 <input v-model="form.s2DryingDesinfectionCost" disabled class="edit-input-short" /> 分钟
                 </span>
                 <br/>
                 <label class="native-checkbox" style="margin-left: 25px;">
@@ -375,7 +375,7 @@
                 <span style="margin-left: 30px;">
                   消毒时间 <el-time-picker v-model="form.s3OzoneDesinfectionStartTime" value-format="HH:mm:ss" size="small" style="width: 100px;" />
                   至 <el-time-picker v-model="form.s3OzoneDesinfectionEndTime" value-format="HH:mm:ss" size="small" style="width: 100px;" />
-                  ，共 <input v-model="form.s3OzoneDesinfectionCost" class="edit-input-short" /> 分钟
+                  ，共 <input v-model="form.s3OzoneDesinfectionCost" disabled class="edit-input-short" /> 分钟
                 </span>
                 <br/>
                 <label class="native-checkbox"><input type="checkbox" v-model="form.s3AirShowerFlag" true-value="Y" false-value="N" /><span>风淋</span></label>
@@ -710,6 +710,50 @@ function handleClosed() {
 function close() { visible.value = false }
 
 const emit = defineEmits(['step1Submit', 'step2Submit', 'step3Submit', 'step4Submit', 'submit'])
+
+// 计算时间差（分钟），输入 HH:mm:ss
+function getMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const parts = timeStr.split(':').map(Number);
+  return parts[0] * 60 + parts[1];
+}
+
+function diffMinutes(start, end) {
+  if (!start || !end) return '';
+  let startMin = getMinutes(start);
+  let endMin = getMinutes(end);
+  let diff = endMin - startMin;
+  if (diff < 0) diff += 24 * 60; // 跨天处理
+  return diff;
+}
+
+// 自动计算 Step2 臭氧消毒时长
+watch(
+  () => [form.s2OzoneDesinfectionStartTime, form.s2OzoneDesinfectionEndTime],
+  ([start, end]) => {
+    form.s2OzoneDesinfectionCost = diffMinutes(start, end);
+  },
+  { immediate: true }
+);
+
+// 自动计算 Step2 高温消毒时长
+watch(
+  () => [form.s2DryingDesinfectionStartTime, form.s2DryingDesinfectionEndTime],
+  ([start, end]) => {
+    form.s2DryingDesinfectionCost = diffMinutes(start, end);
+  },
+  { immediate: true }
+);
+
+// 自动计算 Step3 臭氧消毒时长
+watch(
+  () => [form.s3OzoneDesinfectionStartTime, form.s3OzoneDesinfectionEndTime],
+  ([start, end]) => {
+    form.s3OzoneDesinfectionCost = diffMinutes(start, end);
+  },
+  { immediate: true }
+);
+
 defineExpose({ open, close })
 </script>
 

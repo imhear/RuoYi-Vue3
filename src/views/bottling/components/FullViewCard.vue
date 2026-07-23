@@ -1,6 +1,7 @@
 <!--
   全览卡片组件
   状态值说明：'0'=已归档，'1'=未归档
+  待删除
 -->
 <template>
   <el-card class="placeholder-card all-workshop-card" shadow="hover">

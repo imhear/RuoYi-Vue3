@@ -4,17 +4,9 @@
       <div class="app-container">
         <!-- ===== 第一层：车间 Tabs ===== -->
         <el-tabs v-model="activeWorkshop" type="card" tab-position="top" class="workshop-tabs">
-          <!-- 全览标签页 -->
+          <!-- 全览标签页 - 使用子组件 -->
           <el-tab-pane label="全览" name="全部车间">
-            <div class="card-scroll-wrapper all-workshop-scroll-wrapper">
-              <div class="card-list">
-                <FullViewCard
-                  v-for="card in getAllWorkshopCards()"
-                  :key="card.id"
-                  :card="card"
-                />
-              </div>
-            </div>
+            <WorkshopOverview :cards-data="cardsData" />
           </el-tab-pane>
 
           <!-- 消毒车间 -->
@@ -384,7 +376,7 @@
 import { ref, reactive, computed, nextTick } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import CardItem from './CardItem.vue';
-import FullViewCard from './FullViewCard.vue';
+import WorkshopOverview from './WorkshopOverview.vue';
 
 // ===== 状态定义 =====
 const activeWorkshop = ref('全部车间');
@@ -492,22 +484,22 @@ function getAllCards(workshopName) {
   return all;
 }
 
-function getAllWorkshopCards() {
-  const all = [];
-  const workshopNames = Object.keys(cardsData);
-  workshopNames.forEach(workshopName => {
-    const workshop = cardsData[workshopName];
-    Object.keys(workshop).forEach(formName => {
-      workshop[formName].forEach(card => {
-        all.push({
-          ...card,
-          workshopName: workshopName
-        });
-      });
-    });
-  });
-  return all;
-}
+// function getAllWorkshopCards() {
+//   const all = [];
+//   const workshopNames = Object.keys(cardsData);
+//   workshopNames.forEach(workshopName => {
+//     const workshop = cardsData[workshopName];
+//     Object.keys(workshop).forEach(formName => {
+//       workshop[formName].forEach(card => {
+//         all.push({
+//           ...card,
+//           workshopName: workshopName
+//         });
+//       });
+//     });
+//   });
+//   return all;
+// }
 
 function getCurrentForm() {
   if (activeForm.value === '全部') return null;
@@ -668,9 +660,9 @@ defineExpose({ open, close });
 }
 
 /* 全览页面专用滚动容器（高度适配小卡片） */
-.all-workshop-scroll-wrapper {
+/* .all-workshop-scroll-wrapper {
   height: 538px;
-}
+} */
 
 /* ===== 卡片列表（flex 换行布局） ===== */
 .card-list {

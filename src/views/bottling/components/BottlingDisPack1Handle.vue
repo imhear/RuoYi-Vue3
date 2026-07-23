@@ -226,8 +226,8 @@
                 ：消毒臭氧浓度 <input v-model="form.s2OzoneConcentration" class="edit-input-short" /> ppm，
                 <br/>
                 <span style="margin-left: 30px;">
-                  消毒时间 <el-time-picker v-model="form.s2OzoneDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  至 <el-time-picker v-model="form.s2OzoneDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
+                  消毒时间 <el-time-picker v-model="form.s2OzoneDesinfectionStartTime" value-format="HH:mm" placeholder="" size="small" style="width: 100px;" />
+                  至 <el-time-picker v-model="form.s2OzoneDesinfectionEndTime" value-format="HH:mm" placeholder="" size="small" style="width: 100px;" />
                   ，共 <input v-model="form.s2OzoneDesinfectionCost" disabled class="edit-input-short" /> 分钟
                 </span>
                 <br/>
@@ -238,8 +238,8 @@
                 ：烘干消毒温度 <input v-model="form.s2DryingDesinfectionTemperature" class="edit-input-short" /> ℃，
                 <br/>
                 <span style="margin-left: 30px;">
-                  消毒时间 <el-time-picker v-model="form.s2DryingDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  至 <el-time-picker v-model="form.s2DryingDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
+                  消毒时间 <el-time-picker v-model="form.s2DryingDesinfectionStartTime" value-format="HH:mm" placeholder="" size="small" style="width: 100px;" />
+                  至 <el-time-picker v-model="form.s2DryingDesinfectionEndTime" value-format="HH:mm" placeholder="" size="small" style="width: 100px;" />
                   ，共 <input v-model="form.s2DryingDesinfectionCost" disabled class="edit-input-short" /> 分钟
                 </span>
                 <br/>
@@ -250,8 +250,8 @@
                 ：高温烘干消毒温度 <input v-model="form.s2HighDryingDesinfectionTemperature" class="edit-input-short" /> ℃，
                 <br/>
                 <span style="margin-left: 30px;">
-                  消毒时间 <el-time-picker v-model="form.s2HighDryingDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                  至 <el-time-picker v-model="form.s2HighDryingDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
+                  消毒时间 <el-time-picker v-model="form.s2HighDryingDesinfectionStartTime" value-format="HH:mm" placeholder="" size="small" style="width: 100px;" />
+                  至 <el-time-picker v-model="form.s2HighDryingDesinfectionEndTime" value-format="HH:mm" placeholder="" size="small" style="width: 100px;" />
                 </span>
                 <br/>
                 <span>3）是否干净，干燥、完好、外观无变色：</span>
@@ -323,9 +323,9 @@
             <table class="inner-fill-table step3-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
               <tr style="height: 28px;">
                 <td colspan="2" style="text-align: center;">
-                  <el-date-picker v-model="form.s3StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="开始时间" size="small" style="width: 180px;" />
+                  <el-date-picker v-model="form.s3StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm" placeholder="开始时间" size="small" style="width: 180px;" />
                   <span style="margin: 0 8px;">至</span>
-                  <el-date-picker v-model="form.s3EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="结束时间" size="small" style="width: 180px;" />
+                  <el-date-picker v-model="form.s3EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm" placeholder="结束时间" size="small" style="width: 180px;" />
                 </td>
               </tr>
               <tr style="height: 28px;">

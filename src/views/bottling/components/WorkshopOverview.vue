@@ -1,120 +1,144 @@
 <!--
   全览面板组件（WorkshopOverview）
-  左右结构：左侧操作日志时间线，右侧三个水平滚动的卡片列表（按车间分组）
+  倒品字型布局：上方左侧操作日志 + 右侧卡片列表（左右结构），下方固定底部信息区域
+  交互优化：首次进入显示提示卡片，点击卡片后切换为日志视图（随机展示两组日志之一）
 -->
 <template>
   <div class="overview-container">
-    <!-- ===== 左侧面板：操作日志时间线 ===== -->
-    <div class="overview-left-panel">
-      <!-- 使用 el-scrollbar 支撑滚动，保持固定高度 -->
-      <el-scrollbar class="log-scrollbar">
-        <el-timeline>
-          <el-timeline-item
-            v-for="(log, index) in logActivities"
-            :key="index"
-            :type="log.type"
-            :hollow="log.hollow"
-            :timestamp="log.timestamp"
-            placement="top"
-            size="small"
-          >
-            <div class="log-content" :class="{ 'log-cancel': log.isCancel }">
-              <div class="log-operator">{{ log.operator }}</div>
-              <div class="log-detail">
-                <span>{{ log.detail }}</span>
-                <span v-if="log.reason" class="log-reason">（{{ log.reason }}）</span>
-              </div>
+    <!-- ===== 上方区域：左右结构（日志面板 + 卡片列表） ===== -->
+    <div class="overview-top">
+      <!-- 左侧：操作日志时间线 -->
+      <div class="overview-left-panel">
+        <!-- 初次进入显示的提示卡片 -->
+        <div v-if="!hasClickedCard" class="hint-card-wrapper">
+          <div class="hint-card">
+            <span class="hint-text">点击卡片以查看详情</span>
+          </div>
+        </div>
+
+        <!-- 点击卡片后显示的日志视图 -->
+        <template v-else>
+          <div class="panel-header">
+            <span class="panel-title">{{ currentCardName }}</span>
+          </div>
+          <el-scrollbar class="log-scrollbar">
+            <el-timeline>
+              <el-timeline-item
+                v-for="(log, index) in currentLogs"
+                :key="index"
+                :type="log.type"
+                :hollow="log.hollow"
+                :timestamp="log.timestamp"
+                placement="bottom"
+                size="small"
+              >
+                <el-card class="log-card" :class="{ 'log-card-cancel': log.isCancel }" shadow="hover">
+                  <div class="log-action">{{ log.detail }}</div>
+                  <div class="log-person-time">{{ log.operatorName }}｜{{ log.workshop }}｜{{ log.role }}</div>
+                </el-card>
+              </el-timeline-item>
+            </el-timeline>
+          </el-scrollbar>
+        </template>
+      </div>
+
+      <!-- 右侧：三个车间卡片列表（水平滚动） -->
+      <div class="overview-right-wrapper">
+        <!-- 消毒车间 -->
+        <div class="workshop-section">
+          <div class="card-scroll-wrapper-horizontal">
+            <div class="card-list-horizontal">
+              <el-card
+                v-for="card in getCardsForWorkshop('消毒车间')"
+                :key="card.id"
+                class="placeholder-card all-workshop-card-horizontal"
+                shadow="hover"
+                @click="handleCardClick(card)"
+              >
+                <template #header>
+                  <div style="font-size:11px; color: white;">{{ card.formName }}</div>
+                </template>
+                <div class="card-actions" style="padding-top: 10px;">
+                  <!-- 已归档标签现在显示为黑底白字（样式已覆盖） -->
+                  <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
+                </div>
+                <template #footer>
+                  <div style="justify-content: center; font-size: 11px; color:white;">
+                    {{ card.date }}
+                  </div>
+                </template>
+              </el-card>
             </div>
-          </el-timeline-item>
-        </el-timeline>
-      </el-scrollbar>
+          </div>
+        </div>
+
+        <!-- 灌装车间 -->
+        <div class="workshop-section">
+          <div class="card-scroll-wrapper-horizontal">
+            <div class="card-list-horizontal">
+              <el-card
+                v-for="card in getCardsForWorkshop('灌装车间')"
+                :key="card.id"
+                class="placeholder-card all-workshop-card-horizontal"
+                shadow="hover"
+                @click="handleCardClick(card)"
+              >
+                <template #header>
+                  <div style="font-size:11px; color: white;">{{ card.formName }}</div>
+                </template>
+                <div class="card-actions" style="padding-top: 10px;">
+                  <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
+                </div>
+                <template #footer>
+                  <div style="justify-content: center; font-size: 11px; color:white;">
+                    {{ card.date }}
+                  </div>
+                </template>
+              </el-card>
+            </div>
+          </div>
+        </div>
+
+        <!-- 包装车间 -->
+        <div class="workshop-section">
+          <div class="card-scroll-wrapper-horizontal">
+            <div class="card-list-horizontal">
+              <el-card
+                v-for="card in getCardsForWorkshop('包装车间')"
+                :key="card.id"
+                class="placeholder-card all-workshop-card-horizontal"
+                shadow="hover"
+                @click="handleCardClick(card)"
+              >
+                <template #header>
+                  <div style="font-size:11px; color: white;">{{ card.formName }}</div>
+                </template>
+                <div class="card-actions" style="padding-top: 10px;">
+                  <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
+                </div>
+                <template #footer>
+                  <div style="justify-content: center; font-size: 11px; color:white;">
+                    {{ card.date }}
+                  </div>
+                </template>
+              </el-card>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- ===== 右侧：三个车间卡片列表 ===== -->
-    <div class="overview-right-wrapper">
-      <!-- 消毒车间 -->
-      <div class="workshop-section">
-        <div class="card-scroll-wrapper-horizontal">
-          <div class="card-list-horizontal">
-            <el-card
-              v-for="card in getCardsForWorkshop('消毒车间')"
-              :key="card.id"
-              class="placeholder-card all-workshop-card-horizontal"
-              shadow="hover"
-            >
-              <template #header>
-                <div style="font-size:11px; color: white;">{{ card.formName }}</div>
-              </template>
-              <div class="card-actions" style="padding-top: 10px;">
-                <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
-              </div>
-              <template #footer>
-                <div style="justify-content: center; font-size: 11px; color:white;">
-                  {{ card.date }}
-                </div>
-              </template>
-            </el-card>
-          </div>
-        </div>
-      </div>
-
-      <!-- 灌装车间 -->
-      <div class="workshop-section">
-        <div class="card-scroll-wrapper-horizontal">
-          <div class="card-list-horizontal">
-            <el-card
-              v-for="card in getCardsForWorkshop('灌装车间')"
-              :key="card.id"
-              class="placeholder-card all-workshop-card-horizontal"
-              shadow="hover"
-            >
-              <template #header>
-                <div style="font-size:11px; color: white;">{{ card.formName }}</div>
-              </template>
-              <div class="card-actions" style="padding-top: 10px;">
-                <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
-              </div>
-              <template #footer>
-                <div style="justify-content: center; font-size: 11px; color:white;">
-                  {{ card.date }}
-                </div>
-              </template>
-            </el-card>
-          </div>
-        </div>
-      </div>
-
-      <!-- 包装车间 -->
-      <div class="workshop-section">
-        <div class="card-scroll-wrapper-horizontal">
-          <div class="card-list-horizontal">
-            <el-card
-              v-for="card in getCardsForWorkshop('包装车间')"
-              :key="card.id"
-              class="placeholder-card all-workshop-card-horizontal"
-              shadow="hover"
-            >
-              <template #header>
-                <div style="font-size:11px; color: white;">{{ card.formName }}</div>
-              </template>
-              <div class="card-actions" style="padding-top: 10px;">
-                <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
-              </div>
-              <template #footer>
-                <div style="justify-content: center; font-size: 11px; color:white;">
-                  {{ card.date }}
-                </div>
-              </template>
-            </el-card>
-          </div>
-        </div>
-      </div>
+    <!-- ===== 下方固定区域（倒品字底部） ===== -->
+    <div class="overview-bottom">
+      <div class="bottom-text-line">当前批次：2026-07-27 生产计划</div>
+      <div class="bottom-text-line">总任务数：12 项，已完成：8 项</div>
+      <div class="bottom-text-line">最新动态：张伟 完成了 消毒车间 领料单 填报</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps, computed } from 'vue';
+import { ref, defineProps, computed } from 'vue';
 
 /** 卡片数据源：{ 车间名: { 表单名: [card, ...] } } */
 const props = defineProps({
@@ -165,209 +189,412 @@ const totalCards = computed(() => {
 });
 
 /**
- * 操作日志数据（固定模拟数据）
+ * 当前选中的卡片名称
+ */
+const currentCardName = ref('领料单');
+
+/**
+ * 是否已点击过卡片
+ */
+const hasClickedCard = ref(false);
+
+/**
+ * 当前显示的日志数据
+ */
+const currentLogs = ref([]);
+
+/**
+ * 日志数据组1
  */
 const logActivities = [
   {
-    timestamp: '07-15 09:30',
-    operator: '张伟/生产部/操作员',
     detail: '填报',
+    operatorName: '张伟',
+    workshop: '消毒车间',
+    role: '操作员',
+    timestamp: '07-15 09:30',
     isCancel: false,
     type: 'primary',
     hollow: false
   },
   {
-    timestamp: '07-15 10:15',
-    operator: '李芳/质量部/质检员',
     detail: '复核',
+    operatorName: '李芳',
+    workshop: '消毒车间',
+    role: '质检员',
+    timestamp: '07-15 10:15',
     isCancel: false,
     type: 'success',
     hollow: false
   },
   {
-    timestamp: '07-15 11:00',
-    operator: '王强/质量部/质检员',
     detail: '检查',
+    operatorName: '王强',
+    workshop: '消毒车间',
+    role: '质检员',
+    timestamp: '07-15 11:00',
     isCancel: false,
     type: 'warning',
     hollow: false
   },
   {
-    timestamp: '07-15 11:45',
-    operator: '刘敏/生产部/代理主管',
     detail: '归档',
+    operatorName: '刘敏',
+    workshop: '消毒车间',
+    role: '代理主管',
+    timestamp: '07-15 11:45',
     isCancel: false,
     type: 'info',
     hollow: false
   },
   {
-    timestamp: '07-15 13:20',
-    operator: '赵磊/生产部/操作员',
     detail: '取消归档',
+    operatorName: '赵磊',
+    workshop: '灌装车间',
+    role: '操作员',
+    timestamp: '07-15 13:20',
     isCancel: true,
-    reason: '错填',
     type: 'danger',
     hollow: true
   },
   {
-    timestamp: '07-15 14:05',
-    operator: '孙悦/质量部/质检员',
     detail: '取消检查',
+    operatorName: '孙悦',
+    workshop: '灌装车间',
+    role: '质检员',
+    timestamp: '07-15 14:05',
     isCancel: true,
-    reason: '错填',
     type: 'danger',
     hollow: true
   },
   {
-    timestamp: '07-15 14:50',
-    operator: '周婷/质量部/质检员',
     detail: '取消复核',
+    operatorName: '周婷',
+    workshop: '灌装车间',
+    role: '质检员',
+    timestamp: '07-15 14:50',
     isCancel: true,
-    reason: '错填',
     type: 'danger',
     hollow: true
   },
   {
-    timestamp: '07-15 15:30',
-    operator: '张伟/生产部/操作员',
     detail: '填报',
+    operatorName: '张伟',
+    workshop: '包装车间',
+    role: '操作员',
+    timestamp: '07-15 15:30',
     isCancel: false,
     type: 'primary',
     hollow: false
   },
   {
-    timestamp: '07-15 16:10',
-    operator: '李芳/质量部/质检员',
     detail: '复核',
+    operatorName: '李芳',
+    workshop: '包装车间',
+    role: '质检员',
+    timestamp: '07-15 16:10',
     isCancel: false,
     type: 'success',
     hollow: false
   },
   {
-    timestamp: '07-15 16:50',
-    operator: '王强/质量部/质检员',
     detail: '检查',
+    operatorName: '王强',
+    workshop: '包装车间',
+    role: '质检员',
+    timestamp: '07-15 16:50',
     isCancel: false,
     type: 'warning',
     hollow: false
   },
   {
-    timestamp: '07-15 17:30',
-    operator: '刘敏/生产部/代理主管',
     detail: '归档',
+    operatorName: '刘敏',
+    workshop: '包装车间',
+    role: '代理主管',
+    timestamp: '07-15 17:30',
     isCancel: false,
     type: 'info',
     hollow: false
   }
 ];
+
+/**
+ * 日志数据组2
+ */
+const logActivities2 = [
+  {
+    detail: '提交申请',
+    operatorName: '陈晨',
+    workshop: '消毒车间',
+    role: '工艺员',
+    timestamp: '07-16 08:20',
+    isCancel: false,
+    type: 'primary',
+    hollow: false
+  },
+  {
+    detail: '审核通过',
+    operatorName: '林琳',
+    workshop: '消毒车间',
+    role: '主管',
+    timestamp: '07-16 09:10',
+    isCancel: false,
+    type: 'success',
+    hollow: false
+  },
+  {
+    detail: '执行操作',
+    operatorName: '黄海',
+    workshop: '灌装车间',
+    role: '操作员',
+    timestamp: '07-16 10:00',
+    isCancel: false,
+    type: 'warning',
+    hollow: false
+  },
+  {
+    detail: '质量确认',
+    operatorName: '杨阳',
+    workshop: '灌装车间',
+    role: '质检员',
+    timestamp: '07-16 10:45',
+    isCancel: false,
+    type: 'info',
+    hollow: false
+  },
+  {
+    detail: '取消执行',
+    operatorName: '黄海',
+    workshop: '灌装车间',
+    role: '操作员',
+    timestamp: '07-16 11:30',
+    isCancel: true,
+    reason: '参数调整',
+    type: 'danger',
+    hollow: true
+  },
+  {
+    detail: '重新执行',
+    operatorName: '黄海',
+    workshop: '灌装车间',
+    role: '操作员',
+    timestamp: '07-16 13:00',
+    isCancel: false,
+    type: 'primary',
+    hollow: false
+  },
+  {
+    detail: '终检合格',
+    operatorName: '杨阳',
+    workshop: '灌装车间',
+    role: '质检员',
+    timestamp: '07-16 14:20',
+    isCancel: false,
+    type: 'success',
+    hollow: false
+  },
+  {
+    detail: '包装完成',
+    operatorName: '吴迪',
+    workshop: '包装车间',
+    role: '操作员',
+    timestamp: '07-16 15:10',
+    isCancel: false,
+    type: 'warning',
+    hollow: false
+  },
+  {
+    detail: '入库登记',
+    operatorName: '郑兰',
+    workshop: '包装车间',
+    role: '仓管员',
+    timestamp: '07-16 16:00',
+    isCancel: false,
+    type: 'info',
+    hollow: false
+  }
+];
+
+/**
+ * 处理卡片点击事件
+ */
+function handleCardClick(card) {
+  hasClickedCard.value = true;
+  currentCardName.value = card.formName || '未知表单';
+  const randomIndex = Math.floor(Math.random() * 2);
+  currentLogs.value = randomIndex === 0 ? logActivities : logActivities2;
+}
 </script>
 
 <style scoped>
 /* ===== 外层容器 ===== */
 .overview-container {
   display: flex;
+  flex-direction: column;
   width: 100%;
   height: 538px;
   gap: 0;
 }
 
+/* ===== 上方区域（左右结构） ===== */
+.overview-top {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+
 /* ===== 左侧面板 ===== */
 .overview-left-panel {
-  flex: 0 0 150px;          /* 保持原有宽度 150px */
-  height: 450px;            /* 保持原有高度 */
-  background-color: #a5a5a5; /* 保持原有背景色 */
-  border-radius: 4px 0 0 4px;
-  padding: 8px 6px;         /* 减小内边距以适配小宽度 */
+  flex: 0 0 200px;
+  height: 100%;
+  background-color: #d9d9d9;
+  border-radius: 4px 0 0 0;
+  padding: 8px 8px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
-/* 日志滚动容器 */
+/* ===== 提示卡片容器（居中） ===== */
+.hint-card-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 提示卡片 ===== */
+.hint-card {
+  width: 170px;
+  height: 170px;
+  background-color: transparent;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.hint-text {
+  line-height: 1.6;
+}
+
+/* ===== 顶部卡片名称显示区域（日志视图） ===== */
+.panel-header {
+  text-align: center;
+  color: #fff;
+  background-color: #606266;
+  padding: 0;                    /* 已改为 0 */
+  border-radius: 4px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  line-height: 0px;              /* 从 30px 改为 0px，高度缩小 */
+}
+.panel-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .log-scrollbar {
   flex: 1;
   height: 100%;
 }
 
-/* 时间线项样式（紧凑适配 150px 宽度） */
-.log-content {
-  font-size: 10px;
-  line-height: 1.4;
-  color: #303133;
-  padding: 1px 0;
-  word-break: break-all;
+/* ===== 时间线卡片样式 ===== */
+.log-card {
+  background-color: #606266 !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 2px 0 !important;
+  color: #fff;
 }
 
-.log-content .log-operator {
+.log-card :deep(.el-card__body) {
+  padding: 5px 0px 5px 5px !important;
+}
+
+.log-card-cancel {
+  background-color: #7a3b3b !important;
+}
+
+.log-action {
+  font-size: 13px;
   font-weight: 500;
-  color: #2c3e50;
-  font-size: 9px;
+  color: #ffffff;
 }
 
-.log-content .log-detail {
-  color: #303133;
-  font-size: 10px;
+.log-person-time {
+  font-size: 11px;
+  color: #d0d0d0;
+  margin-top: 1px;
 }
 
-.log-content .log-reason {
-  color: #f56c6c;
-  font-style: italic;
-  font-size: 9px;
+/* ===== 覆盖时间线组件样式 ===== */
+:deep(.el-timeline.is-start) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
-/* 取消操作的日志特殊样式 */
-.log-cancel {
-  background-color: rgba(245, 108, 108, 0.15);
-  border-radius: 3px;
-  padding: 1px 4px;
-}
-
-/* ===== 覆盖 el-timeline 样式使其更紧凑 ===== */
-:deep(.el-timeline-item__wrapper) {
-  padding-left: 16px;
-}
 :deep(.el-timeline-item__timestamp) {
-  font-size: 9px;
-  color: #909399;
+  color: #fff !important;
+  font-size: 11px;
+}
+
+:deep(.el-timeline-item__wrapper) {
+  padding-left: 18px;
 }
 :deep(.el-timeline-item__node) {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 :deep(.el-timeline-item) {
-  padding-bottom: 4px;
+  padding-bottom: 12px !important;
 }
 :deep(.el-timeline-item__content) {
   padding-top: 0;
 }
 
-/* ===== 右侧容器（保持不变） ===== */
+/* ===== 改造 1：将“已归档”标签改为黑底白字 ===== */
+:deep(.el-tag--dark.el-tag--success) {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+}
+
+/* ===== 右侧容器 ===== */
 .overview-right-wrapper {
   flex: 1;
-  height: 450px;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  padding-left: 10px;
+  padding-left: 2px;        /* 原 10px，改为 2px */
   box-sizing: border-box;
-  gap: 6px;
+  gap: 2px;                 /* 原 6px，改为 2px */
   min-width: 0;
 }
 
-/* ===== 每个车间分区 ===== */
 .workshop-section {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   background: #d9d9d9;
-  border-radius: 4px;
+  border-radius: 0 4px 0 0;
   padding: 4px 0;
   box-sizing: border-box;
   overflow: hidden;
 }
 
-/* ===== 水平滚动容器 ===== */
 .card-scroll-wrapper-horizontal {
   flex: 1;
   width: 100%;
@@ -388,7 +615,6 @@ const logActivities = [
   background: #f0f0f0;
 }
 
-/* ===== 水平卡片列表 ===== */
 .card-list-horizontal {
   display: flex;
   gap: 12px;
@@ -396,15 +622,15 @@ const logActivities = [
   align-items: stretch;
   flex-wrap: nowrap;
   padding: 4px 10px;
+  cursor: pointer;
 }
 
-/* ===== 水平卡片样式 ===== */
 .all-workshop-card-horizontal {
-  flex: 0 0 80px;
+  flex: 0 0 75px;
   height: 120px;
   min-width: 0;
   transition: transform 0.2s;
-  background-color: #aaaaaa;
+  background-color: #606266 !important;
 }
 .all-workshop-card-horizontal:hover {
   transform: translateY(-4px);
@@ -432,11 +658,32 @@ const logActivities = [
   min-height: 18px;
 }
 
-/* 卡片内部操作区 */
 .card-actions {
   display: flex;
   gap: 4px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+/* ===== 下方固定区域（倒品字底部） ===== */
+.overview-bottom {
+  flex: 0 0 80px;
+  width: 100%;
+  background-color: #606266;
+  border-radius: 0 0 4px 4px;
+  padding: 8px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.bottom-text-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

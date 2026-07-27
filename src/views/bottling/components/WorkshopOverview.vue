@@ -2,6 +2,7 @@
   全览面板组件（WorkshopOverview）
   倒品字型布局：上方左侧操作日志 + 右侧卡片列表（左右结构），下方固定底部信息区域
   交互优化：首次进入显示提示卡片，点击卡片后切换为日志视图（随机展示两组日志之一）
+  角标：使用 SVG PulseBadge 组件（瘦高菱形脉冲角标）
 -->
 <template>
   <div class="overview-container">
@@ -48,26 +49,33 @@
         <div class="workshop-section">
           <div class="card-scroll-wrapper-horizontal">
             <div class="card-list-horizontal">
-              <el-card
+              <div
                 v-for="card in getCardsForWorkshop('消毒车间')"
                 :key="card.id"
-                class="placeholder-card all-workshop-card-horizontal"
-                shadow="hover"
+                class="card-wrapper"
                 @click="handleCardClick(card)"
               >
-                <template #header>
-                  <div style="font-size:11px; color: white;">{{ card.formName }}</div>
-                </template>
-                <div class="card-actions" style="padding-top: 10px;">
-                  <!-- 已归档标签现在显示为黑底白字（样式已覆盖） -->
-                  <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
-                </div>
-                <template #footer>
-                  <div style="justify-content: center; font-size: 11px; color:white;">
-                    {{ card.date }}
+                <el-card
+                  class="placeholder-card all-workshop-card-horizontal"
+                  shadow="hover"
+                >
+                  <template #header>
+                    <div style="font-size:11px; color: white;">{{ card.formName }}</div>
+                  </template>
+                  <div class="card-actions" style="padding-top: 10px;">
+                    <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
                   </div>
-                </template>
-              </el-card>
+                  <template #footer>
+                    <div style="justify-content: center; font-size: 11px; color:white;">
+                      {{ card.date }}
+                    </div>
+                  </template>
+                </el-card>
+                <!-- 角标组件（定位在卡片内部右上角） -->
+                <div v-if="selectedCardId === card.id" class="badge-wrapper">
+                  <PulseBadge :size="20" :outer-width="3" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -76,25 +84,32 @@
         <div class="workshop-section">
           <div class="card-scroll-wrapper-horizontal">
             <div class="card-list-horizontal">
-              <el-card
+              <div
                 v-for="card in getCardsForWorkshop('灌装车间')"
                 :key="card.id"
-                class="placeholder-card all-workshop-card-horizontal"
-                shadow="hover"
+                class="card-wrapper"
                 @click="handleCardClick(card)"
               >
-                <template #header>
-                  <div style="font-size:11px; color: white;">{{ card.formName }}</div>
-                </template>
-                <div class="card-actions" style="padding-top: 10px;">
-                  <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
-                </div>
-                <template #footer>
-                  <div style="justify-content: center; font-size: 11px; color:white;">
-                    {{ card.date }}
+                <el-card
+                  class="placeholder-card all-workshop-card-horizontal"
+                  shadow="hover"
+                >
+                  <template #header>
+                    <div style="font-size:11px; color: white;">{{ card.formName }}</div>
+                  </template>
+                  <div class="card-actions" style="padding-top: 10px;">
+                    <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
                   </div>
-                </template>
-              </el-card>
+                  <template #footer>
+                    <div style="justify-content: center; font-size: 11px; color:white;">
+                      {{ card.date }}
+                    </div>
+                  </template>
+                </el-card>
+                <div v-if="selectedCardId === card.id" class="badge-wrapper">
+                  <PulseBadge :size="20" :outer-width="3" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -103,25 +118,32 @@
         <div class="workshop-section">
           <div class="card-scroll-wrapper-horizontal">
             <div class="card-list-horizontal">
-              <el-card
+              <div
                 v-for="card in getCardsForWorkshop('包装车间')"
                 :key="card.id"
-                class="placeholder-card all-workshop-card-horizontal"
-                shadow="hover"
+                class="card-wrapper"
                 @click="handleCardClick(card)"
               >
-                <template #header>
-                  <div style="font-size:11px; color: white;">{{ card.formName }}</div>
-                </template>
-                <div class="card-actions" style="padding-top: 10px;">
-                  <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
-                </div>
-                <template #footer>
-                  <div style="justify-content: center; font-size: 11px; color:white;">
-                    {{ card.date }}
+                <el-card
+                  class="placeholder-card all-workshop-card-horizontal"
+                  shadow="hover"
+                >
+                  <template #header>
+                    <div style="font-size:11px; color: white;">{{ card.formName }}</div>
+                  </template>
+                  <div class="card-actions" style="padding-top: 10px;">
+                    <el-tag v-if="card.archived === '0'" type="success" effect="dark" size="small">已归档</el-tag>
                   </div>
-                </template>
-              </el-card>
+                  <template #footer>
+                    <div style="justify-content: center; font-size: 11px; color:white;">
+                      {{ card.date }}
+                    </div>
+                  </template>
+                </el-card>
+                <div v-if="selectedCardId === card.id" class="badge-wrapper">
+                  <PulseBadge :size="20" :outer-width="3" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -139,6 +161,7 @@
 
 <script setup>
 import { ref, defineProps, computed } from 'vue';
+import PulseBadge from './PulseBadge.vue';
 
 /** 卡片数据源：{ 车间名: { 表单名: [card, ...] } } */
 const props = defineProps({
@@ -189,22 +212,27 @@ const totalCards = computed(() => {
 });
 
 /**
- * 当前选中的卡片名称
+ * 当前选中的卡片名称（用于左侧顶部显示）
  */
 const currentCardName = ref('领料单');
 
 /**
- * 是否已点击过卡片
+ * 当前选中的卡片ID（用于脉冲角标高亮）
+ */
+const selectedCardId = ref(null);
+
+/**
+ * 是否已点击过卡片（控制左侧视图切换）
  */
 const hasClickedCard = ref(false);
 
 /**
- * 当前显示的日志数据
+ * 当前显示的日志数据（初始为空，点击卡片后随机选择一组）
  */
 const currentLogs = ref([]);
 
 /**
- * 日志数据组1
+ * 日志数据组1（模拟数据）
  */
 const logActivities = [
   {
@@ -320,7 +348,7 @@ const logActivities = [
 ];
 
 /**
- * 日志数据组2
+ * 日志数据组2（模拟数据，内容不同）
  */
 const logActivities2 = [
   {
@@ -370,7 +398,6 @@ const logActivities2 = [
     role: '操作员',
     timestamp: '07-16 11:30',
     isCancel: true,
-    reason: '参数调整',
     type: 'danger',
     hollow: true
   },
@@ -422,6 +449,7 @@ const logActivities2 = [
 function handleCardClick(card) {
   hasClickedCard.value = true;
   currentCardName.value = card.formName || '未知表单';
+  selectedCardId.value = card.id;
   const randomIndex = Math.floor(Math.random() * 2);
   currentLogs.value = randomIndex === 0 ? logActivities : logActivities2;
 }
@@ -447,7 +475,7 @@ function handleCardClick(card) {
 
 /* ===== 左侧面板 ===== */
 .overview-left-panel {
-  flex: 0 0 200px;
+  flex: 0 0 180px;
   height: 100%;
   background-color: #d9d9d9;
   border-radius: 4px 0 0 0;
@@ -459,15 +487,13 @@ function handleCardClick(card) {
   position: relative;
 }
 
-/* ===== 提示卡片容器（居中） ===== */
+/* ===== 提示卡片 ===== */
 .hint-card-wrapper {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
-/* ===== 提示卡片 ===== */
 .hint-card {
   width: 170px;
   height: 170px;
@@ -484,21 +510,20 @@ function handleCardClick(card) {
   padding: 10px;
   box-sizing: border-box;
 }
-
 .hint-text {
   line-height: 1.6;
 }
 
-/* ===== 顶部卡片名称显示区域（日志视图） ===== */
+/* ===== 顶部卡片名称显示区域 ===== */
 .panel-header {
   text-align: center;
   color: #fff;
   background-color: #606266;
-  padding: 0;                    /* 已改为 0 */
+  padding: 0;
   border-radius: 4px;
   margin-bottom: 8px;
   flex-shrink: 0;
-  line-height: 0px;              /* 从 30px 改为 0px，高度缩小 */
+  line-height: 0px;
 }
 .panel-title {
   font-size: 14px;
@@ -518,21 +543,17 @@ function handleCardClick(card) {
   padding: 2px 0 !important;
   color: #fff;
 }
-
 .log-card :deep(.el-card__body) {
   padding: 5px 0px 5px 5px !important;
 }
-
 .log-card-cancel {
   background-color: #7a3b3b !important;
 }
-
 .log-action {
   font-size: 13px;
   font-weight: 500;
   color: #ffffff;
 }
-
 .log-person-time {
   font-size: 11px;
   color: #d0d0d0;
@@ -544,14 +565,12 @@ function handleCardClick(card) {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
-
 :deep(.el-timeline-item__timestamp) {
   color: #fff !important;
   font-size: 11px;
 }
-
-:deep(.el-timeline-item__wrapper) {
-  padding-left: 18px;
+:deep(.el-timeline-item.is-start .el-timeline-item__wrapper) {
+  padding-left: 15px !important;
 }
 :deep(.el-timeline-item__node) {
   width: 10px;
@@ -564,7 +583,7 @@ function handleCardClick(card) {
   padding-top: 0;
 }
 
-/* ===== 改造 1：将“已归档”标签改为黑底白字 ===== */
+/* ===== “已归档”标签黑底白字 ===== */
 :deep(.el-tag--dark.el-tag--success) {
   background-color: #000000 !important;
   color: #ffffff !important;
@@ -577,9 +596,9 @@ function handleCardClick(card) {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding-left: 2px;        /* 原 10px，改为 2px */
+  padding-left: 2px;
   box-sizing: border-box;
-  gap: 2px;                 /* 原 6px，改为 2px */
+  gap: 2px;
   min-width: 0;
 }
 
@@ -592,7 +611,7 @@ function handleCardClick(card) {
   border-radius: 0 4px 0 0;
   padding: 4px 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: hidden; /* 关键：限制宽度，使滚动生效 */
 }
 
 .card-scroll-wrapper-horizontal {
@@ -617,25 +636,34 @@ function handleCardClick(card) {
 
 .card-list-horizontal {
   display: flex;
-  gap: 12px;
+  gap: 6px;
   height: 100%;
   align-items: stretch;
   flex-wrap: nowrap;
   padding: 4px 10px;
-  cursor: pointer;
+  width: max-content; /* 宽度由内容撑开，触发滚动 */
 }
 
-.all-workshop-card-horizontal {
+/* ===== 卡片包裹器 ===== */
+.card-wrapper {
+  position: relative;
   flex: 0 0 75px;
   height: 120px;
-  min-width: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: stretch;
+}
+
+/* ===== 卡片本身 ===== */
+.all-workshop-card-horizontal {
+  width: 100%;
+  height: 100%;
   transition: transform 0.2s;
   background-color: #606266 !important;
 }
 .all-workshop-card-horizontal:hover {
   transform: translateY(-4px);
 }
-
 .all-workshop-card-horizontal :deep(.el-card__body) {
   overflow: hidden !important;
   padding: 6px 4px !important;
@@ -657,7 +685,6 @@ function handleCardClick(card) {
   text-align: center;
   min-height: 18px;
 }
-
 .card-actions {
   display: flex;
   gap: 4px;
@@ -665,7 +692,21 @@ function handleCardClick(card) {
   flex-wrap: wrap;
 }
 
-/* ===== 下方固定区域（倒品字底部） ===== */
+/* 角标容器（定位在卡片内部右上角） */
+.badge-wrapper {
+  position: absolute;
+  top: -7px;          /* 内移，避免溢出裁剪 */
+  right: -7px;
+  width: 28px;
+  height: 35px;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 下方固定区域 ===== */
 .overview-bottom {
   flex: 0 0 80px;
   width: 100%;
@@ -680,10 +721,10 @@ function handleCardClick(card) {
   font-size: 14px;
   line-height: 1.6;
 }
-
 .bottom-text-line {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 </style>
+

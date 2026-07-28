@@ -1,11 +1,17 @@
 <template>
-  <el-dialog v-model="visible" title="植本清方光感修护精华水 120ml FE1802" width="260mm" append-to-body @closed="handleClosed">
+  <el-dialog 
+    v-model="visible" 
+    title="植本清方光感修护精华水 120ml FE1802" 
+    width="260mm" 
+    append-to-body
+    class="no-padding-dialog"
+    @closed="handleClosed">
     <div>
       <div class="app-container">
         <!-- ===== 第一层：车间 Tabs ===== -->
-        <el-tabs v-model="activeWorkshop" type="card" tab-position="top" class="workshop-tabs">
+        <el-tabs v-model="activeWorkshop" type="" tab-position="top" class="workshop-tabs">
           <!-- 全览标签页 - 使用子组件 -->
-          <el-tab-pane label="全览" name="全部车间">
+          <el-tab-pane label="全 览" name="全部车间">
             <WorkshopOverview :cards-data="cardsData" />
           </el-tab-pane>
 
@@ -647,6 +653,11 @@ defineExpose({ open, close });
   width: 100% !important;
   overflow: hidden !important;
   max-width: 100% !important;
+}
+
+/* ===== 对话框内边距重置：通过 :global 写入全局样式 ===== */
+:global(.el-dialog.no-padding-dialog) {
+  --el-dialog-padding-primary: 0px;
 }
 
 /* ===== 滚动容器 ===== */

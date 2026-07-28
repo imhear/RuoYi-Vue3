@@ -695,8 +695,8 @@ function handleCardClick(card) {
 /* 角标容器（定位在卡片内部右上角） */
 .badge-wrapper {
   position: absolute;
-  top: -7px;          /* 内移，避免溢出裁剪 */
-  right: -7px;
+  top: -13px;          /* 内移，避免溢出裁剪 */
+  right: -5px;
   width: 28px;
   height: 35px;
   z-index: 10;

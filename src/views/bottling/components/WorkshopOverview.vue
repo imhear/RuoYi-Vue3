@@ -40,7 +40,7 @@
         </template>
       </div>
 
-      <!-- 右侧：竹简卡片区域 -->
+      <!-- 右侧：纸卷卡片区域 -->
       <div class="overview-right-wrapper">
         <!-- 消毒车间 -->
         <div class="workshop-section">
@@ -53,7 +53,7 @@
                 :class="{ expanded: expandedCardId === card.id, archived: card.archived === '0' }"
                 @click="toggleCard(card)"
               >
-                <!-- 竹简卷起状态 -->
+                <!-- 纸卷卷起状态 -->
                 <div class="scroll-roll">
                   <div class="bamboo-texture"></div>
                   <!-- 三条横向编绳，带绳结 -->
@@ -67,7 +67,7 @@
                     <span class="seal-text">封</span>
                   </div>
                 </div>
-                <!-- 竹简展开内容 -->
+                <!-- 纸卷展开内容 -->
                 <div class="scroll-content">
                   <div class="content-inner">
                     <div class="watermark-text">{{ card.formName }}</div>
@@ -250,69 +250,180 @@ function toggleCard(card) {
 
 
 <style scoped>
-/* ===== 整体容器 ===== */
+/* ===== 整体容器：设定固定高度并裁剪超出内容 ===== */
 .overview-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 538px;
-  background: #f0f2f5;
-  border-radius: 8px;
-  overflow: hidden;
+  display: flex;            /* 启用弹性布局，垂直排列 */
+  flex-direction: column;   /* 主轴为垂直方向 */
+  width: 100%;              /* 占满父容器宽度 */
+  height: 528px;            /* 固定高度，确保整体大小不变 */
+  background: #f0f2f5;      /* 浅灰背景 */
+  border-radius: 8px;       /* 圆角 */
+  overflow: hidden;         /* 隐藏超出容器部分 */
 }
+
+/* ===== 上方区域：左右并排，自动填满剩余高度 ===== */
 .overview-top {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  padding: 10px;
-  background: #f0f2f5;
+  display: flex;            /* 水平弹性布局 */
+  flex: 1;                  /* 占满垂直方向剩余空间 */
+  min-height: 0;            /* 避免 flex 子元素溢出 */
+  padding: 10px;            /* 内边距 */
+  background: #f0f2f5;      /* 与容器背景一致 */
 }
 
-/* ===== 左侧日志面板（保持不变） ===== */
+/* ===== 左侧日志面板 ===== */
 .overview-left-panel {
-  flex: 0 0 200px;
-  height: 100%;
-  background-color: #f7f8fa;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  padding: 12px;
-  box-sizing: border-box;
+  flex: 0 0 200px;          /* 固定宽度 200px，不伸缩 */
+  height: 100%;             /* 高度继承父级 */
+  background-color: #f7f8fa; /* 浅灰白背景 */
+  border-radius: 8px;       /* 圆角 */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04); /* 轻微阴影 */
+  padding: 0 6px 0 6px;            /* 内边距 */
+  box-sizing: border-box;   /* 内边距计入宽高 */
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  margin-right: 10px;
+  flex-direction: column;   /* 垂直弹性布局 */
+  overflow: hidden;         /* 裁剪溢出内容 */
+  margin-right: 10px;       /* 右侧间距 */
 }
-.hint-card-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; }
-.hint-card { width: 150px; height: 150px; background: linear-gradient(135deg, #e6f0ff, #fff); border: 2px dashed #409eff; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #409eff; font-size: 15px; font-weight: 500; text-align: center; padding: 15px; transition: 0.3s; cursor: pointer; }
-.hint-card:hover { background: linear-gradient(135deg, #d0e4ff, #f0f7ff); transform: scale(1.02); }
-.hint-text { line-height: 1.6; }
-.panel-header { text-align: center; background-color: #ecf5ff; padding: 6px 0; border-radius: 6px; margin-bottom: 10px; border: 1px solid #d9ecff; }
-.panel-title { color: #409eff !important; font-size: 14px; font-weight: 600; }
-.log-scrollbar { flex: 1; height: 100%; }
-.log-card { background-color: #fff !important; border: 1px solid #ebeef5 !important; box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important; border-radius: 6px; transition: 0.2s; }
-.log-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; transform: translateY(-1px); }
-.log-card :deep(.el-card__body) { padding: 8px 12px !important; }
-.log-card-cancel { background-color: #fef0f0 !important; border-color: #fde2e2 !important; }
-.log-action { font-size: 13px; font-weight: 500; color: #303133; }
-.log-person-time { font-size: 11px; color: #909399; margin-top: 4px; }
-:deep(.el-timeline.is-start) { padding-left: 0 !important; padding-right: 0 !important; }
-:deep(.el-timeline-item__timestamp) { color: #606266 !important; font-size: 11px; }
-:deep(.el-timeline-item.is-start .el-timeline-item__wrapper) { padding-left: 18px !important; }
-:deep(.el-timeline-item__node) { width: 10px; height: 10px; }
-:deep(.el-timeline-item) { padding-bottom: 16px !important; }
-:deep(.el-timeline-item__content) { padding-top: 0; }
 
-/* ===== 右侧区域 ===== */
-.overview-right-wrapper {
+/* 提示卡片容器：居中显示 */
+.hint-card-wrapper {
+  flex: 1;                 /* 填满可用空间 */
+  display: flex;
+  align-items: center;     /* 垂直居中 */
+  justify-content: center; /* 水平居中 */
+}
+
+/* 提示卡片样式 */
+.hint-card {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, #e6f0ff, #fff); /* 渐变背景 */
+  border: 2px dashed #409eff;  /* 虚线边框 */
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #409eff;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  padding: 15px;
+  transition: 0.3s;        /* 过渡动画 */
+  cursor: pointer;
+}
+
+/* 提示卡片悬浮效果 */
+.hint-card:hover {
+  background: linear-gradient(135deg, #d0e4ff, #f0f7ff);
+  transform: scale(1.02);
+}
+
+/* 提示文字行高 */
+.hint-text {
+  line-height: 1.6;
+}
+
+/* 日志面板头部（显示当前卡片名） */
+.panel-header {
+  text-align: center;
+  border-radius: 6px;
+  margin-bottom: 1px;
+}
+
+/* 面板标题 */
+.panel-title {
+  color: #909399 !important;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 日志滚动区 */
+.log-scrollbar {
   flex: 1;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
 }
+
+/* 日志卡片 */
+.log-card {
+  background-color: #fff !important;
+  border: 1px solid #ebeef5 !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+/* 日志卡片悬浮效果 */
+.log-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+  transform: translateY(-1px);
+}
+
+/* 日志卡片内容区 */
+.log-card :deep(.el-card__body) {
+  padding: 8px 12px !important;
+}
+
+/* 已取消操作的日志卡片特殊底色 */
+.log-card-cancel {
+  background-color: #fef0f0 !important;
+  border-color: #fde2e2 !important;
+}
+
+/* 日志操作描述 */
+.log-action {
+  font-size: 13px;
+  font-weight: 500;
+  color: #303133;
+}
+
+/* 日志人物/时间信息 */
+.log-person-time {
+  font-size: 11px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+/* 覆盖时间线组件默认样式 */
+:deep(.el-timeline.is-start) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+:deep(.el-timeline-item__timestamp) {
+  color: #606266 !important;
+  font-size: 11px;
+}
+
+:deep(.el-timeline-item.is-start .el-timeline-item__wrapper) {
+  padding-left: 18px !important;
+}
+
+:deep(.el-timeline-item__node) {
+  width: 10px;
+  height: 10px;
+}
+
+:deep(.el-timeline-item) {
+  padding-bottom: 16px !important;
+}
+
+:deep(.el-timeline-item__content) {
+  padding-top: 0;
+}
+
+/* ===== 右侧卡片区域 ===== */
+.overview-right-wrapper {
+  flex: 1;                 /* 占据剩余宽度 */
+  height: 100%;
+  display: flex;
+  flex-direction: column;  /* 垂直排列多个车间 */
+  gap: 8px;                /* 车间间距 */
+  min-width: 0;            /* 允许缩小 */
+}
+
+/* 单个车间区域 */
 .workshop-section {
-  flex: 1;
+  flex: 1;                 /* 平均分配高度 */
   display: flex;
   flex-direction: column;
   background: #ffffff;
@@ -320,34 +431,47 @@ function toggleCard(card) {
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   padding: 4px 8px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: hidden;        /* 裁剪溢出 */
 }
+
+/* 车间彩色左边框区分 */
 .workshop-section:nth-child(1) { border-left: 4px solid #409eff; }
 .workshop-section:nth-child(2) { border-left: 4px solid #67c23a; }
 .workshop-section:nth-child(3) { border-left: 4px solid #e6a23c; }
 
+/* 水平滚动容器 */
 .card-scroll-wrapper-horizontal {
   height: 100%;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: visible; /* 允许倾斜后不裁剪 */
-  padding: 6px 0;
+  overflow-x: auto;        /* 保留横向滚动 */
+  overflow-y: hidden;      /* 强制隐藏垂直滚动条（关键修改） */
+  padding: 1px 0 1px 6px;
 }
-.card-scroll-wrapper-horizontal::-webkit-scrollbar { height: 5px; }
-.card-scroll-wrapper-horizontal::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 10px; }
-.card-scroll-wrapper-horizontal::-webkit-scrollbar-track { background: #f0f2f5; }
 
+/* 滚动条美化 */
+.card-scroll-wrapper-horizontal::-webkit-scrollbar {
+  height: 5px;
+}
+.card-scroll-wrapper-horizontal::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 10px;
+}
+.card-scroll-wrapper-horizontal::-webkit-scrollbar-track {
+  background: #f0f2f5;
+}
+
+/* 水平卡片列表 */
 .card-list-horizontal {
   display: flex;
-  gap: 12px; /* 增加间距以免倾斜重叠 */
+  gap: 15px;               /* 卡片间距，防止倾斜重叠 */
   height: 100%;
-  align-items: flex-end;
+  align-items: flex-end;   /* 底部对齐 */
   flex-wrap: nowrap;
-  width: max-content;
+  width: max-content;      /* 宽度由内容撑开 */
   padding: 0 4px;
 }
 
-/* ===== 纸卷卡片包裹器（添加轻微旋转） ===== */
+/* 单个纸卷卡片包裹器 */
 .card-wrapper {
   position: relative;
   width: 50px;
@@ -358,14 +482,16 @@ function toggleCard(card) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: rotate(-4deg);       /* 整体倾斜 */
+  transform: rotate(-4deg);      /* 轻微倾斜，模拟纸卷摆放 */
   transform-origin: center bottom;
 }
+
+/* 卡片展开时宽度增加 */
 .card-wrapper.expanded {
-  width: 130px;                  /* 展开稍宽以容纳内容 */
+  width: 130px;
 }
 
-/* ===== 纸卷卷起状态（宣纸质感，去掉竹片） ===== */
+/* 纸卷卷起状态样式 */
 .scroll-roll {
   width: 100%;
   height: 95px;
@@ -376,12 +502,12 @@ function toggleCard(card) {
     #fcf8f2 50%,
     #f7f0e4 80%,
     #e8dcc8 100%
-  );
+  ); /* 米白色调模拟宣纸 */
   border-radius: 3px;            /* 微圆角模拟纸卷边缘 */
   box-shadow: 
     0 4px 10px rgba(0,0,0,0.2),
     inset 0 1px 2px rgba(255,255,255,0.9),
-    inset 0 -1px 2px rgba(0,0,0,0.15);
+    inset 0 -1px 2px rgba(0,0,0,0.15); /* 内外阴影增加立体感 */
   position: relative;
   overflow: hidden;
   transition: all 0.8s;
@@ -395,17 +521,19 @@ function toggleCard(card) {
     rgba(0,0,0,0.02) 5px
   );
 }
+
+/* 展开时隐藏纸卷 */
 .card-wrapper.expanded .scroll-roll {
   opacity: 0;
   transform: scale(0.8);
 }
 
-/* 去掉竹片纹理 */
+/* 移除竹片纹理（纸卷风格） */
 .bamboo-texture {
   display: none;
 }
 
-/* 日期数字（纸卷顶部中央） */
+/* 卷起状态顶部的日期数字 */
 .roll-date {
   position: absolute;
   top: 10px;
@@ -418,7 +546,7 @@ function toggleCard(card) {
   z-index: 2;
 }
 
-/* ===== 印泥标识（保持原样） ===== */
+/* 印泥标识（已归档卡片） */
 .wax-seal {
   position: absolute;
   top: 50%;
@@ -437,6 +565,8 @@ function toggleCard(card) {
   justify-content: center;
   z-index: 4;
 }
+
+/* 印泥中的“封”字 */
 .seal-text {
   font-family: "STKaiti", "楷体", "KaiTi", serif;
   font-size: 13px;
@@ -447,14 +577,14 @@ function toggleCard(card) {
   user-select: none;
 }
 
-/* ===== 纸卷展开内容（倾斜同步，宣纸质感） ===== */
+/* 纸卷展开后的内容面板 */
 .scroll-content {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 95px;
-  background: #fcf8f2; /* 米白宣纸 */
+  background: #fcf8f2;    /* 米白宣纸底色 */
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   padding: 8px 8px;
@@ -474,17 +604,22 @@ function toggleCard(card) {
     rgba(0,0,0,0.015) 6px
   );
 }
+
+/* 展开时显示内容 */
 .card-wrapper.expanded .scroll-content {
   opacity: 1;
   transform: scale(1);
 }
 
+/* 展开内容内部布局 */
 .content-inner {
   display: flex;
   flex-direction: column;
   justify-content: center;
   height: 100%;
 }
+
+/* 表单名称（水印效果） */
 .watermark-text {
   font-size: 13px;
   font-weight: 600;
@@ -496,18 +631,22 @@ function toggleCard(card) {
   font-family: "STKaiti", "楷体", serif;
   letter-spacing: 0.5px;
 }
+
+/* 日期与归档标签行 */
 .detail-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
+/* 展开时的日期文字 */
 .detail-date {
   font-size: 11px;
   color: #6b4c2a;
   font-family: "STKaiti", "楷体", serif;
 }
 
-/* 卡片名称悬挂标签（跟随倾斜） */
+/* 卡片名称悬挂标签（随纸卷倾斜） */
 .card-label {
   margin-top: 4px;
   font-size: 9px;
@@ -518,47 +657,43 @@ function toggleCard(card) {
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 500;
-  transform: rotate(4deg); /* 反向微调以保持文字可读 */
+  transform: rotate(4deg); /* 反向旋转补偿，保持文字可读 */
 }
 
-/* 脉冲角标 */
+/* 脉冲角标容器 */
 .badge-wrapper {
   position: absolute;
-  top: -18px;
-  left: -4px;
+  top: -10px;
+  left: -1px;
   z-index: 10;
   pointer-events: none;
-  /* 角标可以不跟随倾斜，保持水平 */
-  transform: rotate(4deg);
+  transform: rotate(4deg); /* 补偿纸卷倾斜，使角标保持水平 */
 }
 
-/* ===== 底部信息栏 ===== */
+/* ===== 底部信息栏：最大高度限制为 70px ===== */
 .overview-bottom {
-  flex: 0 0 80px;
+  max-height: 50px;          /* 最大高度 70 逻辑像素 */
+  overflow: hidden;          /* 超出部分隐藏 */
+  flex-shrink: 0;            /* 防止被上方区域压缩 */
   background-color: #f7f8fa;
   border-radius: 0 0 8px 8px;
   box-shadow: 0 -2px 6px rgba(0,0,0,0.03);
-  padding: 10px 20px;
+  padding: 0px 20px 0px 10px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center;   /* 内容垂直居中 */
   color: #303133;
-  font-size: 13px;
-  line-height: 1.8;
-  border-top: 2px solid #409eff;
+  font-size: 12px;
 }
+
+/* 底部文字行 */
 .bottom-text-line {
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis;   /* 溢出显示省略号 */
   color: #606266;
 }
-.bottom-text-line:first-child {
-  font-weight: 600;
-  color: #409eff;
-}
+
 </style>
-
-
 

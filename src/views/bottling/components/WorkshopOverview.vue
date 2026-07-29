@@ -277,7 +277,7 @@ function toggleCard(card) {
   background-color: #f7f8fa; /* 浅灰白背景 */
   border-radius: 8px;       /* 圆角 */
   box-shadow: 0 2px 8px rgba(0,0,0,0.04); /* 轻微阴影 */
-  padding: 0 6px 0 6px;            /* 内边距 */
+  padding: 0 14px 0 6px;            /* 内边距 */
   box-sizing: border-box;   /* 内边距计入宽高 */
   display: flex;
   flex-direction: column;   /* 垂直弹性布局 */
@@ -649,7 +649,7 @@ function toggleCard(card) {
 
 /* 卡片名称悬挂标签（随纸卷倾斜） */
 .card-label {
-  margin-top: 4px;
+  margin-top: 8px;
   font-size: 10px;
   color: #5a4a2f;
   text-align: center;

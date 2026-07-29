@@ -360,7 +360,7 @@ function toggleCard(card) {
 
 /* 日志卡片内容区 */
 .log-card :deep(.el-card__body) {
-  padding: 8px 12px !important;
+  padding: 2px 0px 2px 8px !important;
 }
 
 /* 已取消操作的日志卡片特殊底色 */
@@ -390,8 +390,9 @@ function toggleCard(card) {
 }
 
 :deep(.el-timeline-item__timestamp) {
-  color: #606266 !important;
+  color: #909399 !important;
   font-size: 11px;
+  margin-top: 4px;
 }
 
 :deep(.el-timeline-item.is-start .el-timeline-item__wrapper) {
@@ -404,7 +405,7 @@ function toggleCard(card) {
 }
 
 :deep(.el-timeline-item) {
-  padding-bottom: 16px !important;
+  padding-bottom: 12px !important;
 }
 
 :deep(.el-timeline-item__content) {
@@ -510,7 +511,7 @@ function toggleCard(card) {
     inset 0 -1px 2px rgba(0,0,0,0.15); /* 内外阴影增加立体感 */
   position: relative;
   overflow: hidden;
-  transition: all 0.8s;
+  transition: all 0.5s;
   z-index: 2;
   /* 纸张纹理：细微横纹 */
   background-image: repeating-linear-gradient(
@@ -592,7 +593,7 @@ function toggleCard(card) {
   overflow: hidden;
   opacity: 0;
   transform: scale(0.9);
-  transition: all 0.8s;
+  transition: all 0.5s;
   z-index: 1;
   border: 1px solid #ddd0b8;
   /* 纸张纹理 */
@@ -649,7 +650,7 @@ function toggleCard(card) {
 /* 卡片名称悬挂标签（随纸卷倾斜） */
 .card-label {
   margin-top: 4px;
-  font-size: 9px;
+  font-size: 10px;
   color: #5a4a2f;
   text-align: center;
   white-space: nowrap;
@@ -663,7 +664,7 @@ function toggleCard(card) {
 /* 脉冲角标容器 */
 .badge-wrapper {
   position: absolute;
-  top: -10px;
+  top: -11px;
   left: -1px;
   z-index: 10;
   pointer-events: none;

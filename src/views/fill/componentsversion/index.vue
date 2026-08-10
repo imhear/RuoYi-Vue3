@@ -99,8 +99,14 @@
 
     <el-table v-loading="loading" :data="componentsversionList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="版本主键" align="center" prop="versionId" />
-      <el-table-column label="关联表单ID" align="center" prop="formId" />
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" min-width="100">
+        <template #default="scope">
+          <el-button link type="primary" icon="" @click="handleUpdate(scope.row)" v-hasPermi="['fill:componentsversion:edit']">修改</el-button>
+          <el-button link type="primary" icon="" @click="handleDelete(scope.row)" v-hasPermi="['fill:componentsversion:remove']">删除</el-button>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="版本主键" align="center" prop="versionId" /> -->
+      <!-- <el-table-column label="关联表单ID" align="center" prop="formId" /> -->
       <el-table-column label="版本号" align="center" prop="versionCode" />
       <el-table-column label="版本名称" align="center" prop="versionName" />
       <el-table-column label="是否当前生效版本" align="center" prop="isCurrent" />
@@ -111,14 +117,10 @@
       </el-table-column>
       <el-table-column label="前端组件基础路径" align="center" prop="componentBasePath" />
       <el-table-column label="自定义组件映射" align="center" prop="componentNames" />
-      <el-table-column label="变更说明" align="center" prop="changelog" />
+      <!-- <el-table-column label="变更说明" align="center" prop="changelog" /> -->
       <el-table-column label="状态" align="center" prop="status" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:componentsversion:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:componentsversion:remove']">删除</el-button>
-        </template>
-      </el-table-column>
+      <el-table-column label="物理表名" align="center" prop="tableName" :show-overflow-tooltip="true" min-width="100"/>
+      <el-table-column label="物理表注释" align="center" prop="tableComment" :show-overflow-tooltip="true" min-width="130"/>
     </el-table>
     
     <pagination
@@ -131,11 +133,31 @@
 
     <!-- 添加或修改前端组件版本对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="componentsversionRef" :model="form" :rules="rules" label-width="130px">
+      <el-form ref="componentsversionRef" :model="form" :rules="rules" label-width="140px">
         <el-row>
-          <el-col :span="24">
+          <!-- <el-col :span="24">
             <el-form-item label="关联表单ID" prop="formId">
-              <el-input v-model="form.formId" placeholder="请输入关联表单ID" />
+              <el-input v-model="form.formId" placeholder="请输入关联表单ID" disabled/>
+            </el-form-item>
+          </el-col> -->
+          <el-col :span="24">
+            <el-form-item label="物理表名" prop="tableName">
+              <el-input v-model="form.tableName" placeholder="物理表名（自动填充）" disabled/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="物理表注释" prop="tableComment">
+              <el-input v-model="form.tableComment" placeholder="物理表注释（自动填充）" disabled/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="前端组件基础路径" prop="componentBasePath">
+              <el-input v-model="form.componentBasePath" placeholder="前端组件基础路径（如 filling/versions/v1.0.0/）" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="自定义组件映射" prop="componentNames">
+              <el-input v-model="form.componentNames" type="textarea" placeholder='自定义组件映射（JSON格式，如 {"handle":"Handle.vue","review":"Review.vue"}）' />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -164,16 +186,6 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="前端组件基础路径" prop="componentBasePath">
-              <el-input v-model="form.componentBasePath" placeholder="前端组件基础路径（如 filling/versions/v1.0.0/）" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="自定义组件映射" prop="componentNames">
-              <el-input v-model="form.componentNames" type="textarea" placeholder='自定义组件映射（JSON格式，如 {"handle":"Handle.vue","review":"Review.vue"}）' />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
             <el-form-item label="变更说明" prop="changelog">
               <el-input v-model="form.changelog" type="textarea" placeholder="请输入内容" />
             </el-form-item>
@@ -192,12 +204,17 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 选择表单模板对话框（独立组件） -->
+    <SelectFormTemplate ref="selectTemplateRef" @ok="onTemplateSelected" />
   </div>
 </template>
 
 <script setup name="Componentsversion">
 import { ref, reactive, toRefs, watch } from 'vue'   // 新增 watch
 import { listComponentsversion, getComponentsversion, delComponentsversion, addComponentsversion, updateComponentsversion } from "@/api/fill/componentsversion"
+// 引入选择表单模板组件
+import SelectFormTemplate from "./SelectFormTemplate.vue"
 
 const { proxy } = getCurrentInstance()
 
@@ -211,12 +228,17 @@ const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
 
+// 选择表单模板组件引用
+const selectTemplateRef = ref(null)
+
 const data = reactive({
   form: {},
   queryParams: {
     pageNum: 1,
     pageSize: 10,
     formId: undefined,
+    tableName: null,          // 新增
+    tableComment: null,       // 新增
     versionCode: undefined,
     versionName: undefined,
     isCurrent: undefined,
@@ -311,10 +333,24 @@ function handleSelectionChange(selection) {
   multiple.value = !selection.length
 }
 
-/** 新增按钮操作 */
+/**
+ * 新增按钮操作：打开选择表单模板对话框（完全参考代码生成导入逻辑）
+ */
 function handleAdd() {
-  reset()
-  open.value = true
+  // 调用独立组件的 show 方法
+  selectTemplateRef.value.show()
+}
+
+/**
+ * 选择模板确认回调：接收选中行数据，直接打开新增对话框并填充 formId
+ * @param {Object} row 选中的表单模板行数据
+ */
+function onTemplateSelected(row) {
+  reset()                           // 重置新增表单
+  form.value.formId = row.formId    // 将选中的 formId 赋值给新增表单
+  form.value.tableName = row.tableName   // 物理表名（新增冗余字段）
+  form.value.tableComment = row.tableComment // 物理表注释（可选，用于调试）
+  open.value = true                 // 打开新增对话框
   title.value = "添加前端组件版本"
 }
 

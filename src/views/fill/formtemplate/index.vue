@@ -124,30 +124,30 @@
     </el-row>
 
     <el-table v-loading="loading" :data="formtemplateList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="表单主键" align="center" prop="formId" />
-      <el-table-column label="数据库schema" align="center" prop="tableSchema" />
-      <el-table-column label="物理表名" align="center" prop="tableName" />
-      <el-table-column label="物理表注释" align="center" prop="tableComment" />
-      <el-table-column label="物理表DDL创建时间" align="center" prop="ddlCreateTime" width="180">
+      <el-table-column type="selection" align="center" min-width="30"/>
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" min-width="100">
+        <template #default="scope">
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:formtemplate:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:formtemplate:remove']">删除</el-button>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="表单主键" align="center" prop="formId" min-width="60"/> -->
+      <!-- <el-table-column label="数据库schema" align="center" prop="tableSchema" /> -->
+      <el-table-column label="物理表名" align="center" prop="tableName" min-width="140"/>
+      <el-table-column label="物理表注释" align="center" prop="tableComment" min-width="180"/>
+      <el-table-column label="状态" align="center" prop="status" min-width="60"/>
+      <el-table-column label="表单类型" align="center" prop="formType" min-width="60"/>
+      <el-table-column label="所属模块" align="center" prop="moduleName" min-width="60"/>
+      <el-table-column label="所在分组" align="center" prop="groupName" min-width="60"/>
+      <el-table-column label="显示顺序" align="center" prop="orderNum" min-width="60"/>
+      <el-table-column label="物理表DDL创建时间" align="center" prop="ddlCreateTime" min-width="100">
         <template #default="scope">
           <span>{{ parseTime(scope.row.ddlCreateTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="物理表DDL修改时间" align="center" prop="ddlUpdateTime" width="180">
+      <el-table-column label="物理表DDL修改时间" align="center" prop="ddlUpdateTime" min-width="100">
         <template #default="scope">
           <span>{{ parseTime(scope.row.ddlUpdateTime, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="表单类型" align="center" prop="formType" />
-      <el-table-column label="所属模块" align="center" prop="moduleName" />
-      <el-table-column label="所在分组" align="center" prop="groupName" />
-      <el-table-column label="显示顺序" align="center" prop="orderNum" />
-      <el-table-column label="状态" align="center" prop="status" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:formtemplate:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:formtemplate:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>

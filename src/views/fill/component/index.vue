@@ -1,37 +1,29 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="关联分组方案ID" prop="groupSchemeId">
+      <el-form-item label="组件完整路径" prop="componentPath">
         <el-input
-          v-model="queryParams.groupSchemeId"
-          placeholder="请输入关联分组方案ID"
+          v-model="queryParams.componentPath"
+          placeholder="请输入组件完整路径"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="物理表名" prop="tableName">
+      <el-form-item label="是否当前生效" prop="isCurrent">
         <el-input
-          v-model="queryParams.tableName"
-          placeholder="请输入物理表名"
+          v-model="queryParams.isCurrent"
+          placeholder="请输入是否当前生效"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="前置明细ID" prop="predecessorDetailId">
-        <el-input
-          v-model="queryParams.predecessorDetailId"
-          placeholder="请输入前置明细ID"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="排序号" prop="sortOrder">
-        <el-input
-          v-model="queryParams.sortOrder"
-          placeholder="请输入排序号"
-          clearable
-          @keyup.enter="handleQuery"
-        />
+      <el-form-item label="生效日期" prop="effectiveDate">
+        <el-date-picker clearable
+          v-model="queryParams.effectiveDate"
+          type="date"
+          value-format="YYYY-MM-DD"
+          placeholder="请选择生效日期">
+        </el-date-picker>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -46,7 +38,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['fill:schemedetail:add']"
+          v-hasPermi="['fill:component:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -56,7 +48,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['fill:schemedetail:edit']"
+          v-hasPermi="['fill:component:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -66,7 +58,7 @@
           icon="Delete"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['fill:schemedetail:remove']"
+          v-hasPermi="['fill:component:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -75,25 +67,28 @@
           plain
           icon="Download"
           @click="handleExport"
-          v-hasPermi="['fill:schemedetail:export']"
+          v-hasPermi="['fill:component:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="schemedetailList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="componentList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="明细主键" align="center" prop="detailId" />
-      <el-table-column label="关联分组方案ID" align="center" prop="groupSchemeId" />
-      <el-table-column label="物理表名" align="center" prop="tableName" />
-      <el-table-column label="自定义字段预赋值" align="center" prop="customParams" />
-      <el-table-column label="前置明细ID" align="center" prop="predecessorDetailId" />
-      <el-table-column label="排序号" align="center" prop="sortOrder" />
+      <el-table-column label="注册主键" align="center" prop="componentId" />
+      <el-table-column label="组件完整路径" align="center" prop="componentPath" />
+      <el-table-column label="是否当前生效" align="center" prop="isCurrent" />
+      <el-table-column label="生效日期" align="center" prop="effectiveDate" width="180">
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.effectiveDate, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="变更说明" align="center" prop="changelog" />
       <el-table-column label="状态" align="center" prop="status" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:schemedetail:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:schemedetail:remove']">删除</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:component:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:component:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -106,33 +101,33 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改填报明细设计态对话框 -->
+    <!-- 添加或修改前端组件注册对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="schemedetailRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="componentRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="24">
-            <el-form-item label="关联分组方案ID" prop="groupSchemeId">
-              <el-input v-model="form.groupSchemeId" placeholder="请输入关联分组方案ID" />
+            <el-form-item label="组件完整路径" prop="componentPath">
+              <el-input v-model="form.componentPath" placeholder="请输入组件完整路径" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="物理表名" prop="tableName">
-              <el-input v-model="form.tableName" placeholder="请输入物理表名" />
+            <el-form-item label="是否当前生效" prop="isCurrent">
+              <el-input v-model="form.isCurrent" placeholder="请输入是否当前生效" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="自定义字段预赋值" prop="customParams">
-              <el-input v-model="form.customParams" type="textarea" placeholder="请输入内容" />
+            <el-form-item label="生效日期" prop="effectiveDate">
+              <el-date-picker clearable
+                v-model="form.effectiveDate"
+                type="date"
+                value-format="YYYY-MM-DD"
+                placeholder="请选择生效日期">
+              </el-date-picker>
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="前置明细ID" prop="predecessorDetailId">
-              <el-input v-model="form.predecessorDetailId" placeholder="请输入前置明细ID" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="排序号" prop="sortOrder">
-              <el-input v-model="form.sortOrder" placeholder="请输入排序号" />
+            <el-form-item label="变更说明" prop="changelog">
+              <el-input v-model="form.changelog" type="textarea" placeholder="请输入内容" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -152,12 +147,12 @@
   </div>
 </template>
 
-<script setup name="Schemedetail">
-import { listSchemedetail, getSchemedetail, delSchemedetail, addSchemedetail, updateSchemedetail } from "@/api/fill/schemedetail"
+<script setup name="Component">
+import { listComponent, getComponent, delComponent, addComponent, updateComponent } from "@/api/fill/component"
 
 const { proxy } = getCurrentInstance()
 
-const schemedetailList = ref([])
+const componentList = ref([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
@@ -172,30 +167,26 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    groupSchemeId: undefined,
-    tableName: undefined,
-    customParams: undefined,
-    predecessorDetailId: undefined,
-    sortOrder: undefined,
+    componentPath: undefined,
+    isCurrent: undefined,
+    effectiveDate: undefined,
+    changelog: undefined,
     status: undefined,
   },
   rules: {
-    groupSchemeId: [
-      { required: true, message: "关联分组方案ID不能为空", trigger: "blur" }
-    ],
-    tableName: [
-      { required: true, message: "物理表名不能为空", trigger: "blur" }
+    componentPath: [
+      { required: true, message: "组件完整路径不能为空", trigger: "blur" }
     ],
   }
 })
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询填报明细设计态列表 */
+/** 查询前端组件注册列表 */
 function getList() {
   loading.value = true
-  listSchemedetail(queryParams.value).then(response => {
-    schemedetailList.value = response.rows
+  listComponent(queryParams.value).then(response => {
+    componentList.value = response.rows
     total.value = response.total
     loading.value = false
   })
@@ -210,12 +201,11 @@ function cancel() {
 /** 表单重置 */
 function reset() {
   form.value = {
-    detailId: null,
-    groupSchemeId: null,
-    tableName: null,
-    customParams: null,
-    predecessorDetailId: null,
-    sortOrder: null,
+    componentId: null,
+    componentPath: null,
+    isCurrent: null,
+    effectiveDate: null,
+    changelog: null,
     status: null,
     delFlag: null,
     createBy: null,
@@ -223,7 +213,7 @@ function reset() {
     updateBy: null,
     updateTime: null
   }
-  proxy.resetForm("schemedetailRef")
+  proxy.resetForm("componentRef")
 }
 
 /** 搜索按钮操作 */
@@ -240,7 +230,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.detailId)
+  ids.value = selection.map(item => item.componentId)
   single.value = selection.length != 1
   multiple.value = !selection.length
 }
@@ -249,32 +239,32 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加填报明细设计态"
+  title.value = "添加前端组件注册"
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
-  const _detailId = row.detailId || ids.value
-  getSchemedetail(_detailId).then(response => {
+  const _componentId = row.componentId || ids.value
+  getComponent(_componentId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改填报明细设计态"
+    title.value = "修改前端组件注册"
   })
 }
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["schemedetailRef"].validate(valid => {
+  proxy.$refs["componentRef"].validate(valid => {
     if (valid) {
-      if (form.value.detailId != null) {
-        updateSchemedetail(form.value).then(() => {
+      if (form.value.componentId != null) {
+        updateComponent(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addSchemedetail(form.value).then(() => {
+        addComponent(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
@@ -286,9 +276,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _detailIds = row.detailId || ids.value
-  proxy.$modal.confirm('是否确认删除填报明细设计态编号为"' + _detailIds + '"的数据项？').then(function() {
-    return delSchemedetail(_detailIds)
+  const _componentIds = row.componentId || ids.value
+  proxy.$modal.confirm('是否确认删除前端组件注册编号为"' + _componentIds + '"的数据项？').then(function() {
+    return delComponent(_componentIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -297,9 +287,9 @@ function handleDelete(row) {
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('fill/schemedetail/export', {
+  proxy.download('fill/component/export', {
     ...queryParams.value
-  }, `schemedetail_${new Date().getTime()}.xlsx`)
+  }, `component_${new Date().getTime()}.xlsx`)
 }
 
 getList()

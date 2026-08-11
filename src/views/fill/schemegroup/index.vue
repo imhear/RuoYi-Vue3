@@ -17,10 +17,10 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="显示顺序" prop="orderNum">
+      <el-form-item label="排序号" prop="sortOrder">
         <el-input
-          v-model="queryParams.orderNum"
-          placeholder="请输入显示顺序"
+          v-model="queryParams.sortOrder"
+          placeholder="请输入排序号"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -79,7 +79,7 @@
       <el-table-column label="所属方案ID" align="center" prop="schemeId" />
       <el-table-column label="分组类型" align="center" prop="groupType" />
       <el-table-column label="分组类型名称" align="center" prop="groupTypeName" />
-      <el-table-column label="显示顺序" align="center" prop="orderNum" />
+      <el-table-column label="排序号" align="center" prop="sortOrder" />
       <el-table-column label="状态" align="center" prop="status" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
@@ -97,7 +97,7 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改填报方案分组对话框 -->
+    <!-- 添加或修改填报分组设计态对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="schemegroupRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
@@ -107,18 +107,13 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="分组类型" prop="groupType">
-              <el-input v-model="form.groupType" placeholder="请输入分组类型" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
             <el-form-item label="分组类型名称" prop="groupTypeName">
               <el-input v-model="form.groupTypeName" placeholder="请输入分组类型名称" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="显示顺序" prop="orderNum">
-               <el-input-number v-model="form.orderNum" controls-position="right" :min="0" />
+            <el-form-item label="排序号" prop="sortOrder">
+              <el-input v-model="form.sortOrder" placeholder="请输入排序号" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -161,7 +156,7 @@ const data = reactive({
     schemeId: undefined,
     groupType: undefined,
     groupTypeName: undefined,
-    orderNum: undefined,
+    sortOrder: undefined,
     status: undefined,
   },
   rules: {
@@ -176,7 +171,7 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询填报方案分组列表 */
+/** 查询填报分组设计态列表 */
 function getList() {
   loading.value = true
   listSchemegroup(queryParams.value).then(response => {
@@ -199,7 +194,7 @@ function reset() {
     schemeId: null,
     groupType: null,
     groupTypeName: null,
-    orderNum: null,
+    sortOrder: null,
     status: null,
     delFlag: null,
     createBy: null,
@@ -233,7 +228,7 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加填报方案分组"
+  title.value = "添加填报分组设计态"
 }
 
 /** 修改按钮操作 */
@@ -243,7 +238,7 @@ function handleUpdate(row) {
   getSchemegroup(_groupSchemeId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改填报方案分组"
+    title.value = "修改填报分组设计态"
   })
 }
 
@@ -271,7 +266,7 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _groupSchemeIds = row.groupSchemeId || ids.value
-  proxy.$modal.confirm('是否确认删除填报方案分组编号为"' + _groupSchemeIds + '"的数据项？').then(function() {
+  proxy.$modal.confirm('是否确认删除填报分组设计态编号为"' + _groupSchemeIds + '"的数据项？').then(function() {
     return delSchemegroup(_groupSchemeIds)
   }).then(() => {
     getList()

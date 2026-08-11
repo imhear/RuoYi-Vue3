@@ -1,10 +1,10 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="关联分组方案ID" prop="groupSchemeId">
+      <el-form-item label="关联发布ID" prop="releaseId">
         <el-input
-          v-model="queryParams.groupSchemeId"
-          placeholder="请输入关联分组方案ID"
+          v-model="queryParams.releaseId"
+          placeholder="请输入关联发布ID"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -46,7 +46,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['fill:schemedetail:add']"
+          v-hasPermi="['fill:releasedetail:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -56,7 +56,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['fill:schemedetail:edit']"
+          v-hasPermi="['fill:releasedetail:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -66,7 +66,7 @@
           icon="Delete"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['fill:schemedetail:remove']"
+          v-hasPermi="['fill:releasedetail:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -75,25 +75,25 @@
           plain
           icon="Download"
           @click="handleExport"
-          v-hasPermi="['fill:schemedetail:export']"
+          v-hasPermi="['fill:releasedetail:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="schemedetailList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="releasedetailList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="明细主键" align="center" prop="detailId" />
-      <el-table-column label="关联分组方案ID" align="center" prop="groupSchemeId" />
+      <el-table-column label="发布明细主键" align="center" prop="releaseDetailId" />
+      <el-table-column label="关联发布ID" align="center" prop="releaseId" />
+      <el-table-column label="分组类型" align="center" prop="groupType" />
       <el-table-column label="物理表名" align="center" prop="tableName" />
-      <el-table-column label="自定义字段预赋值" align="center" prop="customParams" />
+      <el-table-column label="自定义参数" align="center" prop="customParams" />
       <el-table-column label="前置明细ID" align="center" prop="predecessorDetailId" />
       <el-table-column label="排序号" align="center" prop="sortOrder" />
-      <el-table-column label="状态" align="center" prop="status" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:schemedetail:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:schemedetail:remove']">删除</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:releasedetail:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:releasedetail:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -106,13 +106,13 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改填报明细设计态对话框 -->
+    <!-- 添加或修改填报明细发布态对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="schemedetailRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="releasedetailRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="24">
-            <el-form-item label="关联分组方案ID" prop="groupSchemeId">
-              <el-input v-model="form.groupSchemeId" placeholder="请输入关联分组方案ID" />
+            <el-form-item label="关联发布ID" prop="releaseId">
+              <el-input v-model="form.releaseId" placeholder="请输入关联发布ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -121,7 +121,7 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="自定义字段预赋值" prop="customParams">
+            <el-form-item label="自定义参数" prop="customParams">
               <el-input v-model="form.customParams" type="textarea" placeholder="请输入内容" />
             </el-form-item>
           </el-col>
@@ -152,12 +152,12 @@
   </div>
 </template>
 
-<script setup name="Schemedetail">
-import { listSchemedetail, getSchemedetail, delSchemedetail, addSchemedetail, updateSchemedetail } from "@/api/fill/schemedetail"
+<script setup name="Releasedetail">
+import { listReleasedetail, getReleasedetail, delReleasedetail, addReleasedetail, updateReleasedetail } from "@/api/fill/releasedetail"
 
 const { proxy } = getCurrentInstance()
 
-const schemedetailList = ref([])
+const releasedetailList = ref([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
@@ -172,16 +172,19 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    groupSchemeId: undefined,
+    releaseId: undefined,
+    groupType: undefined,
     tableName: undefined,
     customParams: undefined,
     predecessorDetailId: undefined,
     sortOrder: undefined,
-    status: undefined,
   },
   rules: {
-    groupSchemeId: [
-      { required: true, message: "关联分组方案ID不能为空", trigger: "blur" }
+    releaseId: [
+      { required: true, message: "关联发布ID不能为空", trigger: "blur" }
+    ],
+    groupType: [
+      { required: true, message: "分组类型不能为空", trigger: "change" }
     ],
     tableName: [
       { required: true, message: "物理表名不能为空", trigger: "blur" }
@@ -191,11 +194,11 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询填报明细设计态列表 */
+/** 查询填报明细发布态列表 */
 function getList() {
   loading.value = true
-  listSchemedetail(queryParams.value).then(response => {
-    schemedetailList.value = response.rows
+  listReleasedetail(queryParams.value).then(response => {
+    releasedetailList.value = response.rows
     total.value = response.total
     loading.value = false
   })
@@ -210,20 +213,18 @@ function cancel() {
 /** 表单重置 */
 function reset() {
   form.value = {
-    detailId: null,
-    groupSchemeId: null,
+    releaseDetailId: null,
+    releaseId: null,
+    groupType: null,
     tableName: null,
     customParams: null,
     predecessorDetailId: null,
     sortOrder: null,
-    status: null,
     delFlag: null,
     createBy: null,
-    createTime: null,
-    updateBy: null,
-    updateTime: null
+    createTime: null
   }
-  proxy.resetForm("schemedetailRef")
+  proxy.resetForm("releasedetailRef")
 }
 
 /** 搜索按钮操作 */
@@ -240,7 +241,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.detailId)
+  ids.value = selection.map(item => item.releaseDetailId)
   single.value = selection.length != 1
   multiple.value = !selection.length
 }
@@ -249,32 +250,32 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加填报明细设计态"
+  title.value = "添加填报明细发布态"
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
-  const _detailId = row.detailId || ids.value
-  getSchemedetail(_detailId).then(response => {
+  const _releaseDetailId = row.releaseDetailId || ids.value
+  getReleasedetail(_releaseDetailId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改填报明细设计态"
+    title.value = "修改填报明细发布态"
   })
 }
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["schemedetailRef"].validate(valid => {
+  proxy.$refs["releasedetailRef"].validate(valid => {
     if (valid) {
-      if (form.value.detailId != null) {
-        updateSchemedetail(form.value).then(() => {
+      if (form.value.releaseDetailId != null) {
+        updateReleasedetail(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addSchemedetail(form.value).then(() => {
+        addReleasedetail(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
@@ -286,9 +287,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _detailIds = row.detailId || ids.value
-  proxy.$modal.confirm('是否确认删除填报明细设计态编号为"' + _detailIds + '"的数据项？').then(function() {
-    return delSchemedetail(_detailIds)
+  const _releaseDetailIds = row.releaseDetailId || ids.value
+  proxy.$modal.confirm('是否确认删除填报明细发布态编号为"' + _releaseDetailIds + '"的数据项？').then(function() {
+    return delReleasedetail(_releaseDetailIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -297,9 +298,9 @@ function handleDelete(row) {
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('fill/schemedetail/export', {
+  proxy.download('fill/releasedetail/export', {
     ...queryParams.value
-  }, `schemedetail_${new Date().getTime()}.xlsx`)
+  }, `releasedetail_${new Date().getTime()}.xlsx`)
 }
 
 getList()

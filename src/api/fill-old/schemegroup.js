@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 查询填报分组设计态列表
+// 查询填报方案分组列表
 export function listSchemegroup(query) {
   return request({
     url: '/fill/schemegroup/list',
@@ -9,7 +9,7 @@ export function listSchemegroup(query) {
   })
 }
 
-// 查询填报分组设计态详细
+// 查询填报方案分组详细
 export function getSchemegroup(groupSchemeId) {
   return request({
     url: '/fill/schemegroup/' + groupSchemeId,
@@ -17,7 +17,7 @@ export function getSchemegroup(groupSchemeId) {
   })
 }
 
-// 新增填报分组设计态
+// 新增填报方案分组
 export function addSchemegroup(data) {
   return request({
     url: '/fill/schemegroup',
@@ -26,7 +26,7 @@ export function addSchemegroup(data) {
   })
 }
 
-// 修改填报分组设计态
+// 修改填报方案分组
 export function updateSchemegroup(data) {
   return request({
     url: '/fill/schemegroup',
@@ -35,7 +35,7 @@ export function updateSchemegroup(data) {
   })
 }
 
-// 删除填报分组设计态
+// 删除填报方案分组
 export function delSchemegroup(groupSchemeId) {
   return request({
     url: '/fill/schemegroup/' + groupSchemeId,

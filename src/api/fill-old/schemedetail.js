@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 查询填报明细设计态列表
+// 查询填报方案设计明细列表
 export function listSchemedetail(query) {
   return request({
     url: '/fill/schemedetail/list',
@@ -9,7 +9,7 @@ export function listSchemedetail(query) {
   })
 }
 
-// 查询填报明细设计态详细
+// 查询填报方案设计明细详细
 export function getSchemedetail(detailId) {
   return request({
     url: '/fill/schemedetail/' + detailId,
@@ -17,7 +17,7 @@ export function getSchemedetail(detailId) {
   })
 }
 
-// 新增填报明细设计态
+// 新增填报方案设计明细
 export function addSchemedetail(data) {
   return request({
     url: '/fill/schemedetail',
@@ -26,7 +26,7 @@ export function addSchemedetail(data) {
   })
 }
 
-// 修改填报明细设计态
+// 修改填报方案设计明细
 export function updateSchemedetail(data) {
   return request({
     url: '/fill/schemedetail',
@@ -35,7 +35,7 @@ export function updateSchemedetail(data) {
   })
 }
 
-// 删除填报明细设计态
+// 删除填报方案设计明细
 export function delSchemedetail(detailId) {
   return request({
     url: '/fill/schemedetail/' + detailId,

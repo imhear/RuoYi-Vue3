@@ -17,6 +17,22 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="指定前端组件版本ID" prop="versionId">
+        <el-input
+          v-model="queryParams.versionId"
+          placeholder="请输入指定前端组件版本ID"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="指定版本号" prop="versionCode">
+        <el-input
+          v-model="queryParams.versionCode"
+          placeholder="请输入指定版本号"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
       <el-form-item label="前置明细ID" prop="predecessorDetailId">
         <el-input
           v-model="queryParams.predecessorDetailId"
@@ -25,10 +41,10 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="排序号" prop="sortOrder">
+      <el-form-item label="显示顺序" prop="orderNum">
         <el-input
-          v-model="queryParams.sortOrder"
-          placeholder="请输入排序号"
+          v-model="queryParams.orderNum"
+          placeholder="请输入显示顺序"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -86,9 +102,11 @@
       <el-table-column label="明细主键" align="center" prop="detailId" />
       <el-table-column label="关联分组方案ID" align="center" prop="groupSchemeId" />
       <el-table-column label="物理表名" align="center" prop="tableName" />
+      <el-table-column label="指定前端组件版本ID" align="center" prop="versionId" />
+      <el-table-column label="指定版本号" align="center" prop="versionCode" />
       <el-table-column label="自定义字段预赋值" align="center" prop="customParams" />
       <el-table-column label="前置明细ID" align="center" prop="predecessorDetailId" />
-      <el-table-column label="排序号" align="center" prop="sortOrder" />
+      <el-table-column label="显示顺序" align="center" prop="orderNum" />
       <el-table-column label="状态" align="center" prop="status" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
@@ -106,9 +124,9 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改填报明细设计态对话框 -->
+    <!-- 添加或修改填报方案设计明细对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="schemedetailRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="schemedetailRef" :model="form" :rules="rules" label-width="150px">
         <el-row>
           <el-col :span="24">
             <el-form-item label="关联分组方案ID" prop="groupSchemeId">
@@ -117,12 +135,22 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="物理表名" prop="tableName">
-              <el-input v-model="form.tableName" placeholder="请输入物理表名" />
+              <el-input v-model="form.tableName" placeholder="请输入物理表名" disabled/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="指定前端组件版本ID" prop="versionId">
+              <el-input v-model="form.versionId" placeholder="请输入指定前端组件版本ID" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="指定版本号" prop="versionCode">
+              <el-input v-model="form.versionCode" placeholder="请输入指定版本号" disabled/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="自定义字段预赋值" prop="customParams">
-              <el-input v-model="form.customParams" type="textarea" placeholder="请输入内容" />
+              <el-input v-model="form.customParams" type="textarea" placeholder='自定义字段预赋值（JSON格式，如 {"MaterialType":"PACKAGING_MATERIAL"}）' />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -131,8 +159,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="排序号" prop="sortOrder">
-              <el-input v-model="form.sortOrder" placeholder="请输入排序号" />
+            <el-form-item label="显示顺序" prop="orderNum">
+               <el-input-number v-model="form.orderNum" controls-position="right" :min="0" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -174,24 +202,24 @@ const data = reactive({
     pageSize: 10,
     groupSchemeId: undefined,
     tableName: undefined,
+    versionId: undefined,
+    versionCode: undefined,
     customParams: undefined,
     predecessorDetailId: undefined,
-    sortOrder: undefined,
+    orderNum: undefined,
     status: undefined,
   },
   rules: {
-    groupSchemeId: [
-      { required: true, message: "关联分组方案ID不能为空", trigger: "blur" }
-    ],
-    tableName: [
-      { required: true, message: "物理表名不能为空", trigger: "blur" }
-    ],
+    groupSchemeId: [{ required: true, message: "关联分组方案ID不能为空", trigger: "blur" } ],
+    tableName: [{ required: true, message: "物理表名不能为空", trigger: "blur" }],
+    versionId: [{ required: true, message: "指定前端组件版本ID不能为空", trigger: "blur" }],
+    orderNum: [{ required: true, message: "显示顺序不能为空", trigger: "blur" }],
   }
 })
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询填报明细设计态列表 */
+/** 查询填报方案设计明细列表 */
 function getList() {
   loading.value = true
   listSchemedetail(queryParams.value).then(response => {
@@ -213,9 +241,11 @@ function reset() {
     detailId: null,
     groupSchemeId: null,
     tableName: null,
+    versionId: null,
+    versionCode: null,
     customParams: null,
     predecessorDetailId: null,
-    sortOrder: null,
+    orderNum: null,
     status: null,
     delFlag: null,
     createBy: null,
@@ -249,7 +279,7 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加填报明细设计态"
+  title.value = "添加填报方案设计明细"
 }
 
 /** 修改按钮操作 */
@@ -259,7 +289,7 @@ function handleUpdate(row) {
   getSchemedetail(_detailId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改填报明细设计态"
+    title.value = "修改填报方案设计明细"
   })
 }
 
@@ -287,7 +317,7 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _detailIds = row.detailId || ids.value
-  proxy.$modal.confirm('是否确认删除填报明细设计态编号为"' + _detailIds + '"的数据项？').then(function() {
+  proxy.$modal.confirm('是否确认删除填报方案设计明细编号为"' + _detailIds + '"的数据项？').then(function() {
     return delSchemedetail(_detailIds)
   }).then(() => {
     getList()

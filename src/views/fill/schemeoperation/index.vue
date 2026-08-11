@@ -1,26 +1,34 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="关联分组方案ID" prop="groupSchemeId">
+      <el-form-item label="关联方案明细ID" prop="detailId">
         <el-input
-          v-model="queryParams.groupSchemeId"
-          placeholder="请输入关联分组方案ID"
+          v-model="queryParams.detailId"
+          placeholder="请输入关联方案明细ID"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="物理表名" prop="tableName">
+      <el-form-item label="操作码" prop="operationCode">
         <el-input
-          v-model="queryParams.tableName"
-          placeholder="请输入物理表名"
+          v-model="queryParams.operationCode"
+          placeholder="请输入操作码"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="前置明细ID" prop="predecessorDetailId">
+      <el-form-item label="前端组件完整路径" prop="componentPath">
         <el-input
-          v-model="queryParams.predecessorDetailId"
-          placeholder="请输入前置明细ID"
+          v-model="queryParams.componentPath"
+          placeholder="请输入前端组件完整路径"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="是否在聚合入口卡片上显示" prop="displayOnCard">
+        <el-input
+          v-model="queryParams.displayOnCard"
+          placeholder="请输入是否在聚合入口卡片上显示"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -46,7 +54,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['fill:schemedetail:add']"
+          v-hasPermi="['fill:schemeoperation:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -56,7 +64,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['fill:schemedetail:edit']"
+          v-hasPermi="['fill:schemeoperation:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -66,7 +74,7 @@
           icon="Delete"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['fill:schemedetail:remove']"
+          v-hasPermi="['fill:schemeoperation:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -75,25 +83,25 @@
           plain
           icon="Download"
           @click="handleExport"
-          v-hasPermi="['fill:schemedetail:export']"
+          v-hasPermi="['fill:schemeoperation:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="schemedetailList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="schemeoperationList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="明细主键" align="center" prop="detailId" />
-      <el-table-column label="关联分组方案ID" align="center" prop="groupSchemeId" />
-      <el-table-column label="物理表名" align="center" prop="tableName" />
-      <el-table-column label="自定义字段预赋值" align="center" prop="customParams" />
-      <el-table-column label="前置明细ID" align="center" prop="predecessorDetailId" />
+      <el-table-column label="明细能力主键" align="center" prop="detailOperateId" />
+      <el-table-column label="关联方案明细ID" align="center" prop="detailId" />
+      <el-table-column label="操作码" align="center" prop="operationCode" />
+      <el-table-column label="前端组件完整路径" align="center" prop="componentPath" />
+      <el-table-column label="是否在聚合入口卡片上显示" align="center" prop="displayOnCard" />
       <el-table-column label="排序号" align="center" prop="sortOrder" />
       <el-table-column label="状态" align="center" prop="status" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:schemedetail:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:schemedetail:remove']">删除</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:schemeoperation:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:schemeoperation:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -106,28 +114,28 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改填报明细设计态对话框 -->
+    <!-- 添加或修改填报操作设计态对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="schemedetailRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="schemeoperationRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="24">
-            <el-form-item label="关联分组方案ID" prop="groupSchemeId">
-              <el-input v-model="form.groupSchemeId" placeholder="请输入关联分组方案ID" />
+            <el-form-item label="关联方案明细ID" prop="detailId">
+              <el-input v-model="form.detailId" placeholder="请输入关联方案明细ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="物理表名" prop="tableName">
-              <el-input v-model="form.tableName" placeholder="请输入物理表名" />
+            <el-form-item label="操作码" prop="operationCode">
+              <el-input v-model="form.operationCode" placeholder="请输入操作码" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="自定义字段预赋值" prop="customParams">
-              <el-input v-model="form.customParams" type="textarea" placeholder="请输入内容" />
+            <el-form-item label="前端组件完整路径" prop="componentPath">
+              <el-input v-model="form.componentPath" placeholder="请输入前端组件完整路径" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="前置明细ID" prop="predecessorDetailId">
-              <el-input v-model="form.predecessorDetailId" placeholder="请输入前置明细ID" />
+            <el-form-item label="是否在聚合入口卡片上显示" prop="displayOnCard">
+              <el-input v-model="form.displayOnCard" placeholder="请输入是否在聚合入口卡片上显示" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -152,12 +160,12 @@
   </div>
 </template>
 
-<script setup name="Schemedetail">
-import { listSchemedetail, getSchemedetail, delSchemedetail, addSchemedetail, updateSchemedetail } from "@/api/fill/schemedetail"
+<script setup name="Schemeoperation">
+import { listSchemeoperation, getSchemeoperation, delSchemeoperation, addSchemeoperation, updateSchemeoperation } from "@/api/fill/schemeoperation"
 
 const { proxy } = getCurrentInstance()
 
-const schemedetailList = ref([])
+const schemeoperationList = ref([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
@@ -172,30 +180,30 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    groupSchemeId: undefined,
-    tableName: undefined,
-    customParams: undefined,
-    predecessorDetailId: undefined,
+    detailId: undefined,
+    operationCode: undefined,
+    componentPath: undefined,
+    displayOnCard: undefined,
     sortOrder: undefined,
     status: undefined,
   },
   rules: {
-    groupSchemeId: [
-      { required: true, message: "关联分组方案ID不能为空", trigger: "blur" }
+    detailId: [
+      { required: true, message: "关联方案明细ID不能为空", trigger: "blur" }
     ],
-    tableName: [
-      { required: true, message: "物理表名不能为空", trigger: "blur" }
+    operationCode: [
+      { required: true, message: "操作码不能为空", trigger: "blur" }
     ],
   }
 })
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询填报明细设计态列表 */
+/** 查询填报操作设计态列表 */
 function getList() {
   loading.value = true
-  listSchemedetail(queryParams.value).then(response => {
-    schemedetailList.value = response.rows
+  listSchemeoperation(queryParams.value).then(response => {
+    schemeoperationList.value = response.rows
     total.value = response.total
     loading.value = false
   })
@@ -210,11 +218,11 @@ function cancel() {
 /** 表单重置 */
 function reset() {
   form.value = {
+    detailOperateId: null,
     detailId: null,
-    groupSchemeId: null,
-    tableName: null,
-    customParams: null,
-    predecessorDetailId: null,
+    operationCode: null,
+    componentPath: null,
+    displayOnCard: null,
     sortOrder: null,
     status: null,
     delFlag: null,
@@ -223,7 +231,7 @@ function reset() {
     updateBy: null,
     updateTime: null
   }
-  proxy.resetForm("schemedetailRef")
+  proxy.resetForm("schemeoperationRef")
 }
 
 /** 搜索按钮操作 */
@@ -240,7 +248,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.detailId)
+  ids.value = selection.map(item => item.detailOperateId)
   single.value = selection.length != 1
   multiple.value = !selection.length
 }
@@ -249,32 +257,32 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加填报明细设计态"
+  title.value = "添加填报操作设计态"
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
-  const _detailId = row.detailId || ids.value
-  getSchemedetail(_detailId).then(response => {
+  const _detailOperateId = row.detailOperateId || ids.value
+  getSchemeoperation(_detailOperateId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改填报明细设计态"
+    title.value = "修改填报操作设计态"
   })
 }
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["schemedetailRef"].validate(valid => {
+  proxy.$refs["schemeoperationRef"].validate(valid => {
     if (valid) {
-      if (form.value.detailId != null) {
-        updateSchemedetail(form.value).then(() => {
+      if (form.value.detailOperateId != null) {
+        updateSchemeoperation(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addSchemedetail(form.value).then(() => {
+        addSchemeoperation(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
@@ -286,9 +294,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _detailIds = row.detailId || ids.value
-  proxy.$modal.confirm('是否确认删除填报明细设计态编号为"' + _detailIds + '"的数据项？').then(function() {
-    return delSchemedetail(_detailIds)
+  const _detailOperateIds = row.detailOperateId || ids.value
+  proxy.$modal.confirm('是否确认删除填报操作设计态编号为"' + _detailOperateIds + '"的数据项？').then(function() {
+    return delSchemeoperation(_detailOperateIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -297,9 +305,9 @@ function handleDelete(row) {
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('fill/schemedetail/export', {
+  proxy.download('fill/schemeoperation/export', {
     ...queryParams.value
-  }, `schemedetail_${new Date().getTime()}.xlsx`)
+  }, `schemeoperation_${new Date().getTime()}.xlsx`)
 }
 
 getList()

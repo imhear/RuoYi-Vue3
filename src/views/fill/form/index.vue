@@ -72,7 +72,17 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
+      <!-- 同步按钮：从 information_schema 同步业务表 -->
       <el-col :span="1.5">
+        <el-button
+          type="info"
+          plain
+          icon="Refresh"
+          @click="handleSync"
+          v-hasPermi="['fill:formtemplate:sync']"
+        >同步</el-button>
+      </el-col>
+      <!-- <el-col :span="1.5">
         <el-button
           type="primary"
           plain
@@ -80,8 +90,8 @@
           @click="handleAdd"
           v-hasPermi="['fill:form:add']"
         >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
+      </el-col> -->
+      <!-- <el-col :span="1.5">
         <el-button
           type="success"
           plain
@@ -90,8 +100,8 @@
           @click="handleUpdate"
           v-hasPermi="['fill:form:edit']"
         >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
+      </el-col> -->
+      <!-- <el-col :span="1.5">
         <el-button
           type="danger"
           plain
@@ -100,7 +110,7 @@
           @click="handleDelete"
           v-hasPermi="['fill:form:remove']"
         >删除</el-button>
-      </el-col>
+      </el-col> -->
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -115,7 +125,13 @@
 
     <el-table v-loading="loading" :data="formList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="表单主键" align="center" prop="formId" />
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <template #default="scope">
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:form:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:form:remove']">删除</el-button>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="表单主键" align="center" prop="formId" /> -->
       <el-table-column label="数据库schema" align="center" prop="tableSchema" />
       <el-table-column label="物理表名" align="center" prop="tableName" />
       <el-table-column label="物理表注释" align="center" prop="tableComment" />
@@ -134,12 +150,6 @@
       <el-table-column label="自定义分组" align="center" prop="groupName" />
       <el-table-column label="排序号" align="center" prop="sortOrder" />
       <el-table-column label="状态" align="center" prop="status" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:form:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:form:remove']">删除</el-button>
-        </template>
-      </el-table-column>
     </el-table>
     
     <pagination
@@ -222,7 +232,7 @@
 </template>
 
 <script setup name="Form">
-import { listForm, getForm, delForm, addForm, updateForm } from "@/api/fill/form"
+import { listForm, getForm, delForm, addForm, updateForm, syncForm } from "@/api/fill/form"
 
 const { proxy } = getCurrentInstance()
 
@@ -374,6 +384,16 @@ function handleExport() {
   proxy.download('fill/form/export', {
     ...queryParams.value
   }, `form_${new Date().getTime()}.xlsx`)
+}
+
+/** 同步业务表注册表：从 information_schema 读取未注册的业务表并自动填充 */
+function handleSync() {
+  proxy.$modal.confirm('是否确认同步业务表到业务表注册表？').then(function() {
+    return syncForm()
+  }).then((response) => {
+    proxy.$modal.msgSuccess(response.msg || '同步完成')
+    getList()
+  }).catch(() => {})
 }
 
 getList()

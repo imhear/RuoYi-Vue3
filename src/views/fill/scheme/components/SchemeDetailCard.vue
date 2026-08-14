@@ -12,15 +12,15 @@
       style="width: 100%"
       height="calc(100vh - 280px)"
     >
-      <el-table-column label="排序号" prop="sortOrder" align="center"  min-width="20"/>
+      <el-table-column label="排序号" prop="sortOrder" align="center"  min-width="26"/>
       <el-table-column label="操作" width="80" align="center" min-width="10">
         <template #default="scope">
           <el-button link type="primary" icon="Edit" @click.stop="handleEdit(scope.row)"></el-button>
           <el-button link type="primary" icon="Delete" @click.stop="handleDelete(scope.row)"></el-button>
         </template>
       </el-table-column>
-      <el-table-column label="物理表名" prop="tableName" align="center"  min-width="50"/>
-      <el-table-column label="自定义参数" prop="customParams" align="center" min-width="50"/>
+      <el-table-column label="物理表名" prop="tableName" align="center" show-overflow-tooltip min-width="50"/>
+      <el-table-column label="自定义参数" prop="customParams" align="center" show-overflow-tooltip min-width="50"/>
     </el-table>
 
     <!-- 新增/编辑明细对话框 -->
@@ -58,7 +58,7 @@
 import { ref, watch, nextTick } from 'vue'
 import { listSchemedetail, getSchemedetail, addSchemedetail, updateSchemedetail, delSchemedetail } from "@/api/fill/schemedetail"
 import { listSchemeoperation } from "@/api/fill/schemeoperation"
-import SelectForm from './SelectForm.vue'
+import SelectForm from '../../components/SelectForm.vue'
 
 const props = defineProps({
   groupSchemeId: { type: Number, default: null }

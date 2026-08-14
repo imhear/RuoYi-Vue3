@@ -126,9 +126,9 @@
 <script setup name="Scheme">
 import { listScheme, getScheme, delScheme, addScheme, updateScheme } from "@/api/fill/scheme"
 // 引入三个卡片组件
-import SchemeGroupCard from './SchemeGroupCard.vue'
-import SchemeDetailCard from './SchemeDetailCard.vue'
-import SchemeOperationCard from './SchemeOperationCard.vue'
+import SchemeGroupCard from './components/SchemeGroupCard.vue'
+import SchemeDetailCard from './components/SchemeDetailCard.vue'
+import SchemeOperationCard from './components/SchemeOperationCard.vue'
 
 const { proxy } = getCurrentInstance()
 

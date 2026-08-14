@@ -69,8 +69,8 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue'
 import { listSchemeoperation, getSchemeoperation, addSchemeoperation, updateSchemeoperation, delSchemeoperation } from "@/api/fill/schemeoperation"
-import SelectOperation from './SelectOperation.vue'
-import SelectComponent from './SelectComponent.vue'
+import SelectOperation from '../../components/SelectOperation.vue'
+import SelectComponent from '../../components/SelectComponent.vue'
 
 const props = defineProps({
   detailId: { type: Number, default: null }

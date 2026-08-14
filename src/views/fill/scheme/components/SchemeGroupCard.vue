@@ -12,15 +12,15 @@
       style="width: 100%"
       height="calc(100vh - 280px)"
     >
-      <el-table-column label="排序号" prop="sortOrder" align="center"  min-width="20"/>
+      <el-table-column label="排序号" prop="sortOrder" align="center"  min-width="26"/>
       <el-table-column label="操作" width="80" align="center" min-width="10">
         <template #default="scope">
           <el-button link type="primary" icon="Edit" @click.stop="handleEdit(scope.row)"></el-button>
           <el-button link type="primary" icon="Delete" @click.stop="handleDelete(scope.row)"></el-button>
         </template>
       </el-table-column>
-      <el-table-column label="分组名称" prop="groupTypeName" align="center" min-width="50"/>
       <el-table-column label="分组类型" prop="groupType" align="center" min-width="50"/>
+      <el-table-column label="分组名称" prop="groupTypeName" align="center" min-width="50"/>
     </el-table>
 
     <!-- 新增/编辑分组对话框 -->

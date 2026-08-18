@@ -1,6 +1,14 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
+      <el-form-item label="关联工作单元ID" prop="workUnitId">
+        <el-input
+          v-model="queryParams.workUnitId"
+          placeholder="请输入关联工作单元ID"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
       <el-form-item label="操作码" prop="operationCode">
         <el-input
           v-model="queryParams.operationCode"
@@ -9,42 +17,10 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="操作名称" prop="operationName">
+      <el-form-item label="操作人" prop="operator">
         <el-input
-          v-model="queryParams.operationName"
-          placeholder="请输入操作名称"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="按钮名称" prop="buttonLabel">
-        <el-input
-          v-model="queryParams.buttonLabel"
-          placeholder="请输入按钮名称"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="关联物理表名" prop="tableName">
-        <el-input
-          v-model="queryParams.tableName"
-          placeholder="请输入关联物理表名"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="后端接口路径" prop="backendRoute">
-        <el-input
-          v-model="queryParams.backendRoute"
-          placeholder="请输入后端接口路径"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="前端组件路径" prop="component">
-        <el-input
-          v-model="queryParams.component"
-          placeholder="请输入前端组件路径"
+          v-model="queryParams.operator"
+          placeholder="请输入操作人"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -80,7 +56,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['fill:operation:add']"
+          v-hasPermi="['fill:work_unit_operator:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -90,7 +66,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['fill:operation:edit']"
+          v-hasPermi="['fill:work_unit_operator:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -100,7 +76,7 @@
           icon="Delete"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['fill:operation:remove']"
+          v-hasPermi="['fill:work_unit_operator:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -109,33 +85,29 @@
           plain
           icon="Download"
           @click="handleExport"
-          v-hasPermi="['fill:operation:export']"
+          v-hasPermi="['fill:work_unit_operator:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="operationList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="work_unit_operatorList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="自增主键" align="center" prop="operationId" />
+      <el-table-column label="工作单元作业人员主键" align="center" prop="workUnitOperatorId" />
+      <el-table-column label="关联工作单元ID" align="center" prop="workUnitId" />
       <el-table-column label="操作码" align="center" prop="operationCode" />
-      <el-table-column label="操作名称" align="center" prop="operationName" />
-      <el-table-column label="按钮名称" align="center" prop="buttonLabel" />
-      <el-table-column label="关联物理表名" align="center" prop="tableName" />
-      <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
-      <el-table-column label="前端组件路径" align="center" prop="component" />
+      <el-table-column label="操作人" align="center" prop="operator" />
       <el-table-column label="显示顺序" align="center" prop="orderNum" />
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
           <dict-tag :options="sys_normal_disable" :value="scope.row.status"/>
         </template>
       </el-table-column>
-      <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:operation:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:operation:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:operation:remove']">删除</el-button>
+          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:work_unit_operator:query']">详情</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:work_unit_operator:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:work_unit_operator:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -148,40 +120,25 @@
       @pagination="getList"
     />
 
-    <!-- 操作码详情抽屉 -->
-    <operation-view-drawer ref="operationViewRef" />
-    <!-- 添加或修改操作码对话框 -->
+    <!-- 单元作业人员详情抽屉 -->
+    <work_unit_operator-view-drawer ref="work_unit_operatorViewRef" />
+    <!-- 添加或修改单元作业人员对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="operationRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="work_unit_operatorRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
+          <el-col :span="24">
+            <el-form-item label="关联工作单元ID" prop="workUnitId">
+              <el-input v-model="form.workUnitId" placeholder="请输入关联工作单元ID" />
+            </el-form-item>
+          </el-col>
           <el-col :span="24">
             <el-form-item label="操作码" prop="operationCode">
               <el-input v-model="form.operationCode" placeholder="请输入操作码" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="操作名称" prop="operationName">
-              <el-input v-model="form.operationName" placeholder="请输入操作名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="按钮名称" prop="buttonLabel">
-              <el-input v-model="form.buttonLabel" placeholder="请输入按钮名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="关联物理表名" prop="tableName">
-              <el-input v-model="form.tableName" placeholder="请输入关联物理表名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="后端接口路径" prop="backendRoute">
-              <el-input v-model="form.backendRoute" placeholder="请输入后端接口路径" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="前端组件路径" prop="component">
-              <el-input v-model="form.component" placeholder="请输入前端组件路径" />
+            <el-form-item label="操作人" prop="operator">
+              <el-input v-model="form.operator" placeholder="请输入操作人" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -205,11 +162,6 @@
               <el-input v-model="form.delFlag" placeholder="请输入删除标志" />
             </el-form-item>
           </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
-            </el-form-item>
-          </el-col>
         </el-row>
       </el-form>
       <template #footer>
@@ -222,14 +174,14 @@
   </div>
 </template>
 
-<script setup name="Operation">
-import { listOperation, getOperation, delOperation, addOperation, updateOperation } from "@/api/fill/operation"
-import OperationViewDrawer from "./view"
+<script setup name="Work_unit_operator">
+import { listWork_unit_operator, getWork_unit_operator, delWork_unit_operator, addWork_unit_operator, updateWork_unit_operator } from "@/api/fill/work_unit_operator"
+import Work_unit_operatorViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
 
-const operationList = ref([])
+const work_unit_operatorList = ref([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
@@ -244,32 +196,29 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
+    workUnitId: undefined,
     operationCode: undefined,
-    operationName: undefined,
-    buttonLabel: undefined,
-    tableName: undefined,
-    backendRoute: undefined,
-    component: undefined,
+    operator: undefined,
     orderNum: undefined,
     status: undefined,
   },
   rules: {
+    workUnitId: [
+      { required: true, message: "关联工作单元ID不能为空", trigger: "blur" }
+    ],
     operationCode: [
       { required: true, message: "操作码不能为空", trigger: "blur" }
-    ],
-    operationName: [
-      { required: true, message: "操作名称不能为空", trigger: "blur" }
     ],
   }
 })
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询操作码列表 */
+/** 查询单元作业人员列表 */
 function getList() {
   loading.value = true
-  listOperation(queryParams.value).then(response => {
-    operationList.value = response.rows
+  listWork_unit_operator(queryParams.value).then(response => {
+    work_unit_operatorList.value = response.rows
     total.value = response.total
     loading.value = false
   })
@@ -284,21 +233,19 @@ function cancel() {
 /** 表单重置 */
 function reset() {
   form.value = {
-    operationId: null,
+    workUnitOperatorId: null,
+    workUnitId: null,
     operationCode: null,
-    operationName: null,
-    buttonLabel: null,
-    tableName: null,
-    backendRoute: null,
-    component: null,
+    operator: null,
     orderNum: null,
     status: null,
     delFlag: null,
     createBy: null,
     createTime: null,
-    remark: null
+    updateBy: null,
+    updateTime: null
   }
-  proxy.resetForm("operationRef")
+  proxy.resetForm("work_unit_operatorRef")
 }
 
 /** 搜索按钮操作 */
@@ -315,7 +262,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.operationId)
+  ids.value = selection.map(item => item.workUnitOperatorId)
   single.value = selection.length != 1
   multiple.value = !selection.length
 }
@@ -324,32 +271,32 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加操作码"
+  title.value = "添加单元作业人员"
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
-  const _operationId = row.operationId || ids.value
-  getOperation(_operationId).then(response => {
+  const _workUnitOperatorId = row.workUnitOperatorId || ids.value
+  getWork_unit_operator(_workUnitOperatorId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改操作码"
+    title.value = "修改单元作业人员"
   })
 }
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["operationRef"].validate(valid => {
+  proxy.$refs["work_unit_operatorRef"].validate(valid => {
     if (valid) {
-      if (form.value.operationId != null) {
-        updateOperation(form.value).then(() => {
+      if (form.value.workUnitOperatorId != null) {
+        updateWork_unit_operator(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addOperation(form.value).then(() => {
+        addWork_unit_operator(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
@@ -361,9 +308,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _operationIds = row.operationId || ids.value
-  proxy.$modal.confirm('是否确认删除操作码编号为"' + _operationIds + '"的数据项？').then(function() {
-    return delOperation(_operationIds)
+  const _workUnitOperatorIds = row.workUnitOperatorId || ids.value
+  proxy.$modal.confirm('是否确认删除单元作业人员编号为"' + _workUnitOperatorIds + '"的数据项？').then(function() {
+    return delWork_unit_operator(_workUnitOperatorIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -372,14 +319,14 @@ function handleDelete(row) {
 
 /** 详情按钮操作 */
 function handleViewData(row) {
-  proxy.$refs["operationViewRef"].open(row.operationId)
+  proxy.$refs["work_unit_operatorViewRef"].open(row.workUnitOperatorId)
 }
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('fill/operation/export', {
+  proxy.download('fill/work_unit_operator/export', {
     ...queryParams.value
-  }, `operation_${new Date().getTime()}.xlsx`)
+  }, `work_unit_operator_${new Date().getTime()}.xlsx`)
 }
 
 getList()

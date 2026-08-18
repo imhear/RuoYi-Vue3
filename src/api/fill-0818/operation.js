@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 查询操作码列表
+// 查询操作码注册列表
 export function listOperation(query) {
   return request({
     url: '/fill/operation/list',
@@ -9,7 +9,7 @@ export function listOperation(query) {
   })
 }
 
-// 查询操作码详细
+// 查询操作码注册详细
 export function getOperation(operationId) {
   return request({
     url: '/fill/operation/' + operationId,
@@ -17,7 +17,7 @@ export function getOperation(operationId) {
   })
 }
 
-// 新增操作码
+// 新增操作码注册
 export function addOperation(data) {
   return request({
     url: '/fill/operation',
@@ -26,7 +26,7 @@ export function addOperation(data) {
   })
 }
 
-// 修改操作码
+// 修改操作码注册
 export function updateOperation(data) {
   return request({
     url: '/fill/operation',
@@ -35,7 +35,7 @@ export function updateOperation(data) {
   })
 }
 
-// 删除操作码
+// 删除操作码注册
 export function delOperation(operationId) {
   return request({
     url: '/fill/operation/' + operationId,

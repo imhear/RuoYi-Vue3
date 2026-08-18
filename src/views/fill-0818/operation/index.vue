@@ -41,31 +41,13 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="前端组件路径" prop="component">
+      <el-form-item label="排序号" prop="sortOrder">
         <el-input
-          v-model="queryParams.component"
-          placeholder="请输入前端组件路径"
+          v-model="queryParams.sortOrder"
+          placeholder="请输入排序号"
           clearable
           @keyup.enter="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="显示顺序" prop="orderNum">
-        <el-input
-          v-model="queryParams.orderNum"
-          placeholder="请输入显示顺序"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
-          <el-option
-            v-for="dict in sys_normal_disable"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -123,17 +105,11 @@
       <el-table-column label="按钮名称" align="center" prop="buttonLabel" />
       <el-table-column label="关联物理表名" align="center" prop="tableName" />
       <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
-      <el-table-column label="前端组件路径" align="center" prop="component" />
-      <el-table-column label="显示顺序" align="center" prop="orderNum" />
-      <el-table-column label="状态" align="center" prop="status">
-        <template #default="scope">
-          <dict-tag :options="sys_normal_disable" :value="scope.row.status"/>
-        </template>
-      </el-table-column>
-      <el-table-column label="备注" align="center" prop="remark" />
+      <el-table-column label="操作描述" align="center" prop="description" />
+      <el-table-column label="排序号" align="center" prop="sortOrder" />
+      <el-table-column label="状态" align="center" prop="status" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:operation:query']">详情</el-button>
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:operation:edit']">修改</el-button>
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:operation:remove']">删除</el-button>
         </template>
@@ -148,9 +124,7 @@
       @pagination="getList"
     />
 
-    <!-- 操作码详情抽屉 -->
-    <operation-view-drawer ref="operationViewRef" />
-    <!-- 添加或修改操作码对话框 -->
+    <!-- 添加或修改操作码注册对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="operationRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
@@ -180,34 +154,18 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="前端组件路径" prop="component">
-              <el-input v-model="form.component" placeholder="请输入前端组件路径" />
+            <el-form-item label="操作描述" prop="description">
+              <el-input v-model="form.description" type="textarea" placeholder="请输入内容" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="显示顺序" prop="orderNum">
-              <el-input v-model="form.orderNum" placeholder="请输入显示顺序" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="状态" prop="status">
-              <el-radio-group v-model="form.status">
-                <el-radio
-                  v-for="dict in sys_normal_disable"
-                  :key="dict.value"
-                  :label="dict.value"
-                >{{dict.label}}</el-radio>
-              </el-radio-group>
+            <el-form-item label="排序号" prop="sortOrder">
+              <el-input v-model="form.sortOrder" placeholder="请输入排序号" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="删除标志" prop="delFlag">
               <el-input v-model="form.delFlag" placeholder="请输入删除标志" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -224,10 +182,8 @@
 
 <script setup name="Operation">
 import { listOperation, getOperation, delOperation, addOperation, updateOperation } from "@/api/fill/operation"
-import OperationViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
-const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const operationList = ref([])
 const open = ref(false)
@@ -249,8 +205,8 @@ const data = reactive({
     buttonLabel: undefined,
     tableName: undefined,
     backendRoute: undefined,
-    component: undefined,
-    orderNum: undefined,
+    description: undefined,
+    sortOrder: undefined,
     status: undefined,
   },
   rules: {
@@ -265,7 +221,7 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询操作码列表 */
+/** 查询操作码注册列表 */
 function getList() {
   loading.value = true
   listOperation(queryParams.value).then(response => {
@@ -290,13 +246,12 @@ function reset() {
     buttonLabel: null,
     tableName: null,
     backendRoute: null,
-    component: null,
-    orderNum: null,
+    description: null,
+    sortOrder: null,
     status: null,
     delFlag: null,
     createBy: null,
-    createTime: null,
-    remark: null
+    createTime: null
   }
   proxy.resetForm("operationRef")
 }
@@ -324,7 +279,7 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加操作码"
+  title.value = "添加操作码注册"
 }
 
 /** 修改按钮操作 */
@@ -334,7 +289,7 @@ function handleUpdate(row) {
   getOperation(_operationId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改操作码"
+    title.value = "修改操作码注册"
   })
 }
 
@@ -362,17 +317,12 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _operationIds = row.operationId || ids.value
-  proxy.$modal.confirm('是否确认删除操作码编号为"' + _operationIds + '"的数据项？').then(function() {
+  proxy.$modal.confirm('是否确认删除操作码注册编号为"' + _operationIds + '"的数据项？').then(function() {
     return delOperation(_operationIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
   }).catch(() => {})
-}
-
-/** 详情按钮操作 */
-function handleViewData(row) {
-  proxy.$refs["operationViewRef"].open(row.operationId)
 }
 
 /** 导出按钮操作 */

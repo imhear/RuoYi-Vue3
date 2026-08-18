@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 查询业务表列表
+// 查询业务表注册列表
 export function listForm(query) {
   return request({
     url: '/fill/form/list',
@@ -9,7 +9,7 @@ export function listForm(query) {
   })
 }
 
-// 查询业务表详细
+// 查询业务表注册详细
 export function getForm(formId) {
   return request({
     url: '/fill/form/' + formId,
@@ -17,7 +17,7 @@ export function getForm(formId) {
   })
 }
 
-// 新增业务表
+// 新增业务表注册
 export function addForm(data) {
   return request({
     url: '/fill/form',
@@ -26,7 +26,7 @@ export function addForm(data) {
   })
 }
 
-// 修改业务表
+// 修改业务表注册
 export function updateForm(data) {
   return request({
     url: '/fill/form',
@@ -35,10 +35,19 @@ export function updateForm(data) {
   })
 }
 
-// 删除业务表
+// 删除业务表注册
 export function delForm(formId) {
   return request({
     url: '/fill/form/' + formId,
     method: 'delete'
+  })
+}
+
+// 手工新增
+// 同步业务表到业务表注册表
+export function syncForm() {
+  return request({
+    url: '/fill/form/sync',
+    method: 'post'
   })
 }

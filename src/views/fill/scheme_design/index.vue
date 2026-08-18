@@ -1,58 +1,34 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="操作码" prop="operationCode">
+      <el-form-item label="方案编码" prop="schemeCode">
         <el-input
-          v-model="queryParams.operationCode"
-          placeholder="请输入操作码"
+          v-model="queryParams.schemeCode"
+          placeholder="请输入方案编码"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="操作名称" prop="operationName">
+      <el-form-item label="方案名称" prop="schemeName">
         <el-input
-          v-model="queryParams.operationName"
-          placeholder="请输入操作名称"
+          v-model="queryParams.schemeName"
+          placeholder="请输入方案名称"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="按钮名称" prop="buttonLabel">
+      <el-form-item label="包含的分组类型数量" prop="groupTypeCount">
         <el-input
-          v-model="queryParams.buttonLabel"
-          placeholder="请输入按钮名称"
+          v-model="queryParams.groupTypeCount"
+          placeholder="请输入包含的分组类型数量"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联物理表名" prop="tableName">
+      <el-form-item label="当前已发布版本ID" prop="currentReleaseId">
         <el-input
-          v-model="queryParams.tableName"
-          placeholder="请输入关联物理表名"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="后端接口路径" prop="backendRoute">
-        <el-input
-          v-model="queryParams.backendRoute"
-          placeholder="请输入后端接口路径"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="前端组件路径" prop="component">
-        <el-input
-          v-model="queryParams.component"
-          placeholder="请输入前端组件路径"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="显示顺序" prop="orderNum">
-        <el-input
-          v-model="queryParams.orderNum"
-          placeholder="请输入显示顺序"
+          v-model="queryParams.currentReleaseId"
+          placeholder="请输入当前已发布版本ID"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -80,7 +56,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['fill:operation:add']"
+          v-hasPermi="['fill:scheme_design:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -90,7 +66,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['fill:operation:edit']"
+          v-hasPermi="['fill:scheme_design:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -100,7 +76,7 @@
           icon="Delete"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['fill:operation:remove']"
+          v-hasPermi="['fill:scheme_design:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -109,22 +85,20 @@
           plain
           icon="Download"
           @click="handleExport"
-          v-hasPermi="['fill:operation:export']"
+          v-hasPermi="['fill:scheme_design:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="operationList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="scheme_designList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="自增主键" align="center" prop="operationId" />
-      <el-table-column label="操作码" align="center" prop="operationCode" />
-      <el-table-column label="操作名称" align="center" prop="operationName" />
-      <el-table-column label="按钮名称" align="center" prop="buttonLabel" />
-      <el-table-column label="关联物理表名" align="center" prop="tableName" />
-      <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
-      <el-table-column label="前端组件路径" align="center" prop="component" />
-      <el-table-column label="显示顺序" align="center" prop="orderNum" />
+      <el-table-column label="方案主键" align="center" prop="schemeId" />
+      <el-table-column label="方案编码" align="center" prop="schemeCode" />
+      <el-table-column label="方案名称" align="center" prop="schemeName" />
+      <el-table-column label="方案类型" align="center" prop="schemeType" />
+      <el-table-column label="包含的分组类型数量" align="center" prop="groupTypeCount" />
+      <el-table-column label="当前已发布版本ID" align="center" prop="currentReleaseId" />
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
           <dict-tag :options="sys_normal_disable" :value="scope.row.status"/>
@@ -133,9 +107,9 @@
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:operation:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:operation:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:operation:remove']">删除</el-button>
+          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:scheme_design:query']">详情</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:scheme_design:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:scheme_design:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -148,45 +122,30 @@
       @pagination="getList"
     />
 
-    <!-- 操作码详情抽屉 -->
-    <operation-view-drawer ref="operationViewRef" />
-    <!-- 添加或修改操作码对话框 -->
+    <!-- 填报方案设计态详情抽屉 -->
+    <scheme_design-view-drawer ref="scheme_designViewRef" />
+    <!-- 添加或修改填报方案设计态对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="operationRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="scheme_designRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="24">
-            <el-form-item label="操作码" prop="operationCode">
-              <el-input v-model="form.operationCode" placeholder="请输入操作码" />
+            <el-form-item label="方案编码" prop="schemeCode">
+              <el-input v-model="form.schemeCode" placeholder="请输入方案编码" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="操作名称" prop="operationName">
-              <el-input v-model="form.operationName" placeholder="请输入操作名称" />
+            <el-form-item label="方案名称" prop="schemeName">
+              <el-input v-model="form.schemeName" placeholder="请输入方案名称" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="按钮名称" prop="buttonLabel">
-              <el-input v-model="form.buttonLabel" placeholder="请输入按钮名称" />
+            <el-form-item label="包含的分组类型数量" prop="groupTypeCount">
+              <el-input v-model="form.groupTypeCount" placeholder="请输入包含的分组类型数量" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联物理表名" prop="tableName">
-              <el-input v-model="form.tableName" placeholder="请输入关联物理表名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="后端接口路径" prop="backendRoute">
-              <el-input v-model="form.backendRoute" placeholder="请输入后端接口路径" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="前端组件路径" prop="component">
-              <el-input v-model="form.component" placeholder="请输入前端组件路径" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="显示顺序" prop="orderNum">
-              <el-input v-model="form.orderNum" placeholder="请输入显示顺序" />
+            <el-form-item label="当前已发布版本ID" prop="currentReleaseId">
+              <el-input v-model="form.currentReleaseId" placeholder="请输入当前已发布版本ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -222,14 +181,14 @@
   </div>
 </template>
 
-<script setup name="Operation">
-import { listOperation, getOperation, delOperation, addOperation, updateOperation } from "@/api/fill/operation"
-import OperationViewDrawer from "./view"
+<script setup name="Scheme_design">
+import { listScheme_design, getScheme_design, delScheme_design, addScheme_design, updateScheme_design } from "@/api/fill/scheme_design"
+import Scheme_designViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
 
-const operationList = ref([])
+const scheme_designList = ref([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
@@ -244,32 +203,30 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    operationCode: undefined,
-    operationName: undefined,
-    buttonLabel: undefined,
-    tableName: undefined,
-    backendRoute: undefined,
-    component: undefined,
-    orderNum: undefined,
+    schemeCode: undefined,
+    schemeName: undefined,
+    schemeType: undefined,
+    groupTypeCount: undefined,
+    currentReleaseId: undefined,
     status: undefined,
   },
   rules: {
-    operationCode: [
-      { required: true, message: "操作码不能为空", trigger: "blur" }
+    schemeCode: [
+      { required: true, message: "方案编码不能为空", trigger: "blur" }
     ],
-    operationName: [
-      { required: true, message: "操作名称不能为空", trigger: "blur" }
+    schemeName: [
+      { required: true, message: "方案名称不能为空", trigger: "blur" }
     ],
   }
 })
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询操作码列表 */
+/** 查询填报方案设计态列表 */
 function getList() {
   loading.value = true
-  listOperation(queryParams.value).then(response => {
-    operationList.value = response.rows
+  listScheme_design(queryParams.value).then(response => {
+    scheme_designList.value = response.rows
     total.value = response.total
     loading.value = false
   })
@@ -284,21 +241,21 @@ function cancel() {
 /** 表单重置 */
 function reset() {
   form.value = {
-    operationId: null,
-    operationCode: null,
-    operationName: null,
-    buttonLabel: null,
-    tableName: null,
-    backendRoute: null,
-    component: null,
-    orderNum: null,
+    schemeId: null,
+    schemeCode: null,
+    schemeName: null,
+    schemeType: null,
+    groupTypeCount: null,
+    currentReleaseId: null,
     status: null,
     delFlag: null,
     createBy: null,
     createTime: null,
+    updateBy: null,
+    updateTime: null,
     remark: null
   }
-  proxy.resetForm("operationRef")
+  proxy.resetForm("scheme_designRef")
 }
 
 /** 搜索按钮操作 */
@@ -315,7 +272,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.operationId)
+  ids.value = selection.map(item => item.schemeId)
   single.value = selection.length != 1
   multiple.value = !selection.length
 }
@@ -324,32 +281,32 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加操作码"
+  title.value = "添加填报方案设计态"
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
-  const _operationId = row.operationId || ids.value
-  getOperation(_operationId).then(response => {
+  const _schemeId = row.schemeId || ids.value
+  getScheme_design(_schemeId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改操作码"
+    title.value = "修改填报方案设计态"
   })
 }
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["operationRef"].validate(valid => {
+  proxy.$refs["scheme_designRef"].validate(valid => {
     if (valid) {
-      if (form.value.operationId != null) {
-        updateOperation(form.value).then(() => {
+      if (form.value.schemeId != null) {
+        updateScheme_design(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addOperation(form.value).then(() => {
+        addScheme_design(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
@@ -361,9 +318,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _operationIds = row.operationId || ids.value
-  proxy.$modal.confirm('是否确认删除操作码编号为"' + _operationIds + '"的数据项？').then(function() {
-    return delOperation(_operationIds)
+  const _schemeIds = row.schemeId || ids.value
+  proxy.$modal.confirm('是否确认删除填报方案设计态编号为"' + _schemeIds + '"的数据项？').then(function() {
+    return delScheme_design(_schemeIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -372,14 +329,14 @@ function handleDelete(row) {
 
 /** 详情按钮操作 */
 function handleViewData(row) {
-  proxy.$refs["operationViewRef"].open(row.operationId)
+  proxy.$refs["scheme_designViewRef"].open(row.schemeId)
 }
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('fill/operation/export', {
+  proxy.download('fill/scheme_design/export', {
     ...queryParams.value
-  }, `operation_${new Date().getTime()}.xlsx`)
+  }, `scheme_design_${new Date().getTime()}.xlsx`)
 }
 
 getList()

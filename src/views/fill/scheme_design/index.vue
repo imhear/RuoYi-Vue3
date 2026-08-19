@@ -93,6 +93,15 @@
 
     <el-table v-loading="loading" :data="scheme_designList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <template #default="scope">
+          <el-button link type="primary" icon="Grid" @click="openConfig(scope.row)">配置</el-button>
+          <el-button link type="primary" icon="Upload" @click="handleRelease(scope.row)" v-hasPermi="['fill:scheme_design:release']">发布</el-button>
+          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:scheme_design:query']">详情</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:scheme_design:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:scheme_design:remove']">删除</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="方案主键" align="center" prop="schemeId" />
       <el-table-column label="方案编码" align="center" prop="schemeCode" />
       <el-table-column label="方案名称" align="center" prop="schemeName" />
@@ -105,15 +114,6 @@
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-
-          <el-button link type="primary" icon="Grid" @click="openConfig(scope.row)">配置</el-button>
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:scheme_design:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:scheme_design:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:scheme_design:remove']">删除</el-button>
-        </template>
-      </el-table-column>
     </el-table>
     
     <pagination
@@ -183,11 +183,24 @@
 
     <!-- 设计态配置对话框 -->
     <DesignConfigDialog ref="designConfigRef" :scheme-id="currentSchemeId" />
+
+    <!-- 发布方案对话框 -->
+    <el-dialog title="发布方案" v-model="releaseVisible" width="400px" append-to-body>
+      <el-form :model="releaseForm" :rules="releaseRules" ref="releaseFormRef" label-width="80px">
+        <el-form-item label="发布说明" prop="releaseNote">
+          <el-input v-model="releaseForm.releaseNote" type="textarea" placeholder="请输入发布说明" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="releaseVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitRelease">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="Scheme_design">
-import { listScheme_design, getScheme_design, delScheme_design, addScheme_design, updateScheme_design } from "@/api/fill/scheme_design"
+import { listScheme_design, getScheme_design, delScheme_design, addScheme_design, updateScheme_design, releaseScheme } from "@/api/fill/scheme_design"
 import Scheme_designViewDrawer from "./view"
 import DesignConfigDialog from './components/DesignConfigDialog.vue'
 
@@ -247,6 +260,31 @@ function getList() {
     loading.value = false
   })
 }
+
+
+const releaseVisible = ref(false)
+const releaseFormRef = ref(null)
+const releaseForm = reactive({ schemeId: null, releaseNote: '' })
+const releaseRules = { releaseNote: [{ required: false }] }
+
+function handleRelease(row) {
+  releaseForm.schemeId = row.schemeId
+  releaseForm.releaseNote = ''
+  releaseVisible.value = true
+  nextTick(() => releaseFormRef.value?.clearValidate())
+}
+
+function submitRelease() {
+  releaseFormRef.value?.validate(valid => {
+    if (!valid) return
+    releaseScheme(releaseForm.schemeId, releaseForm.releaseNote).then(() => {
+      proxy.$modal.msgSuccess('发布成功')
+      releaseVisible.value = false
+      getList()
+    })
+  })
+}
+
 
 /** 取消按钮 */
 function cancel() {

@@ -25,47 +25,21 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联物理表名" prop="tableName">
+      <el-form-item label="权限标识" prop="perms">
+        <el-input
+          v-model="queryParams.perms"
+          placeholder="请输入权限标识"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="物理表名" prop="tableName">
         <el-input
           v-model="queryParams.tableName"
-          placeholder="请输入关联物理表名"
+          placeholder="请输入物理表名"
           clearable
           @keyup.enter="handleQuery"
         />
-      </el-form-item>
-      <el-form-item label="后端接口路径" prop="backendRoute">
-        <el-input
-          v-model="queryParams.backendRoute"
-          placeholder="请输入后端接口路径"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="前端组件路径" prop="component">
-        <el-input
-          v-model="queryParams.component"
-          placeholder="请输入前端组件路径"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="显示顺序" prop="orderNum">
-        <el-input
-          v-model="queryParams.orderNum"
-          placeholder="请输入显示顺序"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
-          <el-option
-            v-for="dict in sys_normal_disable"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -117,23 +91,21 @@
 
     <el-table v-loading="loading" :data="operationList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="自增主键" align="center" prop="operationId" />
       <el-table-column label="操作码" align="center" prop="operationCode" />
       <el-table-column label="操作名称" align="center" prop="operationName" />
       <el-table-column label="按钮名称" align="center" prop="buttonLabel" />
-      <el-table-column label="关联物理表名" align="center" prop="tableName" />
-      <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
-      <el-table-column label="前端组件路径" align="center" prop="component" />
-      <el-table-column label="显示顺序" align="center" prop="orderNum" />
+      <el-table-column label="物理表名" align="center" prop="tableName" />
+      <el-table-column label="权限标识" align="center" prop="perms" :show-overflow-tooltip="true" />
+      <el-table-column label="后端接口路径" align="center" prop="backendRoute" :show-overflow-tooltip="true" />
+      <el-table-column label="前端组件路径" align="center" prop="component" :show-overflow-tooltip="true" />
+      <el-table-column label="排序号" align="center" prop="orderNum" />
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
           <dict-tag :options="sys_normal_disable" :value="scope.row.status"/>
         </template>
       </el-table-column>
-      <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:operation:query']">详情</el-button>
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:operation:edit']">修改</el-button>
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:operation:remove']">删除</el-button>
         </template>
@@ -148,11 +120,9 @@
       @pagination="getList"
     />
 
-    <!-- 操作码详情抽屉 -->
-    <operation-view-drawer ref="operationViewRef" />
-    <!-- 添加或修改操作码对话框 -->
-    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="operationRef" :model="form" :rules="rules" label-width="100px">
+    <!-- 添加或修改操作码注册对话框 -->
+    <el-dialog :title="title" v-model="open" width="650px" append-to-body>
+      <el-form ref="operationRef" :model="form" :rules="rules" label-width="110px">
         <el-row>
           <el-col :span="24">
             <el-form-item label="操作码" prop="operationCode">
@@ -170,8 +140,26 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联物理表名" prop="tableName">
-              <el-input v-model="form.tableName" placeholder="请输入关联物理表名" />
+            <el-form-item label="物理表名" prop="tableName">
+              <el-input v-model="form.tableName" placeholder="请选择物理表" readonly>
+                <template #append>
+                  <el-button icon="Search" @click="openSelectForm" />
+                </template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="权限标识" prop="perms">
+              <el-tree-select
+                v-model="selectedSysMenuId"
+                :data="sysMenuTreeData"
+                :props="sysMenuTreeProps"
+                node-key="menuId"
+                check-strictly
+                placeholder="请选择系统按钮权限标识"
+                style="width: 100%"
+                @change="handleSysMenuSelect"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -181,12 +169,16 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="前端组件路径" prop="component">
-              <el-input v-model="form.component" placeholder="请输入前端组件路径" />
+              <el-input v-model="form.component" placeholder="请选择前端组件文件" readonly>
+                <template #append>
+                  <el-button icon="Search" @click="openFrontendFileSelector" />
+                </template>
+              </el-input>
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="显示顺序" prop="orderNum">
-              <el-input v-model="form.orderNum" placeholder="请输入显示顺序" />
+            <el-form-item label="排序号" prop="orderNum">
+              <el-input-number v-model="form.orderNum" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -198,11 +190,6 @@
                   :label="dict.value"
                 >{{dict.label}}</el-radio>
               </el-radio-group>
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="删除标志" prop="delFlag">
-              <el-input v-model="form.delFlag" placeholder="请输入删除标志" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -219,12 +206,20 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 选择物理表对话框 -->
+    <SelectForm ref="selectFormRef" @ok="onFormSelected" />
+    <!-- 选择前端组件文件对话框 -->
+    <FrontendFileSelector ref="frontendFileSelectorRef" @ok="onFrontendFileSelected" />
   </div>
 </template>
 
 <script setup name="Operation">
+import { ref, reactive, computed, nextTick } from 'vue'
 import { listOperation, getOperation, delOperation, addOperation, updateOperation } from "@/api/fill/operation"
-import OperationViewDrawer from "./view"
+import { listMenu } from "@/api/system/menu"
+import SelectForm from "@/views/fill/components/SelectForm.vue"
+import FrontendFileSelector from "@/views/fill/components/FrontendFileSelector.vue"
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
@@ -239,18 +234,38 @@ const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
 
+const selectFormRef = ref(null)
+const frontendFileSelectorRef = ref(null)
+
+/** 系统菜单树数据（用于 el-tree-select） */
+const sysMenuTreeData = ref([])
+
+/** 当前选中的系统菜单ID（权限标识回显） */
+const selectedSysMenuId = ref(null)
+
 const data = reactive({
-  form: {},
+  form: {
+    operationId: null,
+    operationCode: null,
+    operationName: null,
+    buttonLabel: null,
+    tableName: null,
+    perms: null,
+    backendRoute: null,
+    component: null,
+    orderNum: 0,
+    status: '0',
+    delFlag: '0',
+    remark: null
+  },
   queryParams: {
     pageNum: 1,
     pageSize: 10,
     operationCode: undefined,
     operationName: undefined,
     buttonLabel: undefined,
+    perms: undefined,
     tableName: undefined,
-    backendRoute: undefined,
-    component: undefined,
-    orderNum: undefined,
     status: undefined,
   },
   rules: {
@@ -265,7 +280,18 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询操作码列表 */
+/**
+ * el-tree-select props：只允许选择按钮类型（F）
+ */
+const sysMenuTreeProps = computed(() => {
+  return {
+    label: 'menuName',
+    children: 'children',
+    disabled: (data) => data.menuType !== 'F'
+  }
+})
+
+/** 查询操作码注册列表 */
 function getList() {
   loading.value = true
   listOperation(queryParams.value).then(response => {
@@ -273,6 +299,60 @@ function getList() {
     total.value = response.total
     loading.value = false
   })
+}
+
+/** 加载系统菜单树 */
+async function loadSysMenuTree() {
+  try {
+    const res = await listMenu()
+    const list = res.data || []
+    sysMenuTreeData.value = buildSysMenuTree(list)
+  } catch (e) {
+    proxy.$modal.msgError('加载系统菜单树失败')
+  }
+}
+
+/** 构建系统菜单树 */
+function buildSysMenuTree(list) {
+  const map = {}
+  list.forEach(item => {
+    item.children = []
+    map[item.menuId] = item
+  })
+  const tree = []
+  list.forEach(item => {
+    if (item.parentId === 0 || !map[item.parentId]) {
+      tree.push(item)
+    } else {
+      const parent = map[item.parentId]
+      if (parent) parent.children.push(item)
+    }
+  })
+  return tree
+}
+
+/** 在系统菜单树中查找节点 */
+function findNodeById(nodes, id) {
+  for (const node of nodes) {
+    if (node.menuId === id) return node
+    if (node.children && node.children.length > 0) {
+      const found = findNodeById(node.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+/** 在系统菜单树中根据 perms 查找节点 */
+function findNodeByPerms(nodes, perms) {
+  for (const node of nodes) {
+    if (node.perms === perms) return node
+    if (node.children && node.children.length > 0) {
+      const found = findNodeByPerms(node.children, perms)
+      if (found) return found
+    }
+  }
+  return null
 }
 
 /** 取消按钮 */
@@ -289,15 +369,15 @@ function reset() {
     operationName: null,
     buttonLabel: null,
     tableName: null,
+    perms: null,
     backendRoute: null,
     component: null,
-    orderNum: null,
-    status: null,
-    delFlag: null,
-    createBy: null,
-    createTime: null,
+    orderNum: 0,
+    status: '0',
+    delFlag: '0',
     remark: null
   }
+  selectedSysMenuId.value = null
   proxy.resetForm("operationRef")
 }
 
@@ -323,18 +403,28 @@ function handleSelectionChange(selection) {
 /** 新增按钮操作 */
 function handleAdd() {
   reset()
+  loadSysMenuTree()
   open.value = true
-  title.value = "添加操作码"
+  title.value = "添加操作码注册"
 }
 
 /** 修改按钮操作 */
-function handleUpdate(row) {
+async function handleUpdate(row) {
   reset()
+  await loadSysMenuTree()
   const _operationId = row.operationId || ids.value
   getOperation(_operationId).then(response => {
     form.value = response.data
+    // 根据 perms 回显系统菜单选中项
+    selectedSysMenuId.value = null
+    if (form.value.perms) {
+      const matched = findNodeByPerms(sysMenuTreeData.value, form.value.perms)
+      if (matched) {
+        selectedSysMenuId.value = matched.menuId
+      }
+    }
     open.value = true
-    title.value = "修改操作码"
+    title.value = "修改操作码注册"
   })
 }
 
@@ -362,17 +452,12 @@ function submitForm() {
 /** 删除按钮操作 */
 function handleDelete(row) {
   const _operationIds = row.operationId || ids.value
-  proxy.$modal.confirm('是否确认删除操作码编号为"' + _operationIds + '"的数据项？').then(function() {
+  proxy.$modal.confirm('是否确认删除操作码注册编号为"' + _operationIds + '"的数据项？').then(function() {
     return delOperation(_operationIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
   }).catch(() => {})
-}
-
-/** 详情按钮操作 */
-function handleViewData(row) {
-  proxy.$refs["operationViewRef"].open(row.operationId)
 }
 
 /** 导出按钮操作 */
@@ -382,5 +467,42 @@ function handleExport() {
   }, `operation_${new Date().getTime()}.xlsx`)
 }
 
+/** 打开选择物理表对话框 */
+function openSelectForm() {
+  selectFormRef.value.show()
+}
+
+/** 物理表选择回调 */
+function onFormSelected(row) {
+  form.value.tableName = row.tableName
+}
+
+/** 打开前端文件选择器 */
+function openFrontendFileSelector() {
+  frontendFileSelectorRef.value.show()
+}
+
+/** 前端组件文件选择回调 */
+function onFrontendFileSelected(filePath) {
+  form.value.component = filePath
+}
+
+/** 系统菜单选择回调（仅回填 perms 和名称） */
+function handleSysMenuSelect(menuId) {
+  if (!menuId) {
+    form.value.perms = ''
+    return
+  }
+  const node = findNodeById(sysMenuTreeData.value, menuId)
+  if (node) {
+    form.value.perms = node.perms || ''
+    if (!form.value.operationName) {
+      form.value.operationName = node.menuName || ''
+    }
+  }
+}
+
+// 初始化加载系统菜单树
+loadSysMenuTree()
 getList()
 </script>

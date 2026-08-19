@@ -42,3 +42,12 @@ export function delScheme_design(schemeId) {
     method: 'delete'
   })
 }
+
+// 发布填报方案
+export function releaseScheme(schemeId, releaseNote) {
+  return request({
+    url: '/fill/scheme_design/release/' + schemeId,
+    method: 'post',
+    data: { releaseNote }
+  })
+}

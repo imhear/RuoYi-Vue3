@@ -1,5 +1,5 @@
 <template>
-  <!-- 选择操作码对话框（单选模式，点击整行选中） -->
+  <!-- 选择操作码对话框（单选模式） -->
   <el-dialog title="选择操作码" v-model="visible" width="900px" top="5vh" append-to-body>
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="操作码" prop="operationCode">
@@ -29,9 +29,12 @@
         <el-table-column label="操作名称" align="center" prop="operationName" :show-overflow-tooltip="true" />
         <el-table-column label="按钮名称" align="center" prop="buttonLabel" />
         <el-table-column label="后端接口路径" align="center" prop="backendRoute" :show-overflow-tooltip="true" />
+        <el-table-column label="前端组件路径" align="center" prop="component" :show-overflow-tooltip="true" />
+        <!-- 新增权限标识列 -->
+        <el-table-column label="权限标识" align="center" prop="perms" :show-overflow-tooltip="true" />
       </el-table>
       <pagination
-        v-show="total>0"
+        v-show="total > 0"
         :total="total"
         v-model:page="queryParams.pageNum"
         v-model:limit="queryParams.pageSize"
@@ -80,19 +83,18 @@ function show() {
 /** 查询操作码列表 */
 function getList() {
   listOperation(queryParams).then(res => {
-    operationList.value = res.rows
-    total.value = res.total
-    // 清除所有选中
+    operationList.value = res.rows || res.data || []
+    total.value = res.total || 0
     operationTableRef.value?.clearSelection()
     selectedRows.value = []
   })
 }
 
 /**
- * 行点击事件：实现点击整行选中/取消，且保持最多选中一行
+ * 行点击事件：单选
  */
 function handleRowClick(row) {
-  const isSelected = selectedRows.value.some(r => r.operationCode === row.operationCode)
+  const isSelected = selectedRows.value.some(r => r.operationId === row.operationId)
   if (isSelected) {
     operationTableRef.value.toggleRowSelection(row, false)
     selectedRows.value = []

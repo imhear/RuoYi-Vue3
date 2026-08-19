@@ -107,6 +107,8 @@
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
+
+          <el-button link type="primary" icon="Grid" @click="openConfig(scope.row)">配置</el-button>
           <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:scheme_design:query']">详情</el-button>
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:scheme_design:edit']">修改</el-button>
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:scheme_design:remove']">删除</el-button>
@@ -178,12 +180,16 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 设计态配置对话框 -->
+    <DesignConfigDialog ref="designConfigRef" :scheme-id="currentSchemeId" />
   </div>
 </template>
 
 <script setup name="Scheme_design">
 import { listScheme_design, getScheme_design, delScheme_design, addScheme_design, updateScheme_design } from "@/api/fill/scheme_design"
 import Scheme_designViewDrawer from "./view"
+import DesignConfigDialog from './components/DesignConfigDialog.vue'
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
@@ -221,6 +227,16 @@ const data = reactive({
 })
 
 const { queryParams, form, rules } = toRefs(data)
+
+const designConfigRef = ref(null)
+const currentSchemeId = ref(null)
+
+function openConfig(row) {
+  currentSchemeId.value = row.schemeId
+  nextTick(() => {
+    designConfigRef.value?.open()
+  })
+}
 
 /** 查询填报方案设计态列表 */
 function getList() {

@@ -82,6 +82,16 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
+      <!-- 同步按钮：从 information_schema 同步业务表 -->
+      <el-col :span="1.5">
+        <el-button
+          type="info"
+          plain
+          icon="Refresh"
+          @click="handleSync"
+          v-hasPermi="['fill:formtemplate:sync']"
+        >同步</el-button>
+      </el-col>
       <el-col :span="1.5">
         <el-button
           type="primary"
@@ -250,7 +260,7 @@
 </template>
 
 <script setup name="Form">
-import { listForm, getForm, delForm, addForm, updateForm } from "@/api/fill/form"
+import { listForm, getForm, delForm, addForm, updateForm, syncForm } from "@/api/fill/form"
 import FormViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
@@ -409,6 +419,16 @@ function handleExport() {
   proxy.download('fill/form/export', {
     ...queryParams.value
   }, `form_${new Date().getTime()}.xlsx`)
+}
+
+/** 同步业务表注册表：从 information_schema 读取未注册的业务表并自动填充 */
+function handleSync() {
+  proxy.$modal.confirm('是否确认同步业务表到业务表注册表？').then(function() {
+    return syncForm()
+  }).then((response) => {
+    proxy.$modal.msgSuccess(response.msg || '同步完成')
+    getList()
+  }).catch(() => {})
 }
 
 getList()

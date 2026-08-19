@@ -42,3 +42,12 @@ export function delForm(formId) {
     method: 'delete'
   })
 }
+
+// 手工新增
+// 同步业务表到业务表注册表
+export function syncForm() {
+  return request({
+    url: '/fill/form/sync',
+    method: 'post'
+  })
+}

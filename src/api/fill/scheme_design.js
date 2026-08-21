@@ -51,3 +51,21 @@ export function releaseScheme(schemeId, releaseNote) {
     data: { releaseNote }
   })
 }
+
+// 导出方案
+export function exportScheme(schemeId) {
+  return request({
+    url: '/fill/scheme_design/export/' + schemeId,
+    method: 'get',
+    responseType: 'blob'
+  })
+}
+
+// 导入方案（接收 JSON 字符串）
+export function importScheme(jsonStr) {
+  return request({
+    url: '/fill/scheme_design/import',
+    method: 'post',
+    data: jsonStr
+  })
+}

@@ -54,6 +54,15 @@
         <el-button
           type="primary"
           plain
+          icon="Upload"
+          @click="handleImportClick"
+          v-hasPermi="['fill:scheme_design:import']"
+        >导入</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="primary"
+          plain
           icon="Plus"
           @click="handleAdd"
           v-hasPermi="['fill:scheme_design:add']"
@@ -97,6 +106,7 @@
         <template #default="scope">
           <el-button link type="primary" icon="Grid" @click="openConfig(scope.row)">配置</el-button>
           <el-button link type="primary" icon="Upload" @click="handleRelease(scope.row)" v-hasPermi="['fill:scheme_design:release']">发布</el-button>
+          <el-button link type="primary" icon="Download" @click="handleExport(scope.row)" v-hasPermi="['fill:scheme_design:export']">导出</el-button>
           <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:scheme_design:query']">详情</el-button>
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:scheme_design:edit']">修改</el-button>
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:scheme_design:remove']">删除</el-button>
@@ -196,13 +206,31 @@
         <el-button type="primary" @click="submitRelease">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 隐藏的文件选择 -->
+    <input
+      ref="importInput"
+      type="file"
+      accept=".json"
+      style="display: none"
+      @change="handleImportFile"
+    />
+
+    <!-- 导入预览对话框 -->
+    <ImportPreviewDialog
+      v-model="importPreviewVisible"
+      :scheme="previewScheme"
+      :menus="previewMenus"
+      @confirm="handleImportConfirm"
+    />
   </div>
 </template>
 
 <script setup name="Scheme_design">
-import { listScheme_design, getScheme_design, delScheme_design, addScheme_design, updateScheme_design, releaseScheme } from "@/api/fill/scheme_design"
+import { listScheme_design, getScheme_design, delScheme_design, addScheme_design, updateScheme_design, releaseScheme, exportScheme, importScheme } from "@/api/fill/scheme_design"
 import Scheme_designViewDrawer from "./view"
 import DesignConfigDialog from './components/DesignConfigDialog.vue'
+import ImportPreviewDialog from './components/ImportPreviewDialog.vue'
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
@@ -241,6 +269,8 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data)
 
+
+//配置功能
 const designConfigRef = ref(null)
 const currentSchemeId = ref(null)
 
@@ -261,7 +291,7 @@ function getList() {
   })
 }
 
-
+// 发布功能
 const releaseVisible = ref(false)
 const releaseFormRef = ref(null)
 const releaseForm = reactive({ schemeId: null, releaseNote: '' })
@@ -284,6 +314,88 @@ function submitRelease() {
     })
   })
 }
+
+//导入导出功能
+const importInput = ref(null)
+const importPreviewVisible = ref(false)
+const previewScheme = ref(null)
+const previewMenus = ref([])
+
+function handleExport(row) {
+  exportScheme(row.schemeId).then(response => {
+    // 创建下载链接
+    const blob = new Blob([response], { type: 'application/json' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${row.schemeCode}_${row.schemeName}.json`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  })
+}
+
+/** 点击导入按钮，触发文件选择 */
+function handleImportClick() {
+  importInput.value?.click()
+}
+
+/** 文件选择变化，解析 JSON 并打开预览 */
+function handleImportFile(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const rawText = e.target.result
+      const parsed = JSON.parse(rawText)
+      // 兼容旧版本带有 AjaxResult 包装的文件
+      let schemeData = parsed
+      if (parsed.data && parsed.data.scheme && parsed.data.menus) {
+        schemeData = parsed.data
+      }
+      if (!schemeData.scheme || !schemeData.menus) {
+        throw new Error('文件格式不正确')
+      }
+      previewScheme.value = schemeData.scheme
+      previewMenus.value = schemeData.menus
+      importPreviewVisible.value = true
+    } catch (err) {
+      proxy.$modal.msgError('导入文件解析失败：' + err.message)
+    }
+  }
+  reader.readAsText(file)
+  // 清除 input 值，允许重复选择同一文件
+  event.target.value = ''
+}
+
+/** 确认导入，重新构造 JSON 字符串并调用后端 */
+function handleImportConfirm() {
+  const jsonObj = {
+    scheme: previewScheme.value,
+    menus: previewMenus.value
+  }
+  const jsonStr = JSON.stringify(jsonObj)
+  importScheme(jsonStr).then(res => {
+    proxy.$modal.msgSuccess(res.msg || '导入成功')
+    importPreviewVisible.value = false
+    getList()
+  }).catch(() => {})
+}
+// function handleImport() {
+//   proxy.$refs.importInput.click()
+// }
+
+// function handleImportFile(event) {
+//   const file = event.target.files[0]
+//   if (!file) return
+//   const formData = new FormData()
+//   formData.append('file', file)
+//   importScheme(formData).then(res => {
+//     proxy.$modal.msgSuccess(res.msg || '导入成功')
+//     getList()
+//   }).catch(() => {})
+// }
+
 
 
 /** 取消按钮 */
@@ -387,11 +499,11 @@ function handleViewData(row) {
 }
 
 /** 导出按钮操作 */
-function handleExport() {
-  proxy.download('fill/scheme_design/export', {
-    ...queryParams.value
-  }, `scheme_design_${new Date().getTime()}.xlsx`)
-}
+// function handleExport() {
+//   proxy.download('fill/scheme_design/export', {
+//     ...queryParams.value
+//   }, `scheme_design_${new Date().getTime()}.xlsx`)
+// }
 
 getList()
 </script>

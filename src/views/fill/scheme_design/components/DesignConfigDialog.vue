@@ -3,7 +3,7 @@
     v-model="visible"
     title="设计态配置"
     width="1400px"
-    top="3vh"
+    top="2vh"
     append-to-body
     class="design-config-dialog"
     @closed="handleClosed"
@@ -52,38 +52,54 @@
         </div>
       </el-col>
 
-      <!-- 右侧：节点详情 -->
+      <!-- 右侧：方案信息 + 节点详情 -->
       <el-col :span="17">
         <div class="detail-panel">
-          <div class="panel-header">节点详情</div>
-          <div v-if="currentNode" class="detail-body">
+          <div class="panel-header">方案信息</div>
+          <div class="detail-body">
+            <!-- 方案基本信息 -->
             <el-descriptions :column="2" border>
-              <el-descriptions-item label="菜单ID">{{ currentNode.menuId }}</el-descriptions-item>
-              <el-descriptions-item label="菜单名称">{{ currentNode.menuName }}</el-descriptions-item>
-              <el-descriptions-item label="菜单类型">
-                <el-tag :type="menuTypeTag(currentNode.menuType)">{{ menuTypeText(currentNode.menuType) }}</el-tag>
-              </el-descriptions-item>
-              <el-descriptions-item label="父菜单ID">{{ currentNode.parentId }}</el-descriptions-item>
-              <el-descriptions-item label="显示顺序">{{ currentNode.orderNum }}</el-descriptions-item>
-              <el-descriptions-item label="前端路由地址">{{ currentNode.path || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="前端组件路径">{{ currentNode.component || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="后端接口路径">{{ currentNode.backendRoute || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="操作码">{{ currentNode.operationCode || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="物理表名">{{ currentNode.tableName || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="权限标识">{{ currentNode.perms || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="路由参数">{{ currentNode.query || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="自定义参数">{{ currentNode.customParams || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="前置菜单ID">{{ currentNode.predecessorDetailId || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="卡片显示">{{ currentNode.operationVisible === '1' ? '是' : '否' }}</el-descriptions-item>
-              <el-descriptions-item label="状态">{{ currentNode.status === '0' ? '正常' : '停用' }}</el-descriptions-item>
-              <el-descriptions-item label="备注">{{ currentNode.remark || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="方案ID">{{ schemeInfo?.schemeId || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="方案编码">{{ schemeInfo?.schemeCode || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="方案名称">{{ schemeInfo?.schemeName || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="方案类型">{{ schemeInfo?.schemeType || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="分组类型数量">{{ schemeInfo?.groupTypeCount || 0 }}</el-descriptions-item>
+              <el-descriptions-item label="当前发布版本ID">{{ schemeInfo?.currentReleaseId || '-' }}</el-descriptions-item>
+              <el-descriptions-item label="状态">{{ schemeInfo?.status === '0' ? '正常' : '停用' }}</el-descriptions-item>
+              <el-descriptions-item label="备注">{{ schemeInfo?.remark || '-' }}</el-descriptions-item>
             </el-descriptions>
-            <div class="detail-actions">
-              <el-button type="primary" @click="handleEdit(currentNode)">编辑</el-button>
-              <el-button v-if="currentNode.menuType !== 'F'" @click="handleAddChild(currentNode)">新增子节点</el-button>
+
+            <el-divider content-position="left">选中节点详情</el-divider>
+
+            <div v-if="currentNode">
+              <el-descriptions :column="2" border>
+                <el-descriptions-item label="菜单ID">{{ currentNode.menuId }}</el-descriptions-item>
+                <el-descriptions-item label="菜单名称">{{ currentNode.menuName }}</el-descriptions-item>
+                <el-descriptions-item label="菜单类型">
+                  <el-tag :type="menuTypeTag(currentNode.menuType)">{{ menuTypeText(currentNode.menuType) }}</el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="父菜单ID">{{ currentNode.parentId }}</el-descriptions-item>
+                <el-descriptions-item label="显示顺序">{{ currentNode.orderNum }}</el-descriptions-item>
+                <el-descriptions-item label="前端路由地址">{{ currentNode.path || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="前端组件路径">{{ currentNode.component || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="后端接口路径">{{ currentNode.backendRoute || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="操作码">{{ currentNode.operationCode || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="物理表名">{{ currentNode.tableName || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="权限标识">{{ currentNode.perms || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="路由参数">{{ currentNode.query || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="自定义参数">{{ currentNode.customParams || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="前置菜单ID">{{ currentNode.predecessorDetailId || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="卡片显示">{{ currentNode.operationVisible === '1' ? '是' : '否' }}</el-descriptions-item>
+                <el-descriptions-item label="状态">{{ currentNode.status === '0' ? '正常' : '停用' }}</el-descriptions-item>
+                <el-descriptions-item label="备注">{{ currentNode.remark || '-' }}</el-descriptions-item>
+              </el-descriptions>
+              <div class="detail-actions">
+                <el-button type="primary" @click="handleEdit(currentNode)">编辑</el-button>
+                <el-button v-if="currentNode.menuType !== 'F'" @click="handleAddChild(currentNode)">新增子节点</el-button>
+              </div>
             </div>
+            <el-empty v-else description="请选择左侧节点查看详情" />
           </div>
-          <el-empty v-else description="请选择左侧节点查看详情" />
         </div>
       </el-col>
     </el-row>
@@ -263,7 +279,7 @@
           </el-col>
 
           <!-- F 按钮专用：选择系统按钮权限（el-tree-select） -->
-          <el-col :span="24" v-if="editForm.menuType === 'F'">
+          <el-col :span="12" v-if="editForm.menuType === 'F'">
             <el-form-item label="系统按钮权限">
               <el-tree-select
                 v-model="selectedSysMenuId"
@@ -279,7 +295,7 @@
           </el-col>
 
           <!-- F 按钮专用：操作码 -->
-          <el-col :span="24" v-if="editForm.menuType === 'F'">
+          <el-col :span="12" v-if="editForm.menuType === 'F'">
             <el-form-item label="操作码" prop="operationCode">
               <el-input v-model="editForm.operationCode" placeholder="请选择操作码" readonly>
                 <template #append>
@@ -355,6 +371,7 @@ import { Folder, Document, Operation, Plus, Edit, Delete, Search } from '@elemen
 import SelectForm from '@/views/fill/components/SelectForm.vue'
 import SelectOperation from '@/views/fill/components/SelectOperation.vue'
 import { listMenu } from "@/api/system/menu"
+import { getScheme_design } from "@/api/fill/scheme_design"
 import { listScheme_design_menu, addScheme_design_menu, updateScheme_design_menu, delScheme_design_menu } from "@/api/fill/scheme_design_menu"
 
 defineOptions({ name: 'DesignConfigDialog' })
@@ -369,6 +386,7 @@ const treeRef = ref(null)
 const treeLoading = ref(false)
 const treeData = ref([])
 const currentNode = ref(null)
+const schemeInfo = ref(null)   // 方案基本信息
 
 const editDialogVisible = ref(false)
 const editFormRef = ref(null)
@@ -425,8 +443,6 @@ const editRules = computed(() => {
 
 /**
  * el-tree-select 的 props，根据节点类型动态禁用不可选节点
- * - C 菜单：只允许选 menuType === 'C'
- * - F 按钮：只允许选 menuType === 'F'
  */
 const sysMenuTreeProps = computed(() => {
   const requiredType = editForm.menuType === 'C' ? 'C' : 'F'
@@ -438,18 +454,28 @@ const sysMenuTreeProps = computed(() => {
 })
 
 // ==================== 工具方法 ====================
-/** 菜单类型文本 */
 function menuTypeText(type) {
   const map = { M: '目录', C: '菜单', F: '按钮' }
   return map[type] || type
 }
-/** 菜单类型标签颜色 */
 function menuTypeTag(type) {
   const map = { M: 'warning', C: 'success', F: 'info' }
   return map[type] || ''
 }
 
 // ==================== 数据加载 ====================
+/**
+ * 加载当前方案基本信息
+ */
+async function loadSchemeInfo() {
+  try {
+    const res = await getScheme_design(props.schemeId)
+    schemeInfo.value = res.data || null
+  } catch (e) {
+    ElMessage.error('加载方案信息失败')
+  }
+}
+
 /**
  * 加载当前方案的菜单树
  */
@@ -567,7 +593,7 @@ function findNodeByPerms(nodes, perms) {
 async function open() {
   visible.value = true
   currentNode.value = null
-  await Promise.all([loadTree(), loadSysMenuTree()])
+  await Promise.all([loadTree(), loadSysMenuTree(), loadSchemeInfo()])
 }
 
 function close() {
@@ -646,7 +672,6 @@ function openEditDialog(menuType, parentId, nodeData) {
  * 节点类型切换时清空不相关字段
  */
 function handleMenuTypeChange(val) {
-  // 清空系统菜单选中
   selectedSysMenuId.value = null
   if (val === 'M') {
     editForm.tableName = ''
@@ -674,16 +699,10 @@ function handleMenuTypeChange(val) {
 }
 
 // ==================== 选择器回调 ====================
-/**
- * 打开选择物理表对话框
- */
 function openSelectForm() {
   selectFormRef.value.show()
 }
 
-/**
- * 物理表选择回调
- */
 function onFormSelected(row) {
   editForm.tableName = row.tableName
   if (!editForm.menuName) {
@@ -691,17 +710,10 @@ function onFormSelected(row) {
   }
 }
 
-/**
- * 打开选择操作码对话框
- */
 function openSelectOperation() {
   selectOperationRef.value.show()
 }
 
-/**
- * 操作码选择回调
- * 只回填 component、backendRoute、perms，path/query 留给用户手工填写
- */
 function onOperationSelected(row) {
   editForm.operationCode = row.operationCode
   editForm.menuName = row.operationName || row.buttonLabel || row.operationCode
@@ -710,9 +722,6 @@ function onOperationSelected(row) {
   editForm.perms = row.perms || ''
 }
 
-/**
- * 系统菜单选择回调
- */
 function handleSysMenuSelect(menuId) {
   if (!menuId) return
   const node = findNodeById(sysMenuTreeData.value, menuId)
@@ -760,7 +769,6 @@ function handleDelete(node) {
 async function submitEdit() {
   await editFormRef.value.validate()
   const data = { ...editForm }
-  // 类型转换
   data.orderNum = Number(data.orderNum)
   data.isFrame = Number(data.isFrame)
   data.isCache = Number(data.isCache)
@@ -783,7 +791,6 @@ defineExpose({ open, close })
 </script>
 
 <style scoped>
-/* 样式保持不变，与原组件一致 */
 .design-config-dialog :deep(.el-dialog__body) {
   padding: 12px;
 }
@@ -806,7 +813,7 @@ defineExpose({ open, close })
 }
 
 .tree-panel {
-  height: 650px;
+  height: calc(100vh - 220px);   /* 原为 650px */
 }
 
 .tree-body {
@@ -850,7 +857,7 @@ defineExpose({ open, close })
 }
 
 .detail-panel {
-  height: 650px;
+  height: calc(100vh - 220px);   /* 原为 650px */
 }
 
 .detail-body {

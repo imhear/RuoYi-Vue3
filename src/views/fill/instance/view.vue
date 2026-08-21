@@ -5,9 +5,9 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">关联菜单权限表发布态：</label>
+            <label class="info-label">关联发布版本ID：</label>
             <span class="info-value plaintext">
-              {{ info.menuId }}
+              {{ info.releaseId }}
             </span>
           </div>
         </el-col>
@@ -23,63 +23,9 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">实例日期：</label>
+            <label class="info-label">工单号：</label>
             <span class="info-value plaintext">
-              {{ parseTime(info.instanceDate, '{y}-{m}-{d}') }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">表单实例序号：</label>
-            <span class="info-value plaintext">
-              {{ info.instanceSeq }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">实例生成状态：</label>
-            <span class="info-value plaintext">
-              {{ info.instanceStatus }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">填报流程控制状态：</label>
-            <span class="info-value plaintext">
-              {{ info.instanceControlStatus }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">业务记录ID：</label>
-            <span class="info-value plaintext">
-              {{ info.businessRecordId }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">前端路由地址：</label>
-            <span class="info-value plaintext">
-              {{ info.path }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">后端接口路径：</label>
-            <span class="info-value plaintext">
-              {{ info.backendRoute }}
+              {{ info.orderNum }}
             </span>
           </div>
         </el-col>
@@ -95,17 +41,17 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">分组类型：</label>
+            <label class="info-label">状态：</label>
             <span class="info-value plaintext">
-              {{ info.groupType }}
+              <dict-tag :options="sys_normal_disable" :value="info.status" />
             </span>
           </div>
         </el-col>
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">物理表名：</label>
+            <label class="info-label">乐观锁版本号：</label>
             <span class="info-value plaintext">
-              {{ info.tableName }}
+              {{ info.revision }}
             </span>
           </div>
         </el-col>
@@ -113,17 +59,9 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">自定义参数：</label>
+            <label class="info-label">系统版本号：</label>
             <span class="info-value plaintext">
-              {{ info.customParams }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">状态：</label>
-            <span class="info-value plaintext">
-              <dict-tag :options="sys_normal_disable" :value="info.status" />
+              {{ info.sysVersion }}
             </span>
           </div>
         </el-col>

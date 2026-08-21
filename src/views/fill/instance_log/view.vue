@@ -5,7 +5,7 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">关联实例ID：</label>
+            <label class="info-label">关联批记录实例ID：</label>
             <span class="info-value plaintext">
               {{ info.instanceId }}
             </span>
@@ -13,9 +13,27 @@
         </el-col>
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">关联排产计划ID：</label>
+            <label class="info-label">关联排产计划ID，冗余：</label>
             <span class="info-value plaintext">
               {{ info.planId }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">关联表单实例ID：</label>
+            <span class="info-value plaintext">
+              {{ info.formId }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">关联填报操作运行态表ID：</label>
+            <span class="info-value plaintext">
+              {{ info.instanceOperationId }}
             </span>
           </div>
         </el-col>
@@ -80,6 +98,24 @@
             <label class="info-label">备注：</label>
             <span class="info-value plaintext">
               {{ info.remark }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">乐观锁版本号：</label>
+            <span class="info-value plaintext">
+              {{ info.revision }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">系统版本号：</label>
+            <span class="info-value plaintext">
+              {{ info.sysVersion }}
             </span>
           </div>
         </el-col>

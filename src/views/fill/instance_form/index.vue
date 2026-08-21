@@ -9,26 +9,34 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联排产计划ID，冗余" prop="planId">
+      <el-form-item label="关联发布态菜单ID" prop="menuId">
+        <el-input
+          v-model="queryParams.menuId"
+          placeholder="请输入关联发布态菜单ID"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="冗余：发布版本ID" prop="releaseId">
+        <el-input
+          v-model="queryParams.releaseId"
+          placeholder="请输入冗余：发布版本ID"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="冗余：排产计划ID" prop="planId">
         <el-input
           v-model="queryParams.planId"
-          placeholder="请输入关联排产计划ID，冗余"
+          placeholder="请输入冗余：排产计划ID"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联表单实例ID" prop="formId">
+      <el-form-item label="冗余：物理表名" prop="tableName">
         <el-input
-          v-model="queryParams.formId"
-          placeholder="请输入关联表单实例ID"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="关联填报操作运行态表ID" prop="instanceOperationId">
-        <el-input
-          v-model="queryParams.instanceOperationId"
-          placeholder="请输入关联填报操作运行态表ID"
+          v-model="queryParams.tableName"
+          placeholder="请输入冗余：物理表名"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -49,29 +57,29 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="操作码" prop="operationCode">
+      <el-form-item label="业务表主键" prop="businessRecordId">
         <el-input
-          v-model="queryParams.operationCode"
-          placeholder="请输入操作码"
+          v-model="queryParams.businessRecordId"
+          placeholder="请输入业务表主键"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="操作人" prop="operator">
-        <el-input
-          v-model="queryParams.operator"
-          placeholder="请输入操作人"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="操作时间" prop="actionTime">
+      <el-form-item label="实例日期" prop="instanceDate">
         <el-date-picker clearable
-          v-model="queryParams.actionTime"
+          v-model="queryParams.instanceDate"
           type="date"
           value-format="YYYY-MM-DD"
-          placeholder="请选择操作时间">
+          placeholder="请选择实例日期">
         </el-date-picker>
+      </el-form-item>
+      <el-form-item label="表单实例序号" prop="instanceSeq">
+        <el-input
+          v-model="queryParams.instanceSeq"
+          placeholder="请输入表单实例序号"
+          clearable
+          @keyup.enter="handleQuery"
+        />
       </el-form-item>
       <el-form-item label="乐观锁版本号" prop="revision">
         <el-input
@@ -102,7 +110,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['fill:instance_log:add']"
+          v-hasPermi="['fill:instance_form:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -112,7 +120,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['fill:instance_log:edit']"
+          v-hasPermi="['fill:instance_form:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -122,7 +130,7 @@
           icon="Delete"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['fill:instance_log:remove']"
+          v-hasPermi="['fill:instance_form:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -131,37 +139,39 @@
           plain
           icon="Download"
           @click="handleExport"
-          v-hasPermi="['fill:instance_log:export']"
+          v-hasPermi="['fill:instance_form:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="instance_logList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="instance_formList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="日志主键" align="center" prop="logId" />
+      <el-table-column label="表单实例主键" align="center" prop="formId" />
       <el-table-column label="关联批记录实例ID" align="center" prop="instanceId" />
-      <el-table-column label="关联排产计划ID，冗余" align="center" prop="planId" />
-      <el-table-column label="关联表单实例ID" align="center" prop="formId" />
-      <el-table-column label="关联填报操作运行态表ID" align="center" prop="instanceOperationId" />
+      <el-table-column label="关联发布态菜单ID" align="center" prop="menuId" />
+      <el-table-column label="冗余：发布版本ID" align="center" prop="releaseId" />
+      <el-table-column label="冗余：排产计划ID" align="center" prop="planId" />
+      <el-table-column label="冗余：物理表名" align="center" prop="tableName" />
+      <el-table-column label="冗余：自定义参数" align="center" prop="customParams" />
       <el-table-column label="前端路由地址" align="center" prop="path" />
       <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
-      <el-table-column label="操作码" align="center" prop="operationCode" />
-      <el-table-column label="操作类型" align="center" prop="actionType" />
-      <el-table-column label="操作人" align="center" prop="operator" />
-      <el-table-column label="操作时间" align="center" prop="actionTime" width="180">
+      <el-table-column label="业务表主键" align="center" prop="businessRecordId" />
+      <el-table-column label="实例日期" align="center" prop="instanceDate" width="180">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.actionTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ parseTime(scope.row.instanceDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="备注" align="center" prop="remark" />
+      <el-table-column label="表单实例序号" align="center" prop="instanceSeq" />
+      <el-table-column label="表单生成状态" align="center" prop="instanceStatus" />
+      <el-table-column label="填报流程控制状态" align="center" prop="instanceControlStatus" />
       <el-table-column label="乐观锁版本号" align="center" prop="revision" />
       <el-table-column label="系统版本号" align="center" prop="sysVersion" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:instance_log:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:instance_log:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:instance_log:remove']">删除</el-button>
+          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:instance_form:query']">详情</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:instance_form:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:instance_form:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -174,11 +184,11 @@
       @pagination="getList"
     />
 
-    <!-- 填报日志详情抽屉 -->
-    <instance_log-view-drawer ref="instance_logViewRef" />
-    <!-- 添加或修改填报日志对话框 -->
+    <!-- 填报单实例运行态详情抽屉 -->
+    <instance_form-view-drawer ref="instance_formViewRef" />
+    <!-- 添加或修改填报单实例运行态对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="instance_logRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="instance_formRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="24">
             <el-form-item label="关联批记录实例ID" prop="instanceId">
@@ -186,18 +196,28 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联排产计划ID，冗余" prop="planId">
-              <el-input v-model="form.planId" placeholder="请输入关联排产计划ID，冗余" />
+            <el-form-item label="关联发布态菜单ID" prop="menuId">
+              <el-input v-model="form.menuId" placeholder="请输入关联发布态菜单ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联表单实例ID" prop="formId">
-              <el-input v-model="form.formId" placeholder="请输入关联表单实例ID" />
+            <el-form-item label="冗余：发布版本ID" prop="releaseId">
+              <el-input v-model="form.releaseId" placeholder="请输入冗余：发布版本ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联填报操作运行态表ID" prop="instanceOperationId">
-              <el-input v-model="form.instanceOperationId" placeholder="请输入关联填报操作运行态表ID" />
+            <el-form-item label="冗余：排产计划ID" prop="planId">
+              <el-input v-model="form.planId" placeholder="请输入冗余：排产计划ID" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="冗余：物理表名" prop="tableName">
+              <el-input v-model="form.tableName" placeholder="请输入冗余：物理表名" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="冗余：自定义参数" prop="customParams">
+              <el-input v-model="form.customParams" type="textarea" placeholder="请输入内容" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -211,28 +231,28 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="操作码" prop="operationCode">
-              <el-input v-model="form.operationCode" placeholder="请输入操作码" />
+            <el-form-item label="业务表主键" prop="businessRecordId">
+              <el-input v-model="form.businessRecordId" placeholder="请输入业务表主键" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="操作人" prop="operator">
-              <el-input v-model="form.operator" placeholder="请输入操作人" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="操作时间" prop="actionTime">
+            <el-form-item label="实例日期" prop="instanceDate">
               <el-date-picker clearable
-                v-model="form.actionTime"
+                v-model="form.instanceDate"
                 type="date"
                 value-format="YYYY-MM-DD"
-                placeholder="请选择操作时间">
+                placeholder="请选择实例日期">
               </el-date-picker>
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
+            <el-form-item label="表单实例序号" prop="instanceSeq">
+              <el-input v-model="form.instanceSeq" placeholder="请输入表单实例序号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="删除标志" prop="delFlag">
+              <el-input v-model="form.delFlag" placeholder="请输入删除标志" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -257,13 +277,13 @@
   </div>
 </template>
 
-<script setup name="Instance_log">
-import { listInstance_log, getInstance_log, delInstance_log, addInstance_log, updateInstance_log } from "@/api/fill/instance_log"
-import Instance_logViewDrawer from "./view"
+<script setup name="Instance_form">
+import { listInstance_form, getInstance_form, delInstance_form, addInstance_form, updateInstance_form } from "@/api/fill/instance_form"
+import Instance_formViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
 
-const instance_logList = ref([])
+const instance_formList = ref([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
@@ -279,15 +299,18 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     instanceId: undefined,
+    menuId: undefined,
+    releaseId: undefined,
     planId: undefined,
-    formId: undefined,
-    instanceOperationId: undefined,
+    tableName: undefined,
+    customParams: undefined,
     path: undefined,
     backendRoute: undefined,
-    operationCode: undefined,
-    actionType: undefined,
-    operator: undefined,
-    actionTime: undefined,
+    businessRecordId: undefined,
+    instanceDate: undefined,
+    instanceSeq: undefined,
+    instanceStatus: undefined,
+    instanceControlStatus: undefined,
     revision: undefined,
     sysVersion: undefined
   },
@@ -295,25 +318,19 @@ const data = reactive({
     instanceId: [
       { required: true, message: "关联批记录实例ID不能为空", trigger: "blur" }
     ],
-    planId: [
-      { required: true, message: "关联排产计划ID，冗余不能为空", trigger: "blur" }
-    ],
-    operationCode: [
-      { required: true, message: "操作码不能为空", trigger: "blur" }
-    ],
-    actionType: [
-      { required: true, message: "操作类型不能为空", trigger: "change" }
+    menuId: [
+      { required: true, message: "关联发布态菜单ID不能为空", trigger: "blur" }
     ],
   }
 })
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询填报日志列表 */
+/** 查询填报单实例运行态列表 */
 function getList() {
   loading.value = true
-  listInstance_log(queryParams.value).then(response => {
-    instance_logList.value = response.rows
+  listInstance_form(queryParams.value).then(response => {
+    instance_formList.value = response.rows
     total.value = response.total
     loading.value = false
   })
@@ -328,24 +345,29 @@ function cancel() {
 /** 表单重置 */
 function reset() {
   form.value = {
-    logId: null,
-    instanceId: null,
-    planId: null,
     formId: null,
-    instanceOperationId: null,
+    instanceId: null,
+    menuId: null,
+    releaseId: null,
+    planId: null,
+    tableName: null,
+    customParams: null,
     path: null,
     backendRoute: null,
-    operationCode: null,
-    actionType: null,
-    operator: null,
-    actionTime: null,
-    remark: null,
+    businessRecordId: null,
+    instanceDate: null,
+    instanceSeq: null,
+    instanceStatus: null,
+    instanceControlStatus: null,
+    delFlag: null,
     createBy: null,
     createTime: null,
+    updateBy: null,
+    updateTime: null,
     revision: null,
     sysVersion: null
   }
-  proxy.resetForm("instance_logRef")
+  proxy.resetForm("instance_formRef")
 }
 
 /** 搜索按钮操作 */
@@ -362,7 +384,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.logId)
+  ids.value = selection.map(item => item.formId)
   single.value = selection.length != 1
   multiple.value = !selection.length
 }
@@ -371,32 +393,32 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加填报日志"
+  title.value = "添加填报单实例运行态"
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
-  const _logId = row.logId || ids.value
-  getInstance_log(_logId).then(response => {
+  const _formId = row.formId || ids.value
+  getInstance_form(_formId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改填报日志"
+    title.value = "修改填报单实例运行态"
   })
 }
 
 /** 提交按钮 */
 function submitForm() {
-  proxy.$refs["instance_logRef"].validate(valid => {
+  proxy.$refs["instance_formRef"].validate(valid => {
     if (valid) {
-      if (form.value.logId != null) {
-        updateInstance_log(form.value).then(() => {
+      if (form.value.formId != null) {
+        updateInstance_form(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addInstance_log(form.value).then(() => {
+        addInstance_form(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
@@ -408,9 +430,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _logIds = row.logId || ids.value
-  proxy.$modal.confirm('是否确认删除填报日志编号为"' + _logIds + '"的数据项？').then(function() {
-    return delInstance_log(_logIds)
+  const _formIds = row.formId || ids.value
+  proxy.$modal.confirm('是否确认删除填报单实例运行态编号为"' + _formIds + '"的数据项？').then(function() {
+    return delInstance_form(_formIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -419,14 +441,14 @@ function handleDelete(row) {
 
 /** 详情按钮操作 */
 function handleViewData(row) {
-  proxy.$refs["instance_logViewRef"].open(row.logId)
+  proxy.$refs["instance_formViewRef"].open(row.formId)
 }
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('fill/instance_log/export', {
+  proxy.download('fill/instance_form/export', {
     ...queryParams.value
-  }, `instance_log_${new Date().getTime()}.xlsx`)
+  }, `instance_form_${new Date().getTime()}.xlsx`)
 }
 
 getList()

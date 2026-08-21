@@ -1,26 +1,74 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="关联实例ID" prop="instanceId">
+      <el-form-item label="冗余：关联批记录实例ID" prop="instanceId">
         <el-input
           v-model="queryParams.instanceId"
-          placeholder="请输入关联实例ID"
+          placeholder="请输入冗余：关联批记录实例ID"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联菜单权限表" prop="menuId">
+      <el-form-item label="关联表单实例ID" prop="formId">
+        <el-input
+          v-model="queryParams.formId"
+          placeholder="请输入关联表单实例ID"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="关联发布态菜单ID" prop="menuId">
         <el-input
           v-model="queryParams.menuId"
-          placeholder="请输入关联菜单权限表"
+          placeholder="请输入关联发布态菜单ID"
           clearable
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联排产计划ID" prop="planId">
+      <el-form-item label="冗余：排产计划ID" prop="planId">
         <el-input
           v-model="queryParams.planId"
-          placeholder="请输入关联排产计划ID"
+          placeholder="请输入冗余：排产计划ID"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="前端路由地址" prop="path">
+        <el-input
+          v-model="queryParams.path"
+          placeholder="请输入前端路由地址"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="后端接口路径" prop="backendRoute">
+        <el-input
+          v-model="queryParams.backendRoute"
+          placeholder="请输入后端接口路径"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="前端组件路径" prop="component">
+        <el-input
+          v-model="queryParams.component"
+          placeholder="请输入前端组件路径"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="冗余：物理表名" prop="tableName">
+        <el-input
+          v-model="queryParams.tableName"
+          placeholder="请输入冗余：物理表名"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="业务表主键" prop="businessRecordId">
+        <el-input
+          v-model="queryParams.businessRecordId"
+          placeholder="请输入业务表主键"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -49,6 +97,14 @@
           placeholder="请选择操作时间">
         </el-date-picker>
       </el-form-item>
+      <el-form-item label="显示顺序" prop="orderNum">
+        <el-input
+          v-model="queryParams.orderNum"
+          placeholder="请输入显示顺序"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
           <el-option
@@ -58,6 +114,22 @@
             :value="dict.value"
           />
         </el-select>
+      </el-form-item>
+      <el-form-item label="乐观锁版本号" prop="revision">
+        <el-input
+          v-model="queryParams.revision"
+          placeholder="请输入乐观锁版本号"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="系统版本号" prop="sysVersion">
+        <el-input
+          v-model="queryParams.sysVersion"
+          placeholder="请输入系统版本号"
+          clearable
+          @keyup.enter="handleQuery"
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -109,12 +181,16 @@
 
     <el-table v-loading="loading" :data="instance_operationList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="实例操作人主键" align="center" prop="instanceOperationId" />
-      <el-table-column label="关联实例ID" align="center" prop="instanceId" />
-      <el-table-column label="关联菜单权限表" align="center" prop="menuId" />
-      <el-table-column label="关联排产计划ID" align="center" prop="planId" />
+      <el-table-column label="实例操作主键" align="center" prop="instanceOperationId" />
+      <el-table-column label="冗余：关联批记录实例ID" align="center" prop="instanceId" />
+      <el-table-column label="关联表单实例ID" align="center" prop="formId" />
+      <el-table-column label="关联发布态菜单ID" align="center" prop="menuId" />
+      <el-table-column label="冗余：排产计划ID" align="center" prop="planId" />
       <el-table-column label="前端路由地址" align="center" prop="path" />
       <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
+      <el-table-column label="前端组件路径" align="center" prop="component" />
+      <el-table-column label="冗余：物理表名" align="center" prop="tableName" />
+      <el-table-column label="业务表主键" align="center" prop="businessRecordId" />
       <el-table-column label="操作码" align="center" prop="operationCode" />
       <el-table-column label="操作人" align="center" prop="operator" />
       <el-table-column label="操作时间" align="center" prop="operatorTime" width="180">
@@ -128,6 +204,8 @@
           <dict-tag :options="sys_normal_disable" :value="scope.row.status"/>
         </template>
       </el-table-column>
+      <el-table-column label="乐观锁版本号" align="center" prop="revision" />
+      <el-table-column label="系统版本号" align="center" prop="sysVersion" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:instance_operation:query']">详情</el-button>
@@ -152,18 +230,23 @@
       <el-form ref="instance_operationRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
           <el-col :span="24">
-            <el-form-item label="关联实例ID" prop="instanceId">
-              <el-input v-model="form.instanceId" placeholder="请输入关联实例ID" />
+            <el-form-item label="冗余：关联批记录实例ID" prop="instanceId">
+              <el-input v-model="form.instanceId" placeholder="请输入冗余：关联批记录实例ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联菜单权限表" prop="menuId">
-              <el-input v-model="form.menuId" placeholder="请输入关联菜单权限表" />
+            <el-form-item label="关联表单实例ID" prop="formId">
+              <el-input v-model="form.formId" placeholder="请输入关联表单实例ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联排产计划ID" prop="planId">
-              <el-input v-model="form.planId" placeholder="请输入关联排产计划ID" />
+            <el-form-item label="关联发布态菜单ID" prop="menuId">
+              <el-input v-model="form.menuId" placeholder="请输入关联发布态菜单ID" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="冗余：排产计划ID" prop="planId">
+              <el-input v-model="form.planId" placeholder="请输入冗余：排产计划ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -174,6 +257,21 @@
           <el-col :span="24">
             <el-form-item label="后端接口路径" prop="backendRoute">
               <el-input v-model="form.backendRoute" placeholder="请输入后端接口路径" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="前端组件路径" prop="component">
+              <el-input v-model="form.component" placeholder="请输入前端组件路径" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="冗余：物理表名" prop="tableName">
+              <el-input v-model="form.tableName" placeholder="请输入冗余：物理表名" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="业务表主键" prop="businessRecordId">
+              <el-input v-model="form.businessRecordId" placeholder="请输入业务表主键" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -217,6 +315,16 @@
               <el-input v-model="form.delFlag" placeholder="请输入删除标志" />
             </el-form-item>
           </el-col>
+          <el-col :span="24">
+            <el-form-item label="乐观锁版本号" prop="revision">
+              <el-input v-model="form.revision" placeholder="请输入乐观锁版本号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="系统版本号" prop="sysVersion">
+              <el-input v-model="form.sysVersion" placeholder="请输入系统版本号" />
+            </el-form-item>
+          </el-col>
         </el-row>
       </el-form>
       <template #footer>
@@ -252,22 +360,34 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     instanceId: undefined,
+    formId: undefined,
     menuId: undefined,
     planId: undefined,
+    path: undefined,
+    backendRoute: undefined,
+    component: undefined,
+    tableName: undefined,
+    businessRecordId: undefined,
     operationCode: undefined,
     operator: undefined,
     operatorTime: undefined,
+    orderNum: undefined,
     status: undefined,
+    revision: undefined,
+    sysVersion: undefined
   },
   rules: {
     instanceId: [
-      { required: true, message: "关联实例ID不能为空", trigger: "blur" }
+      { required: true, message: "冗余：关联批记录实例ID不能为空", trigger: "blur" }
+    ],
+    formId: [
+      { required: true, message: "关联表单实例ID不能为空", trigger: "blur" }
     ],
     menuId: [
-      { required: true, message: "关联菜单权限表不能为空", trigger: "blur" }
+      { required: true, message: "关联发布态菜单ID不能为空", trigger: "blur" }
     ],
     planId: [
-      { required: true, message: "关联排产计划ID不能为空", trigger: "blur" }
+      { required: true, message: "冗余：排产计划ID不能为空", trigger: "blur" }
     ],
     operationCode: [
       { required: true, message: "操作码不能为空", trigger: "blur" }
@@ -298,10 +418,14 @@ function reset() {
   form.value = {
     instanceOperationId: null,
     instanceId: null,
+    formId: null,
     menuId: null,
     planId: null,
     path: null,
     backendRoute: null,
+    component: null,
+    tableName: null,
+    businessRecordId: null,
     operationCode: null,
     operator: null,
     operatorTime: null,
@@ -311,7 +435,9 @@ function reset() {
     createBy: null,
     createTime: null,
     updateBy: null,
-    updateTime: null
+    updateTime: null,
+    revision: null,
+    sysVersion: null
   }
   proxy.resetForm("instance_operationRef")
 }

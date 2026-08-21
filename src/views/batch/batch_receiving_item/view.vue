@@ -1,39 +1,21 @@
 <template>
-  <el-drawer title="填报操作运行态详情" v-model="visible" direction="rtl" size="60%" append-to-body :before-close="handleClose" class="detail-drawer">
+  <el-drawer title="领料单子表详情" v-model="visible" direction="rtl" size="60%" append-to-body :before-close="handleClose" class="detail-drawer">
     <div v-loading="loading" class="drawer-content">
       <h4 class="section-header">基本信息</h4>
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">冗余：关联批记录实例ID：</label>
+            <label class="info-label">关联领料单主键：</label>
             <span class="info-value plaintext">
-              {{ info.instanceId }}
+              {{ info.receivingId }}
             </span>
           </div>
         </el-col>
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">关联表单实例ID：</label>
+            <label class="info-label">序号：</label>
             <span class="info-value plaintext">
-              {{ info.formId }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">关联发布态菜单ID：</label>
-            <span class="info-value plaintext">
-              {{ info.menuId }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">冗余：排产计划ID：</label>
-            <span class="info-value plaintext">
-              {{ info.planId }}
+              {{ info.seqNo }}
             </span>
           </div>
         </el-col>
@@ -41,35 +23,17 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">前端路由地址：</label>
+            <label class="info-label">物料编码：</label>
             <span class="info-value plaintext">
-              {{ info.path }}
+              {{ info.materialCode }}
             </span>
           </div>
         </el-col>
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">后端接口路径：</label>
+            <label class="info-label">物料名称：</label>
             <span class="info-value plaintext">
-              {{ info.backendRoute }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">前端组件路径：</label>
-            <span class="info-value plaintext">
-              {{ info.component }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">冗余：物理表名：</label>
-            <span class="info-value plaintext">
-              {{ info.tableName }}
+              {{ info.materialName }}
             </span>
           </div>
         </el-col>
@@ -77,35 +41,17 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">业务表主键：</label>
+            <label class="info-label">规格：</label>
             <span class="info-value plaintext">
-              {{ info.businessRecordId }}
+              {{ info.spec }}
             </span>
           </div>
         </el-col>
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">操作码：</label>
+            <label class="info-label">单位：</label>
             <span class="info-value plaintext">
-              {{ info.operationCode }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">操作人：</label>
-            <span class="info-value plaintext">
-              {{ info.operator }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">操作时间：</label>
-            <span class="info-value plaintext">
-              {{ parseTime(info.operatorTime, '{y}-{m}-{d}') }}
+              {{ info.unit }}
             </span>
           </div>
         </el-col>
@@ -113,17 +59,71 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">显示顺序：</label>
+            <label class="info-label">计划领用量：</label>
             <span class="info-value plaintext">
-              {{ info.orderNum }}
+              {{ info.requireQty }}
             </span>
           </div>
         </el-col>
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">状态：</label>
+            <label class="info-label">包装是否完整：</label>
             <span class="info-value plaintext">
-              <dict-tag :options="sys_normal_disable" :value="info.status" />
+              {{ info.baozhuangFlag }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">标签是否正确：</label>
+            <span class="info-value plaintext">
+              {{ info.biaoqianFlag }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">是否无发霉/变质/生虫/变色等：</label>
+            <span class="info-value plaintext">
+              {{ info.waiguanFlag }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">是否已放行：</label>
+            <span class="info-value plaintext">
+              {{ info.fangxingFlag }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">物料批号：</label>
+            <span class="info-value plaintext">
+              {{ info.batchNumber }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">实际发料量：</label>
+            <span class="info-value plaintext">
+              {{ info.actualQty }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">备注：</label>
+            <span class="info-value plaintext">
+              {{ info.remark }}
             </span>
           </div>
         </el-col>
@@ -150,23 +150,22 @@
   </el-drawer>
 </template>
 
-<script setup name="Instance_operationViewDrawer">
-import { getInstance_operation } from '@/api/fill/instance_operation'
+<script setup name="Batch_receiving_itemViewDrawer">
+import { getBatch_receiving_item } from '@/api/batch/batch_receiving_item'
 
-const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const visible = ref(false)
 const loading = ref(false)
 const info = reactive({})
 
-const open = async (instanceOperationId) => {
+const open = async (itemId) => {
   visible.value = true
   loading.value = true
   try {
-    const res = await getInstance_operation(instanceOperationId)
+    const res = await getBatch_receiving_item(itemId)
     Object.assign(info, res.data || {})
   } catch (error) {
-    console.error('获取填报操作运行态信息失败:', error)
+    console.error('获取领料单子表信息失败:', error)
   } finally {
     loading.value = false
   }

@@ -1,57 +1,21 @@
 <template>
-  <el-drawer title="填报操作运行态详情" v-model="visible" direction="rtl" size="60%" append-to-body :before-close="handleClose" class="detail-drawer">
+  <el-drawer title="领料单详情" v-model="visible" direction="rtl" size="60%" append-to-body :before-close="handleClose" class="detail-drawer">
     <div v-loading="loading" class="drawer-content">
       <h4 class="section-header">基本信息</h4>
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">冗余：关联批记录实例ID：</label>
-            <span class="info-value plaintext">
-              {{ info.instanceId }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">关联表单实例ID：</label>
-            <span class="info-value plaintext">
-              {{ info.formId }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">关联发布态菜单ID：</label>
-            <span class="info-value plaintext">
-              {{ info.menuId }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">冗余：排产计划ID：</label>
+            <label class="info-label">关联排产计划ID：</label>
             <span class="info-value plaintext">
               {{ info.planId }}
             </span>
           </div>
         </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">前端路由地址：</label>
+            <label class="info-label">关联工单ID：</label>
             <span class="info-value plaintext">
-              {{ info.path }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">后端接口路径：</label>
-            <span class="info-value plaintext">
-              {{ info.backendRoute }}
+              {{ info.orderId }}
             </span>
           </div>
         </el-col>
@@ -59,61 +23,7 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">前端组件路径：</label>
-            <span class="info-value plaintext">
-              {{ info.component }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">冗余：物理表名：</label>
-            <span class="info-value plaintext">
-              {{ info.tableName }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">业务表主键：</label>
-            <span class="info-value plaintext">
-              {{ info.businessRecordId }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">操作码：</label>
-            <span class="info-value plaintext">
-              {{ info.operationCode }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">操作人：</label>
-            <span class="info-value plaintext">
-              {{ info.operator }}
-            </span>
-          </div>
-        </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">操作时间：</label>
-            <span class="info-value plaintext">
-              {{ parseTime(info.operatorTime, '{y}-{m}-{d}') }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">显示顺序：</label>
+            <label class="info-label">工单号：</label>
             <span class="info-value plaintext">
               {{ info.orderNum }}
             </span>
@@ -121,14 +31,94 @@
         </el-col>
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">状态：</label>
+            <label class="info-label">排产单号：</label>
             <span class="info-value plaintext">
-              <dict-tag :options="sys_normal_disable" :value="info.status" />
+              {{ info.planCode }}
             </span>
           </div>
         </el-col>
       </el-row>
       <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">车间：</label>
+            <span class="info-value plaintext">
+              {{ info.workshop }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">物料类别：</label>
+            <span class="info-value plaintext">
+              {{ info.materialType }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">领料日期：</label>
+            <span class="info-value plaintext">
+              {{ parseTime(info.receiveDate, '{y}-{m}-{d}') }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">领料人：</label>
+            <span class="info-value plaintext">
+              {{ info.receiveBy }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">发料日期：</label>
+            <span class="info-value plaintext">
+              {{ parseTime(info.deliveryDate, '{y}-{m}-{d}') }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">发料人：</label>
+            <span class="info-value plaintext">
+              {{ info.deliveryBy }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">备注：</label>
+            <span class="info-value plaintext">
+              {{ info.remark }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">表单版本号：</label>
+            <span class="info-value plaintext">
+              {{ info.versionCode }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">填报实例ID：</label>
+            <span class="info-value plaintext">
+              {{ info.instanceId }}
+            </span>
+          </div>
+        </el-col>
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">乐观锁版本号：</label>
@@ -137,6 +127,8 @@
             </span>
           </div>
         </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">系统版本号：</label>
@@ -150,23 +142,22 @@
   </el-drawer>
 </template>
 
-<script setup name="Instance_operationViewDrawer">
-import { getInstance_operation } from '@/api/fill/instance_operation'
+<script setup name="Batch_receivingViewDrawer">
+import { getBatch_receiving } from '@/api/batch/batch_receiving'
 
-const { sys_normal_disable } = useDict('sys_normal_disable')
 
 const visible = ref(false)
 const loading = ref(false)
 const info = reactive({})
 
-const open = async (instanceOperationId) => {
+const open = async (receivingId) => {
   visible.value = true
   loading.value = true
   try {
-    const res = await getInstance_operation(instanceOperationId)
+    const res = await getBatch_receiving(receivingId)
     Object.assign(info, res.data || {})
   } catch (error) {
-    console.error('获取填报操作运行态信息失败:', error)
+    console.error('获取领料单信息失败:', error)
   } finally {
     loading.value = false
   }

@@ -1,26 +1,23 @@
 <!--
-  领料单纯内容组件（表头换行 + 紧凑复选框）
-  顶部：公司名称 + 编号（居右）
-  第一行表格：产品信息
-  第二行表格：物料明细（复杂表头换行）
-  第三行表格：签名行
+  领料单纯内容组件（数据无关版）
+  支持真实数据查看，也支持无数据空白预览
 -->
 <template>
-  <div v-if="receiving" class="view-container">
+  <div class="view-container">
 
     <!-- ===== 公司名称 + 编号（居右） ===== -->
     <div style="display: flex; align-items: flex-end; margin-bottom: 0px;">
       <h3 style="flex: 1; text-align: center; margin: 0;">兰树化妆品股份有限公司</h3>
-      <span style="flex-shrink: 0; font-size: 12px;">编号：{{ plan?.fileTemplateCode || 'R-(LS-SOP-S-G-001)-01' }}</span>
+      <span style="flex-shrink: 0; font-size: 12px;">编号：{{ safePlan.fileTemplateCode || 'R-(LS-SOP-S-G-001)-01' }}</span>
     </div>
 
     <!-- ===== 物料类别 ===== -->
     <div style="text-align: center; margin-top: 4px; margin-bottom: -6px; display: flex; justify-content: center; align-items: center;">
       <span style="font-weight: bold;">（</span>
-      <el-checkbox :model-value="receiving.materialType === 'RAW_MATERIAL'" disabled>原料</el-checkbox>
-      <el-checkbox :model-value="receiving.materialType === 'SEMI_FINISHED_PRODUCT'" disabled>半成品</el-checkbox>
-      <el-checkbox :model-value="receiving.materialType === 'INTERMEDIATE_PRODUCT'" disabled>半制品</el-checkbox>
-      <el-checkbox :model-value="receiving.materialType === 'PACKAGING_MATERIAL'" disabled>包装材料</el-checkbox>
+      <el-checkbox :model-value="safeReceiving.materialType === 'RAW_MATERIAL'" disabled>原料</el-checkbox>
+      <el-checkbox :model-value="safeReceiving.materialType === 'SEMI_FINISHED_PRODUCT'" disabled>半成品</el-checkbox>
+      <el-checkbox :model-value="safeReceiving.materialType === 'INTERMEDIATE_PRODUCT'" disabled>半制品</el-checkbox>
+      <el-checkbox :model-value="safeReceiving.materialType === 'PACKAGING_MATERIAL'" disabled>包装材料</el-checkbox>
       <span style="font-weight: bold;">）领料单</span>
     </div>
 
@@ -38,7 +35,7 @@
         </template>
       </el-table-column>
       <el-table-column width="331">
-        <template #default>{{ plan?.productName || '' }}</template>
+        <template #default>{{ safePlan.productName || '' }}</template>
       </el-table-column>
       <el-table-column width="80" align="center">
         <template #default>
@@ -46,7 +43,7 @@
         </template>
       </el-table-column>
       <el-table-column>
-        <template #default>{{ plan?.spec || '' }}</template>
+        <template #default>{{ safePlan.spec || '' }}</template>
       </el-table-column>
       <el-table-column width="100" align="center">
         <template #default>
@@ -54,7 +51,7 @@
         </template>
       </el-table-column>
       <el-table-column>
-        <template #default>{{ plan?.batchNumber || '' }}</template>
+        <template #default>{{ safePlan.batchNumber || '' }}</template>
       </el-table-column>
     </el-table>
 
@@ -184,7 +181,7 @@
       </el-table-column>
       <el-table-column>
         <template #default>
-          {{ receiving.receiveBy || '' }} / {{ receiving.receiveDate ? parseTime(receiving.receiveDate, '{y}-{m}-{d}') : '' }}
+          {{ safeReceiving.receiveBy || '' }} / {{ safeReceiving.receiveDate ? parseTime(safeReceiving.receiveDate, '{y}-{m}-{d}') : '' }}
         </template>
       </el-table-column>
       <el-table-column width="130" align="center">
@@ -194,7 +191,7 @@
       </el-table-column>
       <el-table-column>
         <template #default>
-          {{ receiving.deliveryBy || '' }} / {{ receiving.deliveryDate ? parseTime(receiving.deliveryDate, '{y}-{m}-{d}') : '' }}
+          {{ safeReceiving.deliveryBy || '' }} / {{ safeReceiving.deliveryDate ? parseTime(safeReceiving.deliveryDate, '{y}-{m}-{d}') : '' }}
         </template>
       </el-table-column>
     </el-table>
@@ -205,26 +202,36 @@
 import { ref, computed } from 'vue'
 import { parseTime } from '@/utils/ruoyi'
 
-const receiving = ref(null)
-const plan = ref(null)
+const receiving = ref({})
+const plan = ref({})
 
+/** 安全访问：空对象兜底 */
+const safeReceiving = computed(() => receiving.value || {})
+const safePlan = computed(() => plan.value || {})
+
+/** 固定展示 14 行物料明细，缺失行用空对象补齐 */
 const displayItems = computed(() => {
-  const items = receiving.value?.itemList || []
+  const items = safeReceiving.value.itemList || []
   const result = []
   for (let i = 0; i < 14; i++) {
-    result.push(items[i] || null)
+    result.push(items[i] || {})
   }
   return result
 })
 
+/**
+ * 打开组件
+ * @param {Object|null} data 领料单详情（可为 null 预览空白模板）
+ */
 function open(data) {
-  receiving.value = data
-  plan.value = data.plan || null
+  receiving.value = data || {}
+  plan.value = data?.plan || {}
 }
 
+/** 重置为空白状态 */
 function reset() {
-  receiving.value = null
-  plan.value = null
+  receiving.value = {}
+  plan.value = {}
 }
 
 defineExpose({ open, reset })
@@ -279,7 +286,7 @@ defineExpose({ open, reset })
   line-height: 1.2;
 }
 
-/* 表头行高改为23.4px，同时背景色改为白色 */
+/* 表头行高改为30px，同时背景色改为白色 */
 .mid-table :deep(.el-table__header-wrapper th),
 .mid-table :deep(.el-table__fixed-header-wrapper th) {
   height: 30px !important;
@@ -309,4 +316,3 @@ defineExpose({ open, reset })
   border-radius: 2px;
 }
 </style>
-

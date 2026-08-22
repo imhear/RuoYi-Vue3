@@ -42,3 +42,12 @@ export function delBatch_plan(planId) {
     method: 'delete'
   })
 }
+
+// 生成批记录
+export function generateInstance(data) {
+  return request({
+    url: '/batch/batch_plan/generate',
+    method: 'post',
+    data: data
+  })
+}

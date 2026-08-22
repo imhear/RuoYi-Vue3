@@ -219,6 +219,15 @@
 
     <el-table v-loading="loading" :data="batch_planList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <template #default="scope">
+          <!-- 生成按钮：仅状态为待生产(0)时显示 -->
+          <el-button link type="primary" icon="MagicStick" @click="handleGenerate(scope.row)" v-if="scope.row.status === '0'" v-hasPermi="['batch:batch_plan:generate']">生成</el-button>
+          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['batch:batch_plan:query']">详情</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['batch:batch_plan:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_plan:remove']">删除</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="排产计划主键" align="center" prop="planId" />
       <el-table-column label="排产单号" align="center" prop="planCode" />
       <el-table-column label="关联工单ID" align="center" prop="orderId" />
@@ -259,13 +268,6 @@
       <el-table-column label="规格/型号" align="center" prop="spec" />
       <el-table-column label="乐观锁版本号" align="center" prop="revision" />
       <el-table-column label="系统版本号" align="center" prop="sysVersion" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['batch:batch_plan:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['batch:batch_plan:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_plan:remove']">删除</el-button>
-        </template>
-      </el-table-column>
     </el-table>
     
     <pagination
@@ -426,12 +428,18 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 生成批记录对话框 -->
+    <BatchPlanGenerate ref="generateRef" @success="getList" />
+
   </div>
 </template>
 
 <script setup name="Batch_plan">
 import { listBatch_plan, getBatch_plan, delBatch_plan, addBatch_plan, updateBatch_plan } from "@/api/batch/batch_plan"
 import Batch_planViewDrawer from "./view"
+// 引入生成批记录组件
+import BatchPlanGenerate from '@/views/batch/components/BatchPlanGenerate.vue'
 
 const { proxy } = getCurrentInstance()
 
@@ -444,6 +452,7 @@ const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
+const generateRef = ref(null)   // 生成组件引用
 
 const data = reactive({
   form: {},
@@ -478,6 +487,11 @@ const data = reactive({
 })
 
 const { queryParams, form, rules } = toRefs(data)
+
+/** 打开生成批记录对话框 */
+function handleGenerate(row) {
+  generateRef.value?.open(row)
+}
 
 /** 查询生产计划列表 */
 function getList() {

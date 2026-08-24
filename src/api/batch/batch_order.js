@@ -42,3 +42,11 @@ export function delBatch_order(orderId) {
     method: 'delete'
   })
 }
+
+// 查询工单详情（含BOM）
+export function getBatchOrderDetail(orderId) {
+  return request({
+    url: '/batch/batch_order/detail/' + orderId,
+    method: 'get'
+  })
+}

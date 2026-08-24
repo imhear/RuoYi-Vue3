@@ -33,7 +33,7 @@
               <el-option
                 v-for="item in releaseList"
                 :key="item.releaseId"
-                :label="item.schemeName || item.releaseName"
+                :label="item.schemeName+'-'+item.schemeCode+'-'+item.releaseCode"
                 :value="item.releaseId"
               />
             </el-select>
@@ -123,7 +123,15 @@
                       <Document v-else-if="data.menuType === 'C'" />
                       <Operation v-else />
                     </el-icon>
-                    <span class="node-label">{{ data.menuName }}</span>
+                    <span class="node-label">
+                    {{ data.menuName }}
+                    <template v-if="data.menuType === 'M' && data.workUnitName">
+                      - {{ data.workUnitName }}
+                    </template>
+                    <template v-if="data.menuType === 'F'">
+                      - {{ data.operator || '未设置' }}
+                    </template>
+                  </span>
                   </div>
                 </template>
               </el-tree>
@@ -162,23 +170,11 @@
               <div v-else-if="selectedNode && selectedNode.menuType === 'F'">
                 <el-form label-width="80px">
                   <el-form-item label="操作人">
-                    <el-select
-                      v-model="selectedNode.operator"
-                      filterable
-                      remote
-                      reserve-keyword
-                      placeholder="请输入用户名称搜索"
-                      :remote-method="searchUsers"
-                      :loading="userLoading"
-                      style="width: 100%"
-                    >
-                      <el-option
-                        v-for="user in userOptions"
-                        :key="user.userId"
-                        :label="user.nickName ? user.userName + ' (' + user.nickName + ')' : user.userName"
-                        :value="user.userName"
-                      />
-                    </el-select>
+                    <el-input v-model="selectedNode.operator" placeholder="请选择用户" readonly>
+                      <template #append>
+                        <el-button icon="Search" @click="openSelectUser" />
+                      </template>
+                    </el-input>
                   </el-form-item>
                   <el-form-item label="操作码">
                     <el-tag>{{ selectedNode.operationCode }}</el-tag>
@@ -226,42 +222,51 @@
     </div>
     <el-empty v-else description="该节点不支持预览" />
   </el-dialog>
+
+  <!-- 独立用户选择组件 -->
+  <SelectUser ref="selectUserRef" @ok="onUserSelected" />
 </template>
 
 <script setup>
-import { ref, reactive, shallowRef, defineAsyncComponent } from 'vue'
+import { ref, reactive, shallowRef, defineAsyncComponent, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Folder, Document, Operation, FullScreen, Aim, ArrowLeft, Close } from '@element-plus/icons-vue'
+import { Folder, Document, Operation, FullScreen, Aim, Close } from '@element-plus/icons-vue'
+
 import { listScheme_release } from "@/api/fill/scheme_release"
 import { listScheme_release_menu } from "@/api/fill/scheme_release_menu"
 import { listWork_unit } from "@/api/fill/work_unit"
 import { listWork_unit_operator } from "@/api/fill/work_unit_operator"
-import { listUser } from "@/api/system/user"
 import { generateInstance } from "@/api/batch/batch_plan"
+
+import SelectUser from '@/views/fill/components/SelectUser.vue'
 
 defineOptions({ name: 'BatchPlanGenerate' })
 
 const { proxy } = getCurrentInstance()
 
-const visible = ref(false)
-const previewDialogVisible = ref(false)
-const formRef = ref(null)
-const loadingMenus = ref(false)
-const userLoading = ref(false)
+/** ==================== 对话框状态 ==================== */
+const visible = ref(false)                 // 主对话框是否可见
+const previewDialogVisible = ref(false)    // 独立专注预览对话框是否可见
+const isFullscreen = ref(false)            // 主对话框是否全屏
+const showPreview = ref(false)             // 是否已展开“操作人配置”区域
+const loadingMenus = ref(false)            // 发布方案菜单加载中
 
-const currentPlan = ref(null)
-const releaseList = ref([])
-const workUnitList = ref([])
-const userOptions = ref([])
+/** ==================== 基础数据状态 ==================== */
+const currentPlan = ref(null)              // 当前排产计划行数据
+const releaseList = ref([])                // 发布方案列表
+const workUnitList = ref([])               // 工作单元列表
 
-const showPreview = ref(false)
-const isFullscreen = ref(false)
+/** ==================== 方案结构状态 ==================== */
+const menuTree = ref([])                   // 发布方案菜单树（M/C/F）
+const dirSelections = ref([])              // 一级目录及对应工作单元选择
+const selectedNode = ref(null)             // 左侧目录树当前选中节点
+const currentComponent = shallowRef(null)  // 右侧动态加载的只读组件
 
-const menuTree = ref([])
-const dirSelections = ref([])
-const selectedNode = ref(null)
-const currentComponent = shallowRef(null)
+/** ==================== 组件引用 ==================== */
+const formRef = ref(null)                  // 主表单引用
+const selectUserRef = ref(null)            // 独立用户选择弹窗引用
 
+/** ==================== 表单与校验 ==================== */
 const form = reactive({
   releaseId: null,
   planStart: null,
@@ -274,14 +279,32 @@ const rules = {
   planEnd: [{ required: true, message: '请选择计划结束日期', trigger: 'change' }]
 }
 
+/** ==================== 动态组件加载 ==================== */
+/**
+ * 扫描 views 目录下所有 .vue 文件，用于根据 component 字段动态加载只读组件
+ * key 示例：/src/views/bottling/components/BottlingReceivingContent.vue
+ */
 const modules = import.meta.glob('/src/views/**/*.vue')
 
+/** ==================== 打开/关闭对话框 ==================== */
+
 /**
- * 打开对话框
+ * 打开生成批记录对话框
+ * @param {Object} plan 排产计划行数据
  */
 function open(plan) {
   currentPlan.value = plan
   visible.value = true
+  resetDialogState()
+  loadReleaseList()
+  loadWorkUnitList()
+  nextTick(() => formRef.value?.clearValidate())
+}
+
+/**
+ * 重置对话框内所有临时状态
+ */
+function resetDialogState() {
   form.releaseId = null
   form.planStart = null
   form.planEnd = null
@@ -292,220 +315,11 @@ function open(plan) {
   menuTree.value = []
   selectedNode.value = null
   currentComponent.value = null
-  loadReleaseList()
-  loadWorkUnitList()
-  nextTick(() => formRef.value?.clearValidate())
 }
 
 /**
- * 加载发布方案列表
- */
-function loadReleaseList() {
-  listScheme_release({ pageNum: 1, pageSize: 1000 }).then(res => {
-    releaseList.value = res.rows || res.data || []
-  })
-}
-
-/**
- * 加载工作单元列表
- */
-function loadWorkUnitList() {
-  listWork_unit({ pageNum: 1, pageSize: 1000 }).then(res => {
-    workUnitList.value = res.rows || res.data || []
-  })
-}
-
-/**
- * 发布方案选择变化
- */
-function handleReleaseChange(releaseId) {
-  if (!releaseId) {
-    menuTree.value = []
-    dirSelections.value = []
-    showPreview.value = false
-    return
-  }
-  loadingMenus.value = true
-  listScheme_release_menu({ releaseId, pageNum: 1, pageSize: 1000 }).then(res => {
-    const menus = res.rows || res.data || []
-    buildMenuTree(menus)
-    buildDirSelections(menus)
-  }).finally(() => {
-    loadingMenus.value = false
-  })
-}
-
-/**
- * 构建菜单树（平铺转树）
- */
-function buildMenuTree(menus) {
-  const map = {}
-  menus.forEach(item => {
-    item.children = []
-    if (item.menuType === 'F') item.operator = ''
-    map[item.menuId] = item
-  })
-  const roots = []
-  menus.forEach(item => {
-    if (item.parentId === 0 || !map[item.parentId]) {
-      roots.push(item)
-    } else {
-      map[item.parentId].children.push(item)
-    }
-  })
-  menuTree.value = roots
-}
-
-/**
- * 构建一级目录选择数组
- */
-function buildDirSelections(menus) {
-  const dirs = menus.filter(m => m.menuType === 'M' && m.parentId === 0)
-  dirSelections.value = dirs.map(d => ({ menuId: d.menuId, menuName: d.menuName, workUnitId: null }))
-}
-
-/**
- * 工作单元选择变化：回填操作人
- */
-function handleWorkUnitChange(dir) {
-  if (!dir.workUnitId) {
-    clearOperatorsUnderDir(dir.menuId)
-    return
-  }
-  listWork_unit_operator({ workUnitId: dir.workUnitId, pageNum: 1, pageSize: 1000 }).then(res => {
-    const operators = res.rows || res.data || []
-    const opMap = {}
-    operators.forEach(op => { opMap[op.operationCode] = op.operator })
-    fillOperatorsUnderDir(dir.menuId, opMap)
-  })
-}
-
-/**
- * 清空某目录下所有按钮操作人
- */
-function clearOperatorsUnderDir(dirMenuId) {
-  const dirNode = findNode(menuTree.value, dirMenuId)
-  if (!dirNode) return
-  dirNode.children.forEach(menu => {
-    if (menu.menuType === 'C') {
-      (menu.children || []).forEach(btn => {
-        if (btn.menuType === 'F') btn.operator = ''
-      })
-    }
-  })
-}
-
-/**
- * 填充某目录下按钮操作人
- */
-function fillOperatorsUnderDir(dirMenuId, opMap) {
-  const dirNode = findNode(menuTree.value, dirMenuId)
-  if (!dirNode) return
-  dirNode.children.forEach(menu => {
-    if (menu.menuType === 'C') {
-      (menu.children || []).forEach(btn => {
-        if (btn.menuType === 'F' && opMap[btn.operationCode] !== undefined) {
-          btn.operator = opMap[btn.operationCode]
-        }
-      })
-    }
-  })
-}
-
-/**
- * 在树中查找节点
- */
-function findNode(nodes, menuId) {
-  for (const node of nodes) {
-    if (node.menuId === menuId) return node
-    if (node.children && node.children.length > 0) {
-      const found = findNode(node.children, menuId)
-      if (found) return found
-    }
-  }
-  return null
-}
-
-/**
- * 显示/刷新预览
- */
-function togglePreview() {
-  if (!form.releaseId) {
-    ElMessage.warning('请先选择发布方案')
-    return
-  }
-  showPreview.value = true
-  selectedNode.value = null
-  currentComponent.value = null
-}
-
-/**
- * 获取目录下的菜单节点
- */
-function getChildMenus(node) {
-  return node.children || []
-}
-
-/**
- * 树节点点击
- */
-function handleNodeClick(data) {
-  selectedNode.value = data
-  if (data.menuType === 'C') {
-    loadMenuComponent(data.component)
-  } else {
-    currentComponent.value = null
-  }
-}
-
-/**
- * 动态加载菜单只读组件
- */
-function loadMenuComponent(componentPath) {
-  if (!componentPath) {
-    currentComponent.value = null
-    ElMessage.warning('该节点未配置前端组件，不支持预览')
-    return
-  }
-  const fullPath = '/src/views/' + componentPath
-  const loader = modules[fullPath]
-  if (loader) {
-    currentComponent.value = defineAsyncComponent(loader)
-  } else {
-    currentComponent.value = null
-    ElMessage.warning('前端组件未找到：' + componentPath)
-  }
-}
-
-/**
- * 打开专注预览对话框（独立全屏）
- */
-function openFocusPreviewDialog() {
-  if (!currentComponent) {
-    ElMessage.warning('当前菜单节点不支持预览')
-    return
-  }
-  previewDialogVisible.value = true
-}
-
-/**
- * 远程搜索用户
- */
-function searchUsers(query) {
-  if (!query) {
-    userOptions.value = []
-    return
-  }
-  userLoading.value = true
-  listUser({ pageNum: 1, pageSize: 100, userName: query }).then(res => {
-    userOptions.value = res.rows || []
-  }).finally(() => {
-    userLoading.value = false
-  })
-}
-
-/**
- * 关闭前确认（右上角关闭按钮）
+ * 对话框关闭前的二次确认（右上角关闭按钮）
+ * @param {Function} done 关闭回调
  */
 function handleBeforeClose(done) {
   ElMessageBox.confirm('确定要关闭生成批记录对话框吗？', '提示', {
@@ -531,69 +345,363 @@ function handleCancelClick() {
 }
 
 /**
- * 提交生成
+ * 对话框完全关闭回调
+ */
+function handleClosed() {
+  currentPlan.value = null
+  resetDialogState()
+}
+
+/** ==================== 数据加载 ==================== */
+
+/**
+ * 加载发布方案列表
+ */
+function loadReleaseList() {
+  listScheme_release({ pageNum: 1, pageSize: 1000 }).then(res => {
+    releaseList.value = res.rows || res.data || []
+  })
+}
+
+/**
+ * 加载工作单元列表
+ */
+function loadWorkUnitList() {
+  listWork_unit({ pageNum: 1, pageSize: 1000 }).then(res => {
+    workUnitList.value = res.rows || res.data || []
+  })
+}
+
+/**
+ * 发布方案选择变化
+ * @param {Number|null} releaseId 发布方案ID
+ */
+function handleReleaseChange(releaseId) {
+  if (!releaseId) {
+    menuTree.value = []
+    dirSelections.value = []
+    showPreview.value = false
+    return
+  }
+
+  loadingMenus.value = true
+  listScheme_release_menu({ releaseId, pageNum: 1, pageSize: 1000 })
+    .then(res => {
+      const menus = res.rows || res.data || []
+      buildMenuTree(menus)
+      buildDirSelections(menus)
+    })
+    .finally(() => {
+      loadingMenus.value = false
+    })
+}
+
+/** ==================== 菜单树构建 ==================== */
+
+/**
+ * 将发布方案平铺菜单构建为树形结构
+ * 同时为所有按钮节点初始化 operator 为空字符串
+ * @param {Array} menus 平铺菜单列表
+ */
+function buildMenuTree(menus) {
+  const map = {}
+  menus.forEach(item => {
+    item.children = []
+    if (item.menuType === 'F') {
+      item.operator = ''
+    }
+    map[item.menuId] = item
+  })
+
+  const roots = []
+  menus.forEach(item => {
+    if (item.parentId === 0 || !map[item.parentId]) {
+      roots.push(item)
+    } else {
+      map[item.parentId].children.push(item)
+    }
+  })
+
+  menuTree.value = roots
+}
+
+/**
+ * 构建一级目录选择数组
+ * @param {Array} menus 平铺菜单列表
+ */
+function buildDirSelections(menus) {
+  const dirs = menus.filter(m => m.menuType === 'M' && m.parentId === 0)
+  // 直接引用目录节点，附加字段，保证左侧树与工作单元选择联动
+  dirSelections.value = dirs.map(d => {
+    d.workUnitId = null
+    d.workUnitName = ''
+    return d
+  })
+}
+// function buildDirSelections(menus) {
+//   const dirs = menus.filter(m => m.menuType === 'M' && m.parentId === 0)
+//   dirSelections.value = dirs.map(d => ({
+//     menuId: d.menuId,
+//     menuName: d.menuName,
+//     workUnitId: null
+//   }))
+// }
+
+/** ==================== 工作单元与操作人 ==================== */
+
+/**
+ * 工作单元选择变化：回填该目录下所有按钮操作人
+ * @param {Object} dir 一级目录选择对象
+ */
+function handleWorkUnitChange(dir) {
+  // 更新目录节点显示的工作单元名称
+  const workUnit = workUnitList.value.find(w => w.workUnitId === dir.workUnitId)
+  dir.workUnitName = workUnit ? workUnit.workUnitName : ''
+
+  if (!dir.workUnitId) {
+    clearOperatorsUnderDir(dir.menuId)
+    return
+  }
+
+  listWork_unit_operator({ workUnitId: dir.workUnitId, pageNum: 1, pageSize: 1000 })
+    .then(res => {
+      const operators = res.rows || res.data || []
+      const opMap = {}
+      operators.forEach(op => {
+        opMap[op.operationCode] = op.operator
+      })
+      fillOperatorsUnderDir(dir.menuId, opMap)
+    })
+}
+// function handleWorkUnitChange(dir) {
+//   if (!dir.workUnitId) {
+//     clearOperatorsUnderDir(dir.menuId)
+//     return
+//   }
+
+//   listWork_unit_operator({ workUnitId: dir.workUnitId, pageNum: 1, pageSize: 1000 })
+//     .then(res => {
+//       const operators = res.rows || res.data || []
+//       const opMap = {}
+//       operators.forEach(op => {
+//         opMap[op.operationCode] = op.operator
+//       })
+//       fillOperatorsUnderDir(dir.menuId, opMap)
+//     })
+// }
+
+/**
+ * 清空指定一级目录下所有按钮节点操作人
+ * @param {Number} dirMenuId 一级目录发布态菜单ID
+ */
+function clearOperatorsUnderDir(dirMenuId) {
+  const dirNode = findNode(menuTree.value, dirMenuId)
+  if (!dirNode) return
+
+  dirNode.children.forEach(menu => {
+    if (menu.menuType === 'C') {
+      (menu.children || []).forEach(btn => {
+        if (btn.menuType === 'F') {
+          btn.operator = ''
+        }
+      })
+    }
+  })
+}
+
+/**
+ * 填充指定一级目录下所有按钮节点操作人
+ * @param {Number} dirMenuId 一级目录发布态菜单ID
+ * @param {Object} opMap 操作码 -> 操作人 映射
+ */
+function fillOperatorsUnderDir(dirMenuId, opMap) {
+  const dirNode = findNode(menuTree.value, dirMenuId)
+  if (!dirNode) return
+
+  dirNode.children.forEach(menu => {
+    if (menu.menuType === 'C') {
+      (menu.children || []).forEach(btn => {
+        if (btn.menuType === 'F' && opMap[btn.operationCode] !== undefined) {
+          btn.operator = opMap[btn.operationCode]
+        }
+      })
+    }
+  })
+}
+
+/**
+ * 在菜单树中查找指定节点
+ * @param {Array} nodes 节点数组
+ * @param {Number} menuId 菜单ID
+ * @returns {Object|null} 节点对象
+ */
+function findNode(nodes, menuId) {
+  for (const node of nodes) {
+    if (node.menuId === menuId) return node
+    if (node.children && node.children.length > 0) {
+      const found = findNode(node.children, menuId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+/** ==================== 预览与动态组件 ==================== */
+
+/**
+ * 显示/刷新“操作人配置”区域
+ */
+function togglePreview() {
+  if (!form.releaseId) {
+    ElMessage.warning('请先选择发布方案')
+    return
+  }
+
+  showPreview.value = true
+  selectedNode.value = null
+  currentComponent.value = null
+}
+
+/**
+ * 获取目录节点下的菜单节点列表
+ * @param {Object} node 目录节点
+ * @returns {Array} 菜单节点数组
+ */
+function getChildMenus(node) {
+  return node.children || []
+}
+
+/**
+ * 左侧目录树节点点击
+ * @param {Object} data 当前点击的节点
+ */
+function handleNodeClick(data) {
+  selectedNode.value = data
+  if (data.menuType === 'C') {
+    loadMenuComponent(data.component)
+  } else {
+    currentComponent.value = null
+  }
+}
+
+/**
+ * 根据 component 路径动态加载只读组件
+ * @param {String} componentPath 前端组件相对路径，如 bottling/components/BottlingReceivingContent.vue
+ */
+function loadMenuComponent(componentPath) {
+  if (!componentPath) {
+    currentComponent.value = null
+    ElMessage.warning('该节点未配置前端组件，不支持预览')
+    return
+  }
+
+  const fullPath = '/src/views/' + componentPath
+  const loader = modules[fullPath]
+
+  if (loader) {
+    currentComponent.value = defineAsyncComponent(loader)
+  } else {
+    currentComponent.value = null
+    ElMessage.warning('前端组件未找到：' + componentPath)
+  }
+}
+
+/**
+ * 打开独立专注预览对话框（全屏）
+ */
+function openFocusPreviewDialog() {
+  if (!currentComponent) {
+    ElMessage.warning('当前菜单节点不支持预览')
+    return
+  }
+  previewDialogVisible.value = true
+}
+
+/** ==================== 用户选择 ==================== */
+
+/**
+ * 打开独立用户选择弹窗
+ */
+function openSelectUser() {
+  selectUserRef.value?.show()
+}
+
+/**
+ * 用户选择回调：回填 user_name 到当前选中按钮节点
+ * @param {Object} user 选择的用户信息
+ */
+function onUserSelected(user) {
+  if (selectedNode.value && selectedNode.value.menuType === 'F') {
+    selectedNode.value.operator = user.userName || user.nickName || ''
+  }
+}
+
+/** ==================== 提交生成 ==================== */
+
+/**
+ * 提交生成批记录
  */
 function handleSubmit() {
   formRef.value.validate(valid => {
     if (!valid) return
 
+    // 1. 收集已选择工作单元的一级目录
     const selectedDirs = dirSelections.value.filter(d => d.workUnitId)
     if (selectedDirs.length === 0) {
       ElMessage.warning('请至少选择一个工作单元')
       return
     }
 
+    // 2. 组装 workshopItems
     const workshopItems = selectedDirs.map(dir => {
       const dirNode = findNode(menuTree.value, dir.menuId)
       const operators = []
+
       if (dirNode) {
         dirNode.children.forEach(menu => {
           if (menu.menuType === 'C') {
             (menu.children || []).forEach(btn => {
               if (btn.menuType === 'F') {
-                operators.push({ operationCode: btn.operationCode, operator: btn.operator || '' })
+                operators.push({
+                  operationCode: btn.operationCode,
+                  operator: btn.operator || ''
+                })
               }
             })
           }
         })
       }
-      return { dirMenuId: dir.menuId, workUnitId: dir.workUnitId, operators }
+
+      return {
+        dirMenuId: dir.menuId,
+        workUnitId: dir.workUnitId,
+        operators
+      }
     })
 
+    // 3. 组装 DTO
     const dto = {
       planId: currentPlan.value.planId,
       releaseId: form.releaseId,
       planStart: form.planStart,
       planEnd: form.planEnd,
-      instanceDate: form.planStart,   // 实例日期使用计划开始日期
       instanceSeq: 1,
       workshopItems
     }
 
-    ElMessageBox.confirm('确认生成批记录？生成后需在排产计划中点击“审核”进入生产。').then(() => {
-      return generateInstance(dto)
-    }).then(() => {
-      ElMessage.success('生成成功')
-      visible.value = false
-      emit('success')
-    }).catch(() => {})
+    // 4. 二次确认后调用生成接口
+    ElMessageBox.confirm('确认生成批记录？生成后需在排产计划中点击“审核”进入生产。')
+      .then(() => generateInstance(dto))
+      .then(() => {
+        ElMessage.success('生成成功')
+        visible.value = false
+        emit('success')
+      })
+      .catch(() => {})
   })
 }
 
-/**
- * 对话框关闭回调
- */
-function handleClosed() {
-  currentPlan.value = null
-  showPreview.value = false
-  isFullscreen.value = false
-  previewDialogVisible.value = false
-  menuTree.value = []
-  dirSelections.value = []
-  selectedNode.value = null
-  currentComponent.value = null
-}
-
+/** ==================== 对外暴露 ==================== */
 const emit = defineEmits(['success'])
 defineExpose({ open })
 </script>

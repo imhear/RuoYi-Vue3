@@ -51,3 +51,23 @@ export function generateInstance(data) {
     data: data
   })
 }
+
+// 快速新建排产计划
+export function createPlan() {
+  return request({
+    url: '/batch/batch_plan/create',
+    method: 'post'
+  })
+}
+
+// 导入外部生产指令单
+export function importBatchOrder(planId, file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request({
+    url: '/batch/batch_order/import/' + planId,
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}

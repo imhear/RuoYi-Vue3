@@ -231,7 +231,13 @@
       <el-table-column label="排产计划主键" align="center" prop="planId" />
       <el-table-column label="排产单号" align="center" prop="planCode" />
       <el-table-column label="关联工单ID" align="center" prop="orderId" />
-      <el-table-column label="工单号" align="center" prop="orderNum" />
+      <el-table-column label="工单号" align="center" min-width="120">
+        <template #default="scope">
+          <el-button v-if="!scope.row.orderNum" link type="primary" @click="handleImport(scope.row)">导入</el-button>
+          <el-button v-else link type="primary" @click="handleViewOrder(scope.row)">{{ scope.row.orderNum }}</el-button>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="工单号" align="center" prop="orderNum" /> -->
       <el-table-column label="产品编码" align="center" prop="productCode" />
       <el-table-column label="产品名称" align="center" prop="productName" />
       <el-table-column label="要求数量" align="center" prop="requireNum" />
@@ -432,14 +438,32 @@
     <!-- 生成批记录对话框 -->
     <BatchPlanGenerate ref="generateRef" @success="getList" />
 
+    <BatchOrderImport ref="orderImportRef" @success="getList" />
+    <BatchOrderView ref="orderViewRef" /> 
+
   </div>
 </template>
 
 <script setup name="Batch_plan">
-import { listBatch_plan, getBatch_plan, delBatch_plan, addBatch_plan, updateBatch_plan } from "@/api/batch/batch_plan"
+import { listBatch_plan, getBatch_plan, delBatch_plan, addBatch_plan, updateBatch_plan, createPlan } from "@/api/batch/batch_plan"
 import Batch_planViewDrawer from "./view"
 // 引入生成批记录组件
 import BatchPlanGenerate from '@/views/batch/components/BatchPlanGenerate.vue'
+
+import BatchOrderImport from '@/views/batch/components/BatchOrderImport.vue'
+import BatchOrderView from '@/views/batch/components/BatchOrderView.vue'
+const orderImportRef = ref(null)
+const orderViewRef = ref(null)
+
+/** 打开导入生产任务单对话框 */
+function handleImport(row) {
+  orderImportRef.value?.open(row)
+}
+
+/** 查看工单详情 */
+function handleViewOrder(row) {
+  orderViewRef.value?.open(row.orderId)
+}
 
 const { proxy } = getCurrentInstance()
 
@@ -564,12 +588,19 @@ function handleSelectionChange(selection) {
   multiple.value = !selection.length
 }
 
-/** 新增按钮操作 */
+/** 新增按钮操作：快速创建排产计划 */
 function handleAdd() {
-  reset()
-  open.value = true
-  title.value = "添加生产计划"
+  createPlan().then(() => {
+    proxy.$modal.msgSuccess('新建成功')
+    getList()
+  })
 }
+/** 新增按钮操作 */
+// function handleAdd() {
+//   reset()
+//   open.value = true
+//   title.value = "添加生产计划"
+// }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {

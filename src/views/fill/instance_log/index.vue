@@ -17,18 +17,10 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联表单实例ID" prop="formId">
+      <el-form-item label="关联运行态菜单节点ID" prop="menuId">
         <el-input
-          v-model="queryParams.formId"
-          placeholder="请输入关联表单实例ID"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="关联填报操作运行态表ID" prop="instanceOperationId">
-        <el-input
-          v-model="queryParams.instanceOperationId"
-          placeholder="请输入关联填报操作运行态表ID"
+          v-model="queryParams.menuId"
+          placeholder="请输入关联运行态菜单节点ID"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -142,8 +134,7 @@
       <el-table-column label="日志主键" align="center" prop="logId" />
       <el-table-column label="关联批记录实例ID" align="center" prop="instanceId" />
       <el-table-column label="关联排产计划ID，冗余" align="center" prop="planId" />
-      <el-table-column label="关联表单实例ID" align="center" prop="formId" />
-      <el-table-column label="关联填报操作运行态表ID" align="center" prop="instanceOperationId" />
+      <el-table-column label="关联运行态菜单节点ID" align="center" prop="menuId" />
       <el-table-column label="前端路由地址" align="center" prop="path" />
       <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
       <el-table-column label="操作码" align="center" prop="operationCode" />
@@ -191,13 +182,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联表单实例ID" prop="formId">
-              <el-input v-model="form.formId" placeholder="请输入关联表单实例ID" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="24">
-            <el-form-item label="关联填报操作运行态表ID" prop="instanceOperationId">
-              <el-input v-model="form.instanceOperationId" placeholder="请输入关联填报操作运行态表ID" />
+            <el-form-item label="关联运行态菜单节点ID" prop="menuId">
+              <el-input v-model="form.menuId" placeholder="请输入关联运行态菜单节点ID" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -280,8 +266,7 @@ const data = reactive({
     pageSize: 10,
     instanceId: undefined,
     planId: undefined,
-    formId: undefined,
-    instanceOperationId: undefined,
+    menuId: undefined,
     path: undefined,
     backendRoute: undefined,
     operationCode: undefined,
@@ -289,7 +274,7 @@ const data = reactive({
     operator: undefined,
     actionTime: undefined,
     revision: undefined,
-    sysVersion: undefined
+    sysVersion: undefined,
   },
   rules: {
     instanceId: [
@@ -331,8 +316,7 @@ function reset() {
     logId: null,
     instanceId: null,
     planId: null,
-    formId: null,
-    instanceOperationId: null,
+    menuId: null,
     path: null,
     backendRoute: null,
     operationCode: null,
@@ -340,10 +324,10 @@ function reset() {
     operator: null,
     actionTime: null,
     remark: null,
-    createBy: null,
-    createTime: null,
     revision: null,
-    sysVersion: null
+    sysVersion: null,
+    createBy: null,
+    createTime: null
   }
   proxy.resetForm("instance_logRef")
 }

@@ -23,22 +23,12 @@
       <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
-            <label class="info-label">关联表单实例ID：</label>
+            <label class="info-label">关联运行态菜单节点ID：</label>
             <span class="info-value plaintext">
-              {{ info.formId }}
+              {{ info.menuId }}
             </span>
           </div>
         </el-col>
-        <el-col :span="12">
-          <div class="info-item">
-            <label class="info-label">关联填报操作运行态表ID：</label>
-            <span class="info-value plaintext">
-              {{ info.instanceOperationId }}
-            </span>
-          </div>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">前端路由地址：</label>
@@ -47,6 +37,8 @@
             </span>
           </div>
         </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">后端接口路径：</label>
@@ -55,8 +47,6 @@
             </span>
           </div>
         </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">操作码：</label>
@@ -65,6 +55,8 @@
             </span>
           </div>
         </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">操作类型：</label>
@@ -73,8 +65,6 @@
             </span>
           </div>
         </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">操作人：</label>
@@ -83,6 +73,8 @@
             </span>
           </div>
         </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">操作时间：</label>
@@ -91,8 +83,6 @@
             </span>
           </div>
         </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">备注：</label>
@@ -101,6 +91,8 @@
             </span>
           </div>
         </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">乐观锁版本号：</label>
@@ -109,8 +101,6 @@
             </span>
           </div>
         </el-col>
-      </el-row>
-      <el-row :gutter="20" class="mb8">
         <el-col :span="12">
           <div class="info-item">
             <label class="info-label">系统版本号：</label>

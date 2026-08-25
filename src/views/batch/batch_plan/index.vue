@@ -222,58 +222,64 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <!-- 生成按钮：仅状态为待生产(0)时显示 -->
-          <el-button link type="primary" icon="MagicStick" @click="handleGenerate(scope.row)" v-if="scope.row.status === '0'" v-hasPermi="['batch:batch_plan:generate']">生成</el-button>
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['batch:batch_plan:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['batch:batch_plan:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_plan:remove']">删除</el-button>
+          <!-- <el-button link type="primary" icon="MagicStick" @click="handleGenerate(scope.row)" v-if="scope.row.status === '0'" v-hasPermi="['batch:batch_plan:generate']">生成</el-button> -->
+          <!-- <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['batch:batch_plan:query']">详情</el-button> -->
+          <!-- <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['batch:batch_plan:edit']">修改</el-button> -->
+          <el-button link type="primary" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_plan:remove']">删除</el-button>
         </template>
       </el-table-column>
-      <el-table-column label="排产计划主键" align="center" prop="planId" />
-      <el-table-column label="排产单号" align="center" prop="planCode" />
-      <el-table-column label="关联工单ID" align="center" prop="orderId" />
-      <el-table-column label="工单号" align="center" min-width="120">
+      <!-- <el-table-column label="排产计划主键" align="center" prop="planId" /> -->
+      <!-- <el-table-column label="排产单号" align="center" prop="planCode" /> -->
+      <!-- <el-table-column label="关联工单ID" align="center" prop="orderId" /> -->
+      <el-table-column label="工单号" align="center" min-width="140">
         <template #default="scope">
           <el-button v-if="!scope.row.orderNum" link type="primary" @click="handleImport(scope.row)">导入</el-button>
           <el-button v-else link type="primary" @click="handleViewOrder(scope.row)">{{ scope.row.orderNum }}</el-button>
         </template>
       </el-table-column>
       <!-- <el-table-column label="工单号" align="center" prop="orderNum" /> -->
-      <el-table-column label="产品编码" align="center" prop="productCode" />
-      <el-table-column label="产品名称" align="center" prop="productName" />
+      <el-table-column label="批记录" align="center" min-width="120">
+        <template #default="scope">
+          <el-button link type="primary" @click="handleGenerate(scope.row)" v-if="scope.row.status === '0' && !scope.row.instanceId && scope.row.orderNum" v-hasPermi="['batch:batch_plan:generate']">生成</el-button>
+          <el-button v-if="scope.row.instanceId" link type="primary" @click="handleViewInstance(scope.row)">查看</el-button>
+        </template>
+      </el-table-column>
+      <!-- <el-table-column label="关联批记录实例集ID" align="center" prop="instanceId" /> -->
+      <el-table-column label="状态" align="center" prop="status" />
+      <el-table-column label="产品编码" align="center" prop="productCode" width="120"/>
+      <el-table-column label="产品名称" align="center" prop="productName" width="180"/>
+      <el-table-column label="生产批号" align="center" prop="batchNumber" />
+      <el-table-column label="规格/型号" align="center" prop="spec" />
       <el-table-column label="要求数量" align="center" prop="requireNum" />
-      <el-table-column label="排产数量" align="center" prop="planQty" />
+      <!-- <el-table-column label="排产数量" align="center" prop="planQty" /> -->
       <el-table-column label="完成数量" align="center" prop="finishQty" />
       <el-table-column label="单位" align="center" prop="unit" />
-      <el-table-column label="生产批号" align="center" prop="batchNumber" />
-      <el-table-column label="计划开始" align="center" prop="planStart" width="180">
+      <el-table-column label="计划开始" align="center" prop="planStart" width="100">
         <template #default="scope">
           <span>{{ parseTime(scope.row.planStart, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="计划结束" align="center" prop="planEnd" width="180">
+      <el-table-column label="计划结束" align="center" prop="planEnd" width="100">
         <template #default="scope">
           <span>{{ parseTime(scope.row.planEnd, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="实际开始" align="center" prop="startTime" width="180">
+      <el-table-column label="实际开始" align="center" prop="startTime" width="100">
         <template #default="scope">
           <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="实际结束" align="center" prop="endTime" width="180">
+      <el-table-column label="实际结束" align="center" prop="endTime" width="100">
         <template #default="scope">
           <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="关联发布方案ID" align="center" prop="releaseId" />
-      <el-table-column label="关联批记录实例集ID" align="center" prop="instanceId" />
-      <el-table-column label="状态" align="center" prop="status" />
-      <el-table-column label="备注" align="center" prop="remark" />
-      <el-table-column label="取消排产原因" align="center" prop="cancelReason" />
-      <el-table-column label="编号" align="center" prop="fileTemplateCode" />
-      <el-table-column label="规格/型号" align="center" prop="spec" />
-      <el-table-column label="乐观锁版本号" align="center" prop="revision" />
-      <el-table-column label="系统版本号" align="center" prop="sysVersion" />
+      <!-- <el-table-column label="关联发布方案ID" align="center" prop="releaseId" /> -->
+      <!-- <el-table-column label="备注" align="center" prop="remark" /> -->
+      <el-table-column label="取消原因" align="center" prop="cancelReason" />
+      <!-- <el-table-column label="编号" align="center" prop="fileTemplateCode" /> -->
+      <!-- <el-table-column label="乐观锁版本号" align="center" prop="revision" /> -->
+      <!-- <el-table-column label="系统版本号" align="center" prop="sysVersion" /> -->
     </el-table>
     
     <pagination
@@ -438,8 +444,14 @@
     <!-- 生成批记录对话框 -->
     <BatchPlanGenerate ref="generateRef" @success="getList" />
 
+    <!-- 导入生产任务单组件 -->
     <BatchOrderImport ref="orderImportRef" @success="getList" />
+
+    <!-- 查看生产任务单组件 -->
     <BatchOrderView ref="orderViewRef" /> 
+
+    <!-- 批记录实例查看组件 -->
+    <BatchPlanInstanceView ref="instanceViewRef" />
 
   </div>
 </template>
@@ -447,23 +459,24 @@
 <script setup name="Batch_plan">
 import { listBatch_plan, getBatch_plan, delBatch_plan, addBatch_plan, updateBatch_plan, createPlan } from "@/api/batch/batch_plan"
 import Batch_planViewDrawer from "./view"
+// 引入导入生产任务单组件
+import BatchOrderImport from '@/views/batch/components/BatchOrderImport.vue'
+// 引入查看生产任务单组件
+import BatchOrderView from '@/views/batch/components/BatchOrderView.vue'
 // 引入生成批记录组件
 import BatchPlanGenerate from '@/views/batch/components/BatchPlanGenerate.vue'
+// 引入批记录实例查看组件
+import BatchPlanInstanceView from '@/views/batch/components/BatchPlanInstanceView.vue'
 
-import BatchOrderImport from '@/views/batch/components/BatchOrderImport.vue'
-import BatchOrderView from '@/views/batch/components/BatchOrderView.vue'
+// 导入生产任务单组件引用
 const orderImportRef = ref(null)
+// 查看生产任务单组件引用
 const orderViewRef = ref(null)
+// 生成批记录组件引用
+const generateRef = ref(null) 
+// 批记录实例查看组件引用
+const instanceViewRef = ref(null)
 
-/** 打开导入生产任务单对话框 */
-function handleImport(row) {
-  orderImportRef.value?.open(row)
-}
-
-/** 查看工单详情 */
-function handleViewOrder(row) {
-  orderViewRef.value?.open(row.orderId)
-}
 
 const { proxy } = getCurrentInstance()
 
@@ -476,7 +489,6 @@ const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
-const generateRef = ref(null)   // 生成组件引用
 
 const data = reactive({
   form: {},
@@ -504,7 +516,11 @@ const data = reactive({
     fileTemplateCode: undefined,
     spec: undefined,
     revision: undefined,
-    sysVersion: undefined
+    sysVersion: undefined,
+    // status: '0,1,2', // 默认排除已取消
+    delFlag: '0',   // 默认查询未删除的工单
+    orderByColumn: 'create_time',
+    isAsc: 'desc'
   },
   rules: {
   }
@@ -512,9 +528,31 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data)
 
+/** 打开导入生产任务单对话框 */
+function handleImport(row) {
+  orderImportRef.value?.open(row)
+}
+
+/** 查看工单详情 */
+function handleViewOrder(row) {
+  orderViewRef.value?.open(row.orderId)
+}
+
 /** 打开生成批记录对话框 */
 function handleGenerate(row) {
   generateRef.value?.open(row)
+}
+
+/**
+ * 查看批记录实例
+ * @param {Object} row - 当前行数据
+ */
+function handleViewInstance(row) {
+  if (row.instanceId) {
+    instanceViewRef.value?.open(row.instanceId)
+  } else {
+    ElMessage.warning('该记录未生成批记录')
+  }
 }
 
 /** 查询生产计划列表 */

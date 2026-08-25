@@ -125,11 +125,11 @@
                     </el-icon>
                     <span class="node-label">
                     {{ data.menuName }}
-                    <template v-if="data.menuType === 'M' && data.workUnitName">
-                      - {{ data.workUnitName }}
+                    <template v-if="data.menuType === 'M'">
+                      - <span :style="{ color: data.workUnitName ? 'inherit' : 'red' }">{{ data.workUnitName || '未设置' }}</span>
                     </template>
                     <template v-if="data.menuType === 'F'">
-                      - {{ data.operator || '未设置' }}
+                      - <span :style="{ color: data.operator ? 'inherit' : 'red' }">{{ data.operator || '未设置' }}</span>
                     </template>
                   </span>
                   </div>

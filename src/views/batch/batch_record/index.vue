@@ -108,7 +108,7 @@
 
 <script setup name="BatchRecord">
 import { ref, reactive, toRefs } from 'vue'
-import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord } from "@/api/batch/batch_record"
+import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord, deleteBatchRecordCascade } from "@/api/batch/batch_record"
 import { getToken } from '@/utils/auth'
 import BatchRecordGenerate from '@/views/batch/components/BatchRecordGenerate.vue'
 import BatchOrderView from '@/views/batch/components/BatchOrderView.vue'
@@ -244,13 +244,22 @@ function handleAudit(row) {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  proxy.$modal.confirm('确认删除该批记录？').then(() => {
-    return delBatch_record(row.recordId)
+  proxy.$modal.confirm('确认删除该批记录？此操作将同时删除关联数据，且不可恢复！').then(() => {
+    return deleteBatchRecordCascade(row.recordId)
   }).then(() => {
     proxy.$modal.msgSuccess('删除成功')
     getList()
   }).catch(() => {})
 }
+/** 删除按钮操作 */
+// function handleDelete(row) {
+//   proxy.$modal.confirm('确认删除该批记录？').then(() => {
+//     return delBatch_record(row.recordId)
+//   }).then(() => {
+//     proxy.$modal.msgSuccess('删除成功')
+//     getList()
+//   }).catch(() => {})
+// }
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {

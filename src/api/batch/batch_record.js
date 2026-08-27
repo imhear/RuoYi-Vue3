@@ -79,3 +79,11 @@ export function auditBatchRecord(recordId) {
     method: 'put'
   })
 }
+
+// 级联删除批记录及关联数据
+export function deleteBatchRecordCascade(recordId) {
+  return request({
+    url: '/batch/batch_record/deleteCascade/' + recordId,
+    method: 'delete'
+  })
+}

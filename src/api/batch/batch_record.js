@@ -71,3 +71,11 @@ export function generateBatchRecord(data) {
     data: data
   })
 }
+
+// 审核批记录
+export function auditBatchRecord(recordId) {
+  return request({
+    url: '/batch/batch_record/audit/' + recordId,
+    method: 'put'
+  })
+}

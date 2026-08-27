@@ -194,7 +194,7 @@
           <!-- 权限标识（非目录） -->
           <el-col :span="12" v-if="editForm.menuType !== 'M'">
             <el-form-item label="权限标识">
-              <el-input v-model="editForm.perms" placeholder="请输入权限标识" maxlength="100" />
+              <el-input v-model="editForm.perms" placeholder="请输入权限标识" maxlength="100" disabled/>
             </el-form-item>
           </el-col>
 
@@ -302,6 +302,20 @@
                   <el-button icon="Search" @click="openSelectOperation" />
                 </template>
               </el-input>
+            </el-form-item>
+          </el-col>
+
+          <!-- F 按钮专用：操作类型（只读，自动带出） -->
+          <el-col :span="12" v-if="editForm.menuType === 'F'">
+            <el-form-item label="操作类型">
+              <el-input v-model="editForm.actionType" placeholder="自动带出" disabled />
+            </el-form-item>
+          </el-col>
+
+          <!-- F 按钮专用：按钮标签 -->
+          <el-col :span="12" v-if="editForm.menuType === 'F'">
+            <el-form-item label="按钮标签">
+              <el-input v-model="editForm.buttonLabel" placeholder="如：编辑、提交、复核" disabled/>
             </el-form-item>
           </el-col>
 
@@ -423,6 +437,8 @@ const editForm = reactive({
   customParams: '',
   predecessorDetailId: null,
   operationCode: '',
+  actionType: '', 
+  buttonLabel: '',
   operationVisible: '1'
 })
 
@@ -652,6 +668,8 @@ function openEditDialog(menuType, parentId, nodeData) {
     customParams: nodeData?.customParams || '',
     predecessorDetailId: nodeData?.predecessorDetailId ?? null,
     operationCode: nodeData?.operationCode || '',
+    actionType: nodeData?.actionType || '',
+    buttonLabel: nodeData?.buttonLabel || '',
     operationVisible: nodeData?.operationVisible || '1'
   })
 
@@ -695,6 +713,7 @@ function handleMenuTypeChange(val) {
     editForm.isFrame = '1'
     editForm.isCache = '0'
     editForm.visible = '0'
+    editForm.actionType = ''
   }
 }
 
@@ -716,10 +735,12 @@ function openSelectOperation() {
 
 function onOperationSelected(row) {
   editForm.operationCode = row.operationCode
+  editForm.actionType = row.actionType || ''
   editForm.menuName = row.operationName || row.buttonLabel || row.operationCode
   editForm.component = row.component || ''
   editForm.backendRoute = row.backendRoute || ''
   editForm.perms = row.perms || ''
+  editForm.buttonLabel = row.buttonLabel || ''
 }
 
 function handleSysMenuSelect(menuId) {

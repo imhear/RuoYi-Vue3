@@ -27,6 +27,7 @@
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="操作码" align="center" prop="operationCode" :show-overflow-tooltip="true" />
         <el-table-column label="操作名称" align="center" prop="operationName" :show-overflow-tooltip="true" />
+        <el-table-column label="操作类型" align="center" prop="actionType" width="100" />
         <el-table-column label="按钮名称" align="center" prop="buttonLabel" />
         <el-table-column label="后端接口路径" align="center" prop="backendRoute" :show-overflow-tooltip="true" />
         <el-table-column label="前端组件路径" align="center" prop="component" :show-overflow-tooltip="true" />

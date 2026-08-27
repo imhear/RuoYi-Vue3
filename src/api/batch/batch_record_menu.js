@@ -42,3 +42,24 @@ export function delBatch_record_menu(menuId) {
     method: 'delete'
   })
 }
+
+// 根据批记录ID查询完整菜单树（不分页，用于聚合入口）
+export function listBatchRecordMenuTree(recordId) {
+  return request({
+    url: '/batch/batch_record_menu/tree/' + recordId,
+    method: 'get'
+  })
+}
+
+/**
+ * 通用审批操作
+ * @param {Number} menuId 菜单节点ID
+ * @param {String} remark 备注
+ */
+export function approveBatchRecordMenu(menuId, remark) {
+  return request({
+    url: '/batch/batch_record_menu/approve/' + menuId,
+    method: 'post',
+    data: { remark }
+  })
+}

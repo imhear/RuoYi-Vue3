@@ -25,6 +25,21 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="操作类型" prop="actionType">
+        <el-select
+          v-model="queryParams.actionType"
+          placeholder="请选择操作类型"
+          clearable
+          style="width: 180px"
+        >
+          <el-option
+            v-for="type in actionTypeOptions"
+            :key="type.value"
+            :label="type.label"
+            :value="type.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="权限标识" prop="perms">
         <el-input
           v-model="queryParams.perms"
@@ -93,6 +108,12 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="操作码" align="center" prop="operationCode" />
       <el-table-column label="操作名称" align="center" prop="operationName" />
+      <el-table-column label="操作类型" align="center" prop="actionType">
+        <template #default="scope">
+          <el-tag v-if="scope.row.actionType">{{ getActionTypeLabel(scope.row.actionType) }}</el-tag>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="按钮名称" align="center" prop="buttonLabel" />
       <el-table-column label="物理表名" align="center" prop="tableName" />
       <el-table-column label="权限标识" align="center" prop="perms" :show-overflow-tooltip="true" />
@@ -132,6 +153,18 @@
           <el-col :span="24">
             <el-form-item label="操作名称" prop="operationName">
               <el-input v-model="form.operationName" placeholder="请输入操作名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="操作类型" prop="actionType">
+              <el-select v-model="form.actionType" placeholder="请选择操作类型" style="width: 100%">
+                <el-option
+                  v-for="type in actionTypeOptions"
+                  :key="type.value"
+                  :label="type.label"
+                  :value="type.value"
+                />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -215,7 +248,7 @@
 </template>
 
 <script setup name="Operation">
-import { ref, reactive, computed, nextTick } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { listOperation, getOperation, delOperation, addOperation, updateOperation } from "@/api/fill/operation"
 import { listMenu } from "@/api/system/menu"
 import SelectForm from "@/views/fill/components/SelectForm.vue"
@@ -243,11 +276,23 @@ const sysMenuTreeData = ref([])
 /** 当前选中的系统菜单ID（权限标识回显） */
 const selectedSysMenuId = ref(null)
 
+/** 操作类型选项 */
+const actionTypeOptions = [
+  { value: 'submit', label: '提交' },
+  { value: 'review', label: '复核' },
+  { value: 'inspect', label: '检查' },
+  { value: 'archive', label: '归档' },
+  { value: 'cancel_review', label: '取消复核' },
+  { value: 'cancel_inspect', label: '取消检查' },
+  { value: 'cancel_archive', label: '取消归档' }
+]
+
 const data = reactive({
   form: {
     operationId: null,
     operationCode: null,
     operationName: null,
+    actionType: null,
     buttonLabel: null,
     tableName: null,
     perms: null,
@@ -264,6 +309,7 @@ const data = reactive({
     operationCode: undefined,
     operationName: undefined,
     buttonLabel: undefined,
+    actionType: undefined,
     perms: undefined,
     tableName: undefined,
     status: undefined,
@@ -274,6 +320,9 @@ const data = reactive({
     ],
     operationName: [
       { required: true, message: "操作名称不能为空", trigger: "blur" }
+    ],
+    actionType: [
+      { required: true, message: "操作类型不能为空", trigger: "change" }
     ],
   }
 })
@@ -290,6 +339,12 @@ const sysMenuTreeProps = computed(() => {
     disabled: (data) => data.menuType !== 'F'
   }
 })
+
+/** 获取操作类型标签 */
+function getActionTypeLabel(value) {
+  const found = actionTypeOptions.find(item => item.value === value)
+  return found ? found.label : value
+}
 
 /** 查询操作码注册列表 */
 function getList() {
@@ -367,6 +422,7 @@ function reset() {
     operationId: null,
     operationCode: null,
     operationName: null,
+    actionType: null,
     buttonLabel: null,
     tableName: null,
     perms: null,

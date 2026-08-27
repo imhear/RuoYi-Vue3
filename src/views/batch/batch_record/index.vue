@@ -108,7 +108,7 @@
 
 <script setup name="BatchRecord">
 import { ref, reactive, toRefs } from 'vue'
-import { listBatch_record, createBatchRecord, delBatch_record } from "@/api/batch/batch_record"
+import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord } from "@/api/batch/batch_record"
 import { getToken } from '@/utils/auth'
 import BatchRecordGenerate from '@/views/batch/components/BatchRecordGenerate.vue'
 import BatchOrderView from '@/views/batch/components/BatchOrderView.vue'
@@ -235,8 +235,11 @@ function handleViewRecord(row) {
 /** 审核按钮操作 */
 function handleAudit(row) {
   proxy.$modal.confirm('确认审核通过该批记录？').then(() => {
-    // TODO: 调用审核接口，后续补充
-  })
+    return auditBatchRecord(row.recordId)
+  }).then(() => {
+    proxy.$modal.msgSuccess('审核成功')
+    getList()
+  }).catch(() => {})
 }
 
 /** 删除按钮操作 */

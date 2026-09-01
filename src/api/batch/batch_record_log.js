@@ -42,3 +42,11 @@ export function delBatch_record_log(logId) {
     method: 'delete'
   })
 }
+
+// 根据批记录ID查询全部操作日志（不分页）
+export function listBatchRecordLogByRecordId(recordId) {
+  return request({
+    url: '/batch/batch_record_log/listByRecordId/' + recordId,
+    method: 'get'
+  })
+}

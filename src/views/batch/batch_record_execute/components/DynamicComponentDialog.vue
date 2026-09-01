@@ -40,15 +40,7 @@
         :is="currentComponent"
         v-bind="componentProps"
         @closed="visible = false"
-      />
-
-      <!--
-        如果组件加载失败或路径未配置，
-        在非加载状态显示空提示。
-      -->
-      <el-empty
-        v-else-if="!componentLoading"
-        description="组件加载失败或未配置"
+        @refresh="handleRefresh"
       />
     </div>
   </el-dialog>
@@ -60,6 +52,9 @@ import { ElMessage } from 'element-plus'
 import { FullScreen, Aim } from '@element-plus/icons-vue'
 
 defineOptions({ name: 'DynamicComponentDialog' })
+
+// 定义对外事件
+const emit = defineEmits(['refresh'])
 
 /**
  * 使用 import.meta.glob 扫描 src/views 下所有 .vue 文件，
@@ -105,13 +100,15 @@ const componentProps = ref({})
  * 打开动态组件弹窗
  *
  * @param {Object} params 参数对象
- * @param {String} params.component 组件相对路径，如 'batch/batch_receiving/versions/v1.0.0/Edit.vue'
- * @param {Number} params.recordId 批记录ID
- * @param {Number} params.menuId 菜单节点ID
+ * @param {String} params.component      组件相对路径
+ * @param {Number} params.recordId       批记录ID
+ * @param {Number} params.menuId         按钮节点ID（F节点）
  * @param {Number} params.businessRecordId 业务记录ID
- * @param {String} params.operationCode 操作码
- * @param {String} params.backendRoute 后端接口路径
- * @param {String} params.tableName 物理表名
+ * @param {String} params.operationCode  操作码
+ * @param {String} params.backendRoute   后端接口路径
+ * @param {String} params.tableName      物理表名
+ * @param {String} params.menuName       菜单名称（按钮节点名称）
+ * @param {String} params.buttonLabel    按钮标签（用于确认框和按钮文字）
  */
 async function open(params) {
   // 兼容处理：去除传入 component 路径可能存在的多余前导斜杠
@@ -134,11 +131,13 @@ async function open(params) {
     businessRecordId: params.businessRecordId,
     operationCode: params.operationCode,
     backendRoute: params.backendRoute,
-    tableName: params.tableName
+    tableName: params.tableName,
+    menuName: params.menuName || '',       // 新增
+    buttonLabel: params.buttonLabel || ''  // 新增
   }
 
-  // 设置标题为“操作 - 操作码”
-  currentTitle.value = `操作 - ${params.operationCode}`
+  // 设置标题
+  currentTitle.value = `操作 - ${params.buttonLabel || params.operationCode}`
 
   // 开启加载遮罩
   componentLoading.value = true
@@ -161,6 +160,14 @@ async function open(params) {
     ElMessage.error('组件加载失败，请重试')
     console.error('动态组件加载失败:', error)
   }
+}
+
+/**
+ * 子组件触发刷新事件时，向外继续触发
+ */
+function handleRefresh() {
+  // console.log('[Dynamic] 收到子组件 refresh，转发给父组件')
+  emit('refresh')
 }
 
 /**

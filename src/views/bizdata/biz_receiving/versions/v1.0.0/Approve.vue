@@ -95,13 +95,13 @@
 
     <!-- 底部操作按钮 -->
     <div style="text-align: right; margin-top: 12px;">
-      <el-button type="primary" @click="handleConfirm">确认{{ buttonLabel }}</el-button>
+      <el-button type="primary" @click="handleConfirm">{{ buttonLabel }}</el-button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBizReceivingDetail } from '@/api/bizdata/biz_receiving'
 import { getBatch_record } from '@/api/batch/batch_record'
@@ -109,23 +109,30 @@ import { approveBatchRecordMenu } from '@/api/batch/batch_record_menu'
 
 defineOptions({ name: 'ReceivingApprove' })
 
+/**
+ * 父组件传入的 props
+ */
 const props = defineProps({
-  recordId: { type: Number, required: true },
-  menuId: { type: Number, required: true },
-  businessRecordId: { type: Number, required: true },
-  operationCode: { type: String, default: '' },
-  backendRoute: { type: String, default: '' },
-  tableName: { type: String, default: '' },
-  menuName: { type: String, default: '' },
-  buttonLabel: { type: String, default: '确认' }
+  recordId: { type: Number, required: true },         // 批记录ID
+  menuId: { type: Number, required: true },           // 按钮节点ID
+  businessRecordId: { type: Number, required: true }, // 业务记录ID
+  operationCode: { type: String, default: '' },       // 操作码
+  backendRoute: { type: String, default: '' },        // 后端接口路径
+  tableName: { type: String, default: '' },           // 物理表名
+  menuName: { type: String, default: '' },            // 按钮节点名称（用于确认框）
+  buttonLabel: { type: String, default: '确认' }      // 按钮标签（用于按钮文字）
 })
 
-const emit = defineEmits(['closed'])
+// 定义对外事件：closed 关闭弹窗；refresh 通知父组件刷新数据
+const emit = defineEmits(['closed', 'refresh'])
 
-const loading = ref(false)
-const receiving = ref(null)
-const batchRecord = ref(null)
+const loading = ref(false)        // 是否加载中
+const receiving = ref(null)       // 领料单主表数据
+const batchRecord = ref(null)     // 批记录数据（产品信息）
 
+/**
+ * 固定显示14行物料明细（不足补空行）
+ */
 const displayItems = computed(() => {
   const items = receiving.value?.itemList || []
   const rows = []
@@ -135,6 +142,9 @@ const displayItems = computed(() => {
   return rows
 })
 
+/**
+ * 组件挂载时加载数据
+ */
 onMounted(async () => {
   await loadData()
 })
@@ -163,13 +173,17 @@ async function loadData() {
  */
 async function handleConfirm() {
   try {
-    await ElMessageBox.confirm(`确认执行「${props.menuName}」操作吗？`, '提示', {
+    await ElMessageBox.confirm(`确认执行「${props.menuName || props.buttonLabel}」操作吗？`, '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
     await approveBatchRecordMenu(props.menuId, '')
     ElMessage.success('操作成功')
+
+    // 先触发刷新事件，再关闭自身
+    emit('refresh')
+    await nextTick()
     emit('closed')
   } catch (error) {
     if (error !== 'cancel') {

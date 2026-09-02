@@ -49,6 +49,24 @@
         </el-col>
         <el-col :span="12">
           <div class="info-item">
+            <label class="info-label">乐观锁版本号：</label>
+            <span class="info-value plaintext">
+              {{ info.revision }}
+            </span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" class="mb8">
+        <el-col :span="12">
+          <div class="info-item">
+            <label class="info-label">系统版本号：</label>
+            <span class="info-value plaintext">
+              {{ info.sysVersion }}
+            </span>
+          </div>
+        </el-col>
+        <el-col :span="12">
+          <div class="info-item">
             <label class="info-label">备注：</label>
             <span class="info-value plaintext">
               {{ info.remark }}

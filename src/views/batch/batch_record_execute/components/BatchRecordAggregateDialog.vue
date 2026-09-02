@@ -355,13 +355,14 @@ function getControlStatusText(status) {
  */
 function getActionTypeText(actionType) {
   const map = {
-    submit: '提交',
-    review: '复核',
-    inspect: '检查',
-    archive: '归档',
-    cancel_review: '取消复核',
-    cancel_inspect: '取消检查',
-    cancel_archive: '取消归档'
+    EDIT: '编辑',
+    SUBMIT: '提交',
+    REVIEW: '复核',
+    INSPECT: '检查',
+    ARCHIVE: '归档',
+    CANCEL_REVIEW: '取消复核',
+    CANCEL_INSPECT: '取消检查',
+    CANCEL_ARCHIVE: '取消归档'
   }
   return map[actionType] || actionType
 }
@@ -372,9 +373,12 @@ function getActionTypeText(actionType) {
  * @returns {String} Element Plus 标签类型
  */
 function getActionTypeTag(actionType) {
-  if (actionType && actionType.startsWith('cancel_')) return 'danger'
-  if (actionType === 'archive') return 'success'
-  if (actionType === 'submit') return 'primary'
+  // 标签颜色映射
+  if (actionType === 'EDIT') return 'warning'
+  if (actionType === 'SUBMIT') return 'primary'
+  if (actionType === 'REVIEW') return 'success'
+  if (actionType === 'INSPECT') return 'info'
+  if (actionType === 'ARCHIVE') return 'success'
   return 'info'
 }
 

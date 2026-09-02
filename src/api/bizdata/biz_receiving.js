@@ -57,12 +57,27 @@ export function getBizReceivingDetail(receivingId) {
 /**
  * 保存领料单编辑（更新主表 + 替换子表）
  * @param {Number} receivingId 领料单主键
+ * @param {Number} menuId 按钮节点ID（用于日志写入）
  * @param {Object} data 领料单数据（含 itemList）
  */
-export function updateBizReceiving(receivingId, data) {
+export function updateBizReceiving(receivingId, menuId, data) {
   return request({
     url: '/bizdata/biz_receiving/edit/' + receivingId,
-    method: 'put',
+    method: 'post',
+    params: { menuId: menuId },
     data: data
   })
 }
+
+/**
+ * 保存领料单编辑（更新主表 + 替换子表）
+ * @param {Number} receivingId 领料单主键
+ * @param {Object} data 领料单数据（含 itemList）
+ */
+// export function updateBizReceiving(receivingId, data) {
+//   return request({
+//     url: '/bizdata/biz_receiving/edit/' + receivingId,
+//     method: 'put',
+//     data: data
+//   })
+// }

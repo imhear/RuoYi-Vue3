@@ -173,7 +173,7 @@ const props = defineProps({
   tableName: { type: String, default: '' }
 })
 
-const emit = defineEmits(['closed'])
+const emit = defineEmits(['closed', 'refresh'])
 
 const { proxy } = getCurrentInstance()
 const { receiving_material, receiving_spec, pro_unit } = proxy.useDict('receiving_material', 'receiving_spec', 'pro_unit')
@@ -304,9 +304,11 @@ async function handleSubmit() {
   }
 
   try {
-    await updateBizReceiving(props.businessRecordId, payload)
+    await updateBizReceiving(props.businessRecordId, props.menuId, payload)
+    // await updateBizReceiving(props.businessRecordId, payload)
     ElMessage.success('保存成功')
-    emit('closed')
+    emit('refresh')   // 通知聚合入口刷新卡片状态和日志
+    emit('closed')    // 关闭当前编辑弹窗
   } catch (error) {
     ElMessage.error('保存失败')
   }

@@ -6,6 +6,7 @@
     top="5vh"
     append-to-body
     :fullscreen="isFullscreen"
+    :before-close="handleBeforeClose"
     @closed="handleClosed"
   >
     <template #header>
@@ -48,7 +49,7 @@
 
 <script setup>
 import { ref, shallowRef } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { FullScreen, Aim } from '@element-plus/icons-vue'
 
 defineOptions({ name: 'DynamicComponentDialog' })
@@ -132,8 +133,8 @@ async function open(params) {
     operationCode: params.operationCode,
     backendRoute: params.backendRoute,
     tableName: params.tableName,
-    menuName: params.menuName || '',       // 新增
-    buttonLabel: params.buttonLabel || ''  // 新增
+    menuName: params.menuName || '',
+    buttonLabel: params.buttonLabel || ''
   }
 
   // 设置标题
@@ -163,10 +164,34 @@ async function open(params) {
 }
 
 /**
+ * 关闭前拦截：用户点击右上角关闭、按 ESC 或点击遮罩层时触发
+ * 弹出二次确认，防止误操作关闭正在编辑的表单
+ *
+ * @param {Function} done 关闭回调，调用后才会真正关闭弹窗
+ */
+function handleBeforeClose(done) {
+  ElMessageBox.confirm('确定要关闭吗？未保存的修改将丢失。', '提示', {
+    confirmButtonText: '确定关闭',
+    cancelButtonText: '继续编辑',
+    type: 'warning',
+    distinguishCancelAndClose: true,
+    closeOnClickModal: false,
+    closeOnPressEscape: false
+  })
+    .then(() => {
+      // 用户点击“确定关闭”
+      done()
+    })
+    .catch(() => {
+      // 用户点击“继续编辑”或右上角 X，不关闭
+      // 注意：catch 中不能调用 done()，否则会关闭
+    })
+}
+
+/**
  * 子组件触发刷新事件时，向外继续触发
  */
 function handleRefresh() {
-  // console.log('[Dynamic] 收到子组件 refresh，转发给父组件')
   emit('refresh')
 }
 

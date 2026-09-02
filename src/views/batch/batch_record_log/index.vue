@@ -9,10 +9,34 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联批记录菜单节点ID" prop="menuId">
+      <el-form-item label="关联批记录按钮节点ID" prop="menuId">
         <el-input
           v-model="queryParams.menuId"
+          placeholder="请输入关联批记录按钮节点ID"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="关联批记录菜单节点ID" prop="cMenuId">
+        <el-input
+          v-model="queryParams.cMenuId"
           placeholder="请输入关联批记录菜单节点ID"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="物理表名" prop="tableName">
+        <el-input
+          v-model="queryParams.tableName"
+          placeholder="请输入物理表名"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item>
+      <el-form-item label="业务表主键" prop="businessRecordId">
+        <el-input
+          v-model="queryParams.businessRecordId"
+          placeholder="请输入业务表主键"
           clearable
           @keyup.enter="handleQuery"
         />
@@ -125,7 +149,10 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="日志主键" align="center" prop="logId" />
       <el-table-column label="关联批记录ID" align="center" prop="recordId" />
-      <el-table-column label="关联批记录菜单节点ID" align="center" prop="menuId" />
+      <el-table-column label="关联批记录按钮节点ID" align="center" prop="menuId" />
+      <el-table-column label="关联批记录菜单节点ID" align="center" prop="cMenuId" />
+      <el-table-column label="物理表名" align="center" prop="tableName" />
+      <el-table-column label="业务表主键" align="center" prop="businessRecordId" />
       <el-table-column label="前端路由地址" align="center" prop="path" />
       <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
       <el-table-column label="操作码" align="center" prop="operationCode" />
@@ -168,8 +195,23 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联批记录菜单节点ID" prop="menuId">
-              <el-input v-model="form.menuId" placeholder="请输入关联批记录菜单节点ID" />
+            <el-form-item label="关联批记录按钮节点ID" prop="menuId">
+              <el-input v-model="form.menuId" placeholder="请输入关联批记录按钮节点ID" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="关联批记录菜单节点ID" prop="cMenuId">
+              <el-input v-model="form.cMenuId" placeholder="请输入关联批记录菜单节点ID" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="物理表名" prop="tableName">
+              <el-input v-model="form.tableName" placeholder="请输入物理表名" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="业务表主键" prop="businessRecordId">
+              <el-input v-model="form.businessRecordId" placeholder="请输入业务表主键" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -252,6 +294,9 @@ const data = reactive({
     pageSize: 10,
     recordId: undefined,
     menuId: undefined,
+    cMenuId: undefined,
+    tableName: undefined,
+    businessRecordId: undefined,
     path: undefined,
     backendRoute: undefined,
     operationCode: undefined,
@@ -298,6 +343,9 @@ function reset() {
     logId: null,
     recordId: null,
     menuId: null,
+    cMenuId: null,
+    tableName: null,
+    businessRecordId: null,
     path: null,
     backendRoute: null,
     operationCode: null,

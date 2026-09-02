@@ -47,15 +47,15 @@
                     height="100%"
                     empty-text="暂无操作日志"
                     :header-cell-style="{ 'text-align': 'center', 'font-size': '12px' }"
-                    :cell-style="{ 'text-align': 'center', 'font-size': '12px' }"
+                    :cell-style="{ 'text-align': 'center', 'font-size': '12px', 'white-space': 'nowrap' }"
                   >
-                    <el-table-column label="操作时间" align="center">
+                    <el-table-column label="操作时间" align="center" min-width="130" show-overflow-tooltip>
                       <template #default="scope">
                         {{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}') }}
                       </template>
                     </el-table-column>
-                    <el-table-column label="操作人" prop="operator" align="center" show-overflow-tooltip />
-                    <el-table-column label="操作类型" align="center">
+                    <el-table-column label="操作人" prop="operator" align="center" min-width="70" show-overflow-tooltip />
+                    <el-table-column label="操作类型" align="center" min-width="80">
                       <template #default="scope">
                         <el-tag size="small" :type="getActionTypeTag(scope.row.actionType)">
                           {{ getActionTypeText(scope.row.actionType) }}
@@ -83,6 +83,9 @@
                         <el-tag size="small" :type="card.instanceControlStatus === '0' ? 'info' : 'success'">
                           {{ getControlStatusText(card.instanceControlStatus) }}
                         </el-tag>
+                      </div>
+                      <div v-if="getLastEditInfo(card)" class="card-last-edit">
+                        最后编辑：{{ getLastEditInfo(card).operator }} {{ parseTime(getLastEditInfo(card).createTime, '{m}-{d} {h}:{i}') }}
                       </div>
                     </div>
                   </div>
@@ -114,6 +117,9 @@
                         <el-tag size="small" :type="card.instanceControlStatus === '0' ? 'info' : 'success'">
                           {{ getControlStatusText(card.instanceControlStatus) }}
                         </el-tag>
+                      </div>
+                      <div v-if="getLastEditInfo(card)" class="card-last-edit">
+                        最后编辑：{{ getLastEditInfo(card).operator }} {{ parseTime(getLastEditInfo(card).createTime, '{m}-{d} {h}:{i}') }}
                       </div>
                       <div class="card-actions">
                         <el-button
@@ -349,6 +355,18 @@ function getControlStatusText(status) {
 }
 
 /**
+ * 获取卡片最后编辑信息
+ * @param {Object} card C节点对象
+ * @returns {Object|null} 最后一条编辑日志，若无则返回 null
+ */
+function getLastEditInfo(card) {
+  const edits = logList.value.filter(log => log.cMenuId === card.menuId && log.actionType === 'EDIT')
+  if (edits.length === 0) return null
+  edits.sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
+  return edits[0]
+}
+
+/**
  * 获取操作类型文本
  * @param {String} actionType 操作类型
  * @returns {String} 操作类型中文描述
@@ -577,5 +595,13 @@ defineExpose({ open })
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+.card-last-edit {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

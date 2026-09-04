@@ -127,6 +127,7 @@ async function open(params) {
 
   // 准备传给动态组件的 props
   componentProps.value = {
+    mode: params.mode || 'approve',   // 新增：默认为 approve，兼容旧逻辑
     recordId: params.recordId,
     menuId: params.menuId,
     businessRecordId: params.businessRecordId,

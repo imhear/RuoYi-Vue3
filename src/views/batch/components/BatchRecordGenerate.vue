@@ -138,14 +138,17 @@
               </div>
               <!-- 菜单节点 -->
               <div v-else-if="selectedNode && selectedNode.menuType === 'C'">
-                <div v-if="currentComponent" class="component-container">
-                  <component :is="currentComponent" />
-                </div>
-                <el-empty v-else description="该节点不支持预览（缺少前端组件）" />
+                <el-empty description="请点击该节点下的“查看”按钮预览空表单" />
               </div>
               <!-- 按钮节点 -->
               <div v-else-if="selectedNode && selectedNode.menuType === 'F'">
-                <el-form label-width="80px">
+                <!-- 预览按钮 -->
+                <div v-if="selectedNode.actionType === 'PREVIEW' && currentComponent" class="component-container">
+                  <component :is="currentComponent" v-bind="componentProps" />
+                </div>
+                <el-empty v-else-if="selectedNode.actionType === 'PREVIEW'" description="组件未加载" />
+                <!-- 其他按钮：操作人配置 -->
+                <el-form v-else label-width="80px">
                   <el-form-item label="操作人">
                     <el-input v-model="selectedNode.operator" placeholder="请选择用户" readonly>
                       <template #append><el-button icon="Search" @click="openSelectUser" /></template>
@@ -156,6 +159,26 @@
                   <el-form-item label="后端接口"><span>{{ selectedNode.backendRoute || '-' }}</span></el-form-item>
                 </el-form>
               </div>
+              <!-- 菜单节点 -->
+              <!-- <div v-else-if="selectedNode && selectedNode.menuType === 'C'">
+                <div v-if="currentComponent" class="component-container">
+                  <component :is="currentComponent" />
+                </div>
+                <el-empty v-else description="该节点不支持预览（缺少前端组件）" />
+              </div> -->
+              <!-- 按钮节点 -->
+              <!-- <div v-else-if="selectedNode && selectedNode.menuType === 'F'">
+                <el-form label-width="80px">
+                  <el-form-item label="操作人">
+                    <el-input v-model="selectedNode.operator" placeholder="请选择用户" readonly>
+                      <template #append><el-button icon="Search" @click="openSelectUser" /></template>
+                    </el-input>
+                  </el-form-item>
+                  <el-form-item label="操作码"><el-tag>{{ selectedNode.operationCode }}</el-tag></el-form-item>
+                  <el-form-item label="组件路径"><span>{{ selectedNode.component || '-' }}</span></el-form-item>
+                  <el-form-item label="后端接口"><span>{{ selectedNode.backendRoute || '-' }}</span></el-form-item>
+                </el-form>
+              </div> -->
               <el-empty v-else description="请选择左侧节点查看详情" />
             </div>
           </div>
@@ -215,6 +238,7 @@ const selectedNode = ref(null)
 const currentComponent = shallowRef(null)
 const formRef = ref(null)
 const selectUserRef = ref(null)
+const componentProps = ref({})
 
 const form = reactive({ releaseId: null, planStart: null, planEnd: null })
 const rules = {
@@ -351,9 +375,27 @@ function togglePreview() {
 function getChildMenus(node) { return node.children || [] }
 function handleNodeClick(data) {
   selectedNode.value = data
-  if (data.menuType === 'C') loadMenuComponent(data.component)
-  else currentComponent.value = null
+  if (data.menuType === 'C') {
+    // 菜单节点不再直接加载组件，改为提示选择查看按钮
+    currentComponent.value = null
+    componentProps.value = {}
+  } else if (data.menuType === 'F') {
+    if (data.actionType === 'PREVIEW') {
+      // 预览按钮：加载组件并传入 mode=preview，businessRecordId 不传（空模板）
+      loadMenuComponent(data.component)
+      componentProps.value = { mode: 'preview' }
+    } else {
+      // 其他按钮：保留原操作人配置逻辑
+      currentComponent.value = null
+      componentProps.value = {}
+    }
+  }
 }
+// function handleNodeClick(data) {
+//   selectedNode.value = data
+//   if (data.menuType === 'C') loadMenuComponent(data.component)
+//   else currentComponent.value = null
+// }
 function loadMenuComponent(componentPath) {
   if (!componentPath) { currentComponent.value = null; ElMessage.warning('该节点未配置前端组件，不支持预览'); return }
   const fullPath = '/src/views/' + componentPath

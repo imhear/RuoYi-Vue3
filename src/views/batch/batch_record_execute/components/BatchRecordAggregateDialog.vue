@@ -425,6 +425,10 @@ function handleActionClick(btn) {
     ElMessage.warning('未找到卡片信息')
     return
   }
+  let mode = 'approve'
+  if (btn.actionType === 'EDIT') mode = 'edit'
+  else if (btn.actionType === 'PREVIEW') mode = 'preview'
+
   dynamicDialogRef.value?.open({
     component: btn.component,
     recordId: recordId.value,
@@ -434,7 +438,8 @@ function handleActionClick(btn) {
     backendRoute: btn.backendRoute,
     tableName: parentCard.tableName,
     menuName: btn.menuName,       // 传递按钮节点名称，用于审批确认框
-    buttonLabel: btn.buttonLabel  // 传递按钮标签，用于审批按钮文字
+    buttonLabel: btn.buttonLabel,  // 传递按钮标签，用于审批按钮文字
+    mode: mode     // 新增传递 mode
   })
 }
 

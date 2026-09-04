@@ -278,13 +278,14 @@ const selectedSysMenuId = ref(null)
 
 /** 操作类型选项 */
 const actionTypeOptions = [
-  { value: 'submit', label: '提交' },
-  { value: 'review', label: '复核' },
-  { value: 'inspect', label: '检查' },
-  { value: 'archive', label: '归档' },
-  { value: 'cancel_review', label: '取消复核' },
-  { value: 'cancel_inspect', label: '取消检查' },
-  { value: 'cancel_archive', label: '取消归档' }
+  { value: 'PREVIEW', label: '查看' },
+  { value: 'SUBMIT', label: '提交' },
+  { value: 'REVIEW', label: '复核' },
+  { value: 'INSPECT', label: '检查' },
+  { value: 'ARCHIVE', label: '归档' },
+  { value: 'CANCEL_REVIEW', label: '取消复核' },
+  { value: 'CANCEL_INSPECT', label: '取消检查' },
+  { value: 'CANCEL_ARCHIVE', label: '取消归档' }
 ]
 
 const data = reactive({

@@ -52,6 +52,21 @@ export function listBatchRecordMenuTree(recordId) {
 }
 
 /**
+ * 查询指定菜单节点（C节点）下的所有按钮节点（F节点）
+ * 
+ * 用于三态合一组件回显签名行信息。
+ *
+ * @param {Number} cMenuId C节点ID
+ * @returns {Promise} 请求 Promise
+ */
+export function listBatchRecordMenuButtonsByCMenuId(cMenuId) {
+  return request({
+    url: '/batch/batch_record_menu/buttons/' + cMenuId,
+    method: 'get'
+  })
+}
+
+/**
  * 通用审批操作
  * @param {Number} menuId 菜单节点ID
  * @param {String} remark 备注

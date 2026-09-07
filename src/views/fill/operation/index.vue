@@ -279,10 +279,12 @@ const selectedSysMenuId = ref(null)
 /** 操作类型选项 */
 const actionTypeOptions = [
   { value: 'PREVIEW', label: '查看' },
+  { value: 'EDIT', label: '编辑' },
   { value: 'SUBMIT', label: '提交' },
   { value: 'REVIEW', label: '复核' },
   { value: 'INSPECT', label: '检查' },
   { value: 'ARCHIVE', label: '归档' },
+  { value: 'CANCEL_SUBMIT', label: '取消提交' },
   { value: 'CANCEL_REVIEW', label: '取消复核' },
   { value: 'CANCEL_INSPECT', label: '取消检查' },
   { value: 'CANCEL_ARCHIVE', label: '取消归档' }

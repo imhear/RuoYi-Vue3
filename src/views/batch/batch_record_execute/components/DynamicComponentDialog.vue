@@ -79,6 +79,7 @@ const componentProps = ref({})
  * @param {String} params.menuName       菜单名称（按钮节点名称）
  * @param {String} params.buttonLabel    按钮标签
  * @param {String} params.actionType     操作类型（大写：PREVIEW/EDIT/SUBMIT等）
+ * @param {String} params.cMenuId        当前表单对应的 C 节点 ID
  */
 async function open(params) {
   const componentPath = params.component.replace(/^\/+/, '')
@@ -99,7 +100,8 @@ async function open(params) {
     backendRoute: params.backendRoute,
     tableName: params.tableName,
     menuName: params.menuName || '',
-    buttonLabel: params.buttonLabel || ''
+    buttonLabel: params.buttonLabel || '',
+    cMenuId: params.cMenuId || null   // 新增：C 节点 ID
   }
 
   currentTitle.value = `操作 - ${params.buttonLabel || params.operationCode}`

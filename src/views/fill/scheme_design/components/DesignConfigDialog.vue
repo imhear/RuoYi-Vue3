@@ -91,6 +91,7 @@
                 <el-descriptions-item label="前置菜单ID">{{ currentNode.predecessorDetailId || '-' }}</el-descriptions-item>
                 <el-descriptions-item label="卡片显示">{{ currentNode.operationVisible === '1' ? '是' : '否' }}</el-descriptions-item>
                 <el-descriptions-item label="状态">{{ currentNode.status === '0' ? '正常' : '停用' }}</el-descriptions-item>
+                <el-descriptions-item label="是否可反审">{{ currentNode.isUnaudit === '0' ? '是' : '否' }}</el-descriptions-item>
                 <el-descriptions-item label="备注">{{ currentNode.remark || '-' }}</el-descriptions-item>
               </el-descriptions>
               <div class="detail-actions">
@@ -357,6 +358,16 @@
             </el-form-item>
           </el-col>
 
+          <!-- F 按钮专用：是否可反审 -->
+          <el-col :span="24" v-if="editForm.menuType === 'F'">
+            <el-form-item label="是否可反审">
+              <el-radio-group v-model="editForm.isUnaudit">
+                <el-radio label="0">是</el-radio>
+                <el-radio label="1">否</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+
           <!-- 备注 -->
           <el-col :span="24">
             <el-form-item label="备注">
@@ -429,6 +440,7 @@ const editForm = reactive({
   isCache: '0',
   visible: '0',
   status: '0',
+  isUnaudit: '1',
   perms: '',
   icon: '#',
   remark: '',
@@ -660,6 +672,7 @@ function openEditDialog(menuType, parentId, nodeData) {
     isCache: nodeData?.isCache !== undefined ? String(nodeData.isCache) : '0',
     visible: nodeData?.visible || '0',
     status: nodeData?.status || '0',
+    isUnaudit: nodeData?.isUnaudit ?? '1',
     perms: nodeData?.perms || '',
     icon: nodeData?.icon || '#',
     remark: nodeData?.remark || '',

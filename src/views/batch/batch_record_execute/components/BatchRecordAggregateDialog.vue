@@ -330,8 +330,8 @@ function getCardButtons(card) {
  */
 function getControlStatusText(status) {
   const map = {
-    '0': '待填报',
-    '1': '已填报',
+    '0': '待提交',
+    '1': '已提交',
     '2': '已复核',
     '3': '已检查',
     '4': '已归档',
@@ -360,6 +360,7 @@ function getActionTypeText(actionType) {
     REVIEW: '复核',
     INSPECT: '检查',
     ARCHIVE: '归档',
+    CANCEL_SUBMIT: '取消提交',
     CANCEL_REVIEW: '取消复核',
     CANCEL_INSPECT: '取消检查',
     CANCEL_ARCHIVE: '取消归档'
@@ -376,6 +377,10 @@ function getActionTypeTag(actionType) {
   if (actionType === 'REVIEW') return 'success'
   if (actionType === 'INSPECT') return 'info'
   if (actionType === 'ARCHIVE') return 'success'
+  if (actionType === 'CANCEL_SUBMIT') return 'danger'
+  if (actionType === 'CANCEL_REVIEW') return 'warning'
+  if (actionType === 'CANCEL_INSPECT') return 'warning'
+  if (actionType === 'CANCEL_ARCHIVE') return 'warning'
   return 'info'
 }
 
@@ -392,7 +397,7 @@ function handleCardClick(card) {
 
 /**
  * 点击卡片按钮：打开动态组件弹窗
- * 直接传递按钮节点的 actionType（大写），不再转换为小写 mode
+ * 直接传递按钮节点的 actionType（大写），并附带 cMenuId 用于签名行回显
  */
 function handleActionClick(btn) {
   const parentCard = menuList.value.find(m => m.menuId === btn.parentId)
@@ -411,7 +416,8 @@ function handleActionClick(btn) {
     tableName: parentCard.tableName,
     menuName: btn.menuName,
     buttonLabel: btn.buttonLabel,
-    actionType: btn.actionType    // 直接传递大写 actionType
+    actionType: btn.actionType,
+    cMenuId: parentCard.menuId   // 新增：当前表单对应的 C 节点 ID
   })
 }
 

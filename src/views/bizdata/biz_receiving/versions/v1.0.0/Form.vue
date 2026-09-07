@@ -1,9 +1,9 @@
 <template>
   <div class="receiving-form-container">
     <div
-      v-if="mode !== 'preview' || !loading"
+      v-if="actionType !== 'PREVIEW' || !loading"
       class="view-container"
-      :class="mode === 'preview' ? 'preview-mode' : ''"
+      :class="actionType === 'PREVIEW' ? 'preview-mode' : ''"
     >
       <!-- 公司名称 + 编号 -->
       <div style="display: flex; align-items: flex-end; margin-bottom: 0px;">
@@ -171,31 +171,19 @@
         </el-table-column>
       </el-table>
 
-      <!-- 签名行 -->
+      <!-- 签名行（只读，数据源来自 batch_record_menu 控制表） -->
       <el-table :data="[{}]" :show-header="false" border size="small" class="bottom-table">
         <el-table-column width="130" align="center">
           <template #default><span style="font-weight: normal;">领用人/日期：</span></template>
         </el-table-column>
         <el-table-column>
-          <template #default>
-            <template v-if="isEditMode">
-              <el-input v-model="editForm.receiveBy" placeholder="领用人" size="small" style="width: 100px;" />
-              <el-date-picker v-model="editForm.receiveDate" type="date" value-format="YYYY-MM-DD" placeholder="日期" size="small" style="width: 140px; margin-left: 8px;" />
-            </template>
-            <template v-else>{{ receiving?.receiveBy || '' }} / {{ receiving?.receiveDate ? parseTime(receiving.receiveDate, '{y}-{m}-{d}') : '' }}</template>
-          </template>
+          <template #default>{{ submitSignatureText }}</template>
         </el-table-column>
         <el-table-column width="130" align="center">
           <template #default><span style="font-weight: normal;">发料人/日期：</span></template>
         </el-table-column>
         <el-table-column>
-          <template #default>
-            <template v-if="isEditMode">
-              <el-input v-model="editForm.deliveryBy" placeholder="发料人" size="small" style="width: 100px;" />
-              <el-date-picker v-model="editForm.deliveryDate" type="date" value-format="YYYY-MM-DD" placeholder="日期" size="small" style="width: 140px; margin-left: 8px;" />
-            </template>
-            <template v-else>{{ receiving?.deliveryBy || '' }} / {{ receiving?.deliveryDate ? parseTime(receiving.deliveryDate, '{y}-{m}-{d}') : '' }}</template>
-          </template>
+          <template #default>{{ reviewSignatureText }}</template>
         </el-table-column>
       </el-table>
 
@@ -211,11 +199,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBizReceivingDetail, updateBizReceiving } from '@/api/bizdata/biz_receiving'
 import { getBatch_record } from '@/api/batch/batch_record'
-import { approveBatchRecordMenu } from '@/api/batch/batch_record_menu'
+import { approveBatchRecordMenu, listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
 import { parseTime } from '@/utils/ruoyi'
 
 defineOptions({ name: 'ReceivingForm' })
@@ -226,6 +214,7 @@ defineOptions({ name: 'ReceivingForm' })
  * recordId: 批记录ID（必填）
  * menuId: 按钮节点ID（编辑/审批时必填）
  * businessRecordId: 业务记录ID（编辑/审批/查看真实数据时必填；预览空模板时可不传）
+ * cMenuId: 当前表单对应的 C 节点 ID（用于获取签名行数据）
  * 其余为按钮节点相关信息
  */
 const props = defineProps({
@@ -233,6 +222,7 @@ const props = defineProps({
   recordId: { type: Number, required: true },
   menuId: { type: Number, default: null },
   businessRecordId: { type: Number, default: null },
+  cMenuId: { type: Number, default: null },
   operationCode: { type: String, default: '' },
   backendRoute: { type: String, default: '' },
   tableName: { type: String, default: '' },
@@ -249,24 +239,55 @@ const loading = ref(false)
 const receiving = ref(null)
 const batchRecord = ref(null)
 const displayItems = ref([])
-const editForm = reactive({
-  receiveBy: '',
-  receiveDate: null,
-  deliveryBy: '',
-  deliveryDate: null
-})
+const fNodes = ref([])            // 当前 C 节点下所有 F 节点
 
 const isEditMode = computed(() => props.actionType === 'EDIT')
 const isPreviewMode = computed(() => props.actionType === 'PREVIEW')
 const isApproveMode = computed(() => !isEditMode.value && !isPreviewMode.value)
 
 /**
+ * 提交操作按钮节点（actionType=SUBMIT 且 operatorTime 非空）
+ */
+const submitNode = computed(() => {
+  return fNodes.value.find(btn => btn.actionType?.toUpperCase() === 'SUBMIT' && btn.operatorTime)
+})
+
+/**
+ * 复核操作按钮节点（actionType=REVIEW 且 operatorTime 非空）
+ */
+const reviewNode = computed(() => {
+  return fNodes.value.find(btn => btn.actionType?.toUpperCase() === 'REVIEW' && btn.operatorTime)
+})
+
+/**
+ * 提交签名行文本：操作人 / 日期
+ */
+const submitSignatureText = computed(() => {
+  if (!submitNode.value) return ''
+  const operator = submitNode.value.operator || ''
+  const time = submitNode.value.operatorTime ? parseTime(submitNode.value.operatorTime, '{y}-{m}-{d}') : ''
+  return `${operator} / ${time}`
+})
+
+/**
+ * 复核签名行文本：操作人 / 日期
+ */
+const reviewSignatureText = computed(() => {
+  if (!reviewNode.value) return ''
+  const operator = reviewNode.value.operator || ''
+  const time = reviewNode.value.operatorTime ? parseTime(reviewNode.value.operatorTime, '{y}-{m}-{d}') : ''
+  return `${operator} / ${time}`
+})
+
+/**
  * 组件初始化：
+ * - 加载 C 节点下 F 节点用于签名回显
  * - 预览模式且无业务记录ID：初始化空模板
  * - 预览模式且有业务记录ID：加载真实数据（只读查看）
  * - 编辑/审批模式：加载真实数据
  */
 onMounted(async () => {
+  await loadFNodes()
   if (isPreviewMode.value) {
     if (props.businessRecordId) {
       await loadData()
@@ -277,6 +298,20 @@ onMounted(async () => {
     await loadData()
   }
 })
+
+/**
+ * 加载当前 C 节点下的所有 F 节点（用于签名行数据）
+ */
+async function loadFNodes() {
+  if (!props.cMenuId) return
+  try {
+    const res = await listBatchRecordMenuButtonsByCMenuId(props.cMenuId)
+    fNodes.value = res.data || []
+  } catch (error) {
+    fNodes.value = []
+    console.error('加载按钮节点失败', error)
+  }
+}
 
 /**
  * 加载批记录信息与领料单详情
@@ -293,11 +328,6 @@ async function loadData() {
 
     const items = receiving.value?.itemList || []
     initItems(items)
-
-    editForm.receiveBy = receiving.value?.receiveBy || ''
-    editForm.receiveDate = receiving.value?.receiveDate || null
-    editForm.deliveryBy = receiving.value?.deliveryBy || ''
-    editForm.deliveryDate = receiving.value?.deliveryDate || null
   } catch (error) {
     ElMessage.error('加载领料单数据失败')
   } finally {
@@ -340,18 +370,10 @@ function initItems(items) {
 }
 
 /**
- * 编辑提交前的校验
+ * 编辑提交前的校验（仅校验物料明细，不含签名）
  * @returns {Boolean} 校验是否通过
  */
 function beforeSubmitCheck() {
-  editForm.receiveBy = editForm.receiveBy?.replace(/\s/g, '') || ''
-  editForm.deliveryBy = editForm.deliveryBy?.replace(/\s/g, '') || ''
-
-  if (!editForm.receiveBy) { ElMessage.error('领料人不能为空'); return false }
-  if (!editForm.deliveryBy) { ElMessage.error('发料人不能为空'); return false }
-  if (!editForm.receiveDate) { ElMessage.error('领料日期不能为空'); return false }
-  if (!editForm.deliveryDate) { ElMessage.error('发料日期不能为空'); return false }
-
   const numberPattern = /^\d+(\.\d+)?$/
   let foundEmpty = false
   let hasItem = false
@@ -389,13 +411,11 @@ function beforeSubmitCheck() {
  * 编辑模式：保存修改（带二次确认）
  * 
  * 先执行表单校验，校验通过后弹出二次确认框，用户确认后才提交保存请求。
- * 若用户取消或关闭确认框，则终止操作。
+ * 签名行数据不在此提交，由审批操作在控制表中维护。
  */
 async function handleEditSubmit() {
-  // 1. 先执行前端校验
   if (!beforeSubmitCheck()) return
 
-  // 2. 弹出二次确认框
   try {
     await ElMessageBox.confirm('确认保存当前编辑内容吗？', '提示', {
       confirmButtonText: '确定',
@@ -403,23 +423,16 @@ async function handleEditSubmit() {
       type: 'warning'
     })
   } catch (error) {
-    // 用户点击取消或关闭确认框，终止保存
     return
   }
 
-  // 3. 组装提交数据
   const payload = {
     receivingId: props.businessRecordId,
-    receiveBy: editForm.receiveBy,
-    receiveDate: editForm.receiveDate,
-    deliveryBy: editForm.deliveryBy,
-    deliveryDate: editForm.deliveryDate,
     itemList: displayItems.value.filter(item =>
       item.materialName || item.spec || item.unit || item.batchNumber || item.remark
     )
   }
 
-  // 4. 提交保存
   try {
     await updateBizReceiving(props.businessRecordId, props.menuId, payload)
     ElMessage.success('保存成功')

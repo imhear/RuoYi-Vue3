@@ -254,7 +254,7 @@ async function open(id, orderNum) {
   visible.value = true
   activeWorkshop.value = 'all'
   activeForm.value = 'all'
-  selectedCard.value = null   // 初始不选中任何卡片
+  selectedCard.value = null
   await loadMenus()
   await loadLogs()
 }
@@ -292,14 +292,11 @@ async function loadLogs() {
  * @returns {Array} 原样返回，便于后续扩展
  */
 function buildMenuTree(list) {
-  // 这里暂不构建树形结构，直接使用平铺列表
   return list
 }
 
 /**
  * 获取指定车间下的所有表单（C节点）
- * @param {Number} workshopId 车间节点ID
- * @returns {Array} 表单列表
  */
 function getWorkshopForms(workshopId) {
   return menuList.value.filter(m => m.menuType === 'C' && m.parentId === workshopId)
@@ -307,9 +304,6 @@ function getWorkshopForms(workshopId) {
 
 /**
  * 获取指定车间某表单下的卡片列表
- * @param {Number} workshopId 车间节点ID
- * @param {String|Number} formId 表单节点ID，'all' 表示全部
- * @returns {Array} 卡片列表（C节点）
  */
 function getFormCards(workshopId, formId) {
   if (formId === 'all') return getWorkshopForms(workshopId)
@@ -317,10 +311,7 @@ function getFormCards(workshopId, formId) {
 }
 
 /**
- * 获取指定车间下的所有卡片（C节点）
- * @param {Number} workshopId 车间节点ID
- * @param {String|Number} tabName 当前页签名称
- * @returns {Array} 卡片列表
+ * 获取指定车间下的所有卡片
  */
 function getWorkshopCards(workshopId, tabName) {
   if (tabName === 'all') return getWorkshopForms(workshopId)
@@ -329,9 +320,6 @@ function getWorkshopCards(workshopId, tabName) {
 
 /**
  * 获取卡片上应显示的按钮（F节点）
- * 全览页签不使用此方法，但其他页签需要
- * @param {Object} card C节点对象
- * @returns {Array} 按钮节点列表
  */
 function getCardButtons(card) {
   return menuList.value.filter(m => m.menuType === 'F' && m.parentId === card.menuId && m.operationVisible === '1')
@@ -339,8 +327,6 @@ function getCardButtons(card) {
 
 /**
  * 获取流程控制状态文本
- * @param {String} status 状态值
- * @returns {String} 状态中文描述
  */
 function getControlStatusText(status) {
   const map = {
@@ -356,8 +342,6 @@ function getControlStatusText(status) {
 
 /**
  * 获取卡片最后编辑信息
- * @param {Object} card C节点对象
- * @returns {Object|null} 最后一条编辑日志，若无则返回 null
  */
 function getLastEditInfo(card) {
   const edits = logList.value.filter(log => log.cMenuId === card.menuId && log.actionType === 'EDIT')
@@ -368,8 +352,6 @@ function getLastEditInfo(card) {
 
 /**
  * 获取操作类型文本
- * @param {String} actionType 操作类型
- * @returns {String} 操作类型中文描述
  */
 function getActionTypeText(actionType) {
   const map = {
@@ -387,11 +369,8 @@ function getActionTypeText(actionType) {
 
 /**
  * 获取操作类型标签颜色
- * @param {String} actionType 操作类型
- * @returns {String} Element Plus 标签类型
  */
 function getActionTypeTag(actionType) {
-  // 标签颜色映射
   if (actionType === 'EDIT') return 'warning'
   if (actionType === 'SUBMIT') return 'primary'
   if (actionType === 'REVIEW') return 'success'
@@ -401,33 +380,26 @@ function getActionTypeTag(actionType) {
 }
 
 /**
- * 点击卡片：切换选中状态，用于过滤日志
- * @param {Object} card C节点对象
+ * 点击卡片：切换选中状态
  */
 function handleCardClick(card) {
   if (selectedCard.value && selectedCard.value.menuId === card.menuId) {
-    // 再次点击同一卡片，取消筛选
     selectedCard.value = null
   } else {
-    // 选中卡片，过滤日志
     selectedCard.value = card
   }
 }
 
 /**
  * 点击卡片按钮：打开动态组件弹窗
- * @param {Object} btn 按钮节点对象
+ * 直接传递按钮节点的 actionType（大写），不再转换为小写 mode
  */
 function handleActionClick(btn) {
-  // 找到父级 C 节点，获取业务记录ID等信息
   const parentCard = menuList.value.find(m => m.menuId === btn.parentId)
   if (!parentCard) {
     ElMessage.warning('未找到卡片信息')
     return
   }
-  let mode = 'approve'
-  if (btn.actionType === 'EDIT') mode = 'edit'
-  else if (btn.actionType === 'PREVIEW') mode = 'preview'
 
   dynamicDialogRef.value?.open({
     component: btn.component,
@@ -437,9 +409,9 @@ function handleActionClick(btn) {
     operationCode: btn.operationCode,
     backendRoute: btn.backendRoute,
     tableName: parentCard.tableName,
-    menuName: btn.menuName,       // 传递按钮节点名称，用于审批确认框
-    buttonLabel: btn.buttonLabel,  // 传递按钮标签，用于审批按钮文字
-    mode: mode     // 新增传递 mode
+    menuName: btn.menuName,
+    buttonLabel: btn.buttonLabel,
+    actionType: btn.actionType    // 直接传递大写 actionType
   })
 }
 
@@ -447,13 +419,12 @@ function handleActionClick(btn) {
  * 动态组件内操作成功后触发刷新
  */
 function handleRefresh() {
-  // console.log('[Aggregate] 收到 Dynamic 的 refresh，准备刷新菜单和日志')
   loadMenus()
   loadLogs()
 }
 
 /**
- * 对话框关闭回调：清理所有状态
+ * 对话框关闭回调
  */
 function handleClosed() {
   recordId.value = null

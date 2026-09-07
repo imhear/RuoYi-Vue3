@@ -223,22 +223,21 @@ defineOptions({ name: 'BatchRecordGenerate' })
 
 const { proxy } = getCurrentInstance()
 
-// 状态定义（与 BatchPlanGenerate 一致，仅 currentPlan 改名为 currentRecord）
 const visible = ref(false)
 const previewDialogVisible = ref(false)
 const isFullscreen = ref(false)
 const showPreview = ref(false)
 const loadingMenus = ref(false)
-const currentRecord = ref(null)      // 改为当前批记录行数据
+const currentRecord = ref(null)
 const releaseList = ref([])
 const workUnitList = ref([])
 const menuTree = ref([])
 const dirSelections = ref([])
 const selectedNode = ref(null)
 const currentComponent = shallowRef(null)
+const componentProps = ref({})               // 新增：传给动态组件的 props
 const formRef = ref(null)
 const selectUserRef = ref(null)
-const componentProps = ref({})
 
 const form = reactive({ releaseId: null, planStart: null, planEnd: null })
 const rules = {
@@ -248,7 +247,7 @@ const rules = {
 }
 const modules = import.meta.glob('/src/views/**/*.vue')
 
-// 打开对话框
+// ==================== 打开/关闭 ====================
 function open(record) {
   currentRecord.value = record
   visible.value = true
@@ -258,7 +257,6 @@ function open(record) {
   nextTick(() => formRef.value?.clearValidate())
 }
 
-// 重置状态
 function resetDialogState() {
   form.releaseId = null
   form.planStart = null
@@ -270,9 +268,9 @@ function resetDialogState() {
   menuTree.value = []
   selectedNode.value = null
   currentComponent.value = null
+  componentProps.value = {}
 }
 
-// 关闭确认
 function handleBeforeClose(done) {
   ElMessageBox.confirm('确定要关闭生成批记录对话框吗？', '提示', { type: 'warning' })
     .then(() => done()).catch(() => {})
@@ -286,7 +284,7 @@ function handleClosed() {
   resetDialogState()
 }
 
-// 数据加载
+// ==================== 数据加载 ====================
 function loadReleaseList() {
   listScheme_release({ pageNum: 1, pageSize: 1000 }).then(res => { releaseList.value = res.rows || res.data || [] })
 }
@@ -301,7 +299,7 @@ function handleReleaseChange(releaseId) {
     .finally(() => { loadingMenus.value = false })
 }
 
-// 菜单树构建
+// ==================== 菜单树构建 ====================
 function buildMenuTree(menus) {
   const map = {}
   menus.forEach(item => {
@@ -321,7 +319,7 @@ function buildDirSelections(menus) {
   dirSelections.value = menus.filter(m => m.menuType === 'M' && m.parentId === 0)
 }
 
-// 工作单元与操作人
+// ==================== 工作单元与操作人 ====================
 function handleWorkUnitChange(dir) {
   const workUnit = workUnitList.value.find(w => w.workUnitId === dir.workUnitId)
   dir.workUnitName = workUnit ? workUnit.workUnitName : ''
@@ -365,37 +363,30 @@ function findNode(nodes, menuId) {
   return null
 }
 
-// 预览与动态组件
+// ==================== 预览与动态组件 ====================
 function togglePreview() {
   if (!form.releaseId) { ElMessage.warning('请先选择发布方案'); return }
   showPreview.value = true
   selectedNode.value = null
   currentComponent.value = null
+  componentProps.value = {}
 }
 function getChildMenus(node) { return node.children || [] }
 function handleNodeClick(data) {
   selectedNode.value = data
   if (data.menuType === 'C') {
-    // 菜单节点不再直接加载组件，改为提示选择查看按钮
     currentComponent.value = null
     componentProps.value = {}
   } else if (data.menuType === 'F') {
     if (data.actionType === 'PREVIEW') {
-      // 预览按钮：加载组件并传入 mode=preview，businessRecordId 不传（空模板）
       loadMenuComponent(data.component)
-      componentProps.value = { mode: 'preview' }
+      componentProps.value = { actionType: 'PREVIEW' }   // 直接传大写 actionType
     } else {
-      // 其他按钮：保留原操作人配置逻辑
       currentComponent.value = null
       componentProps.value = {}
     }
   }
 }
-// function handleNodeClick(data) {
-//   selectedNode.value = data
-//   if (data.menuType === 'C') loadMenuComponent(data.component)
-//   else currentComponent.value = null
-// }
 function loadMenuComponent(componentPath) {
   if (!componentPath) { currentComponent.value = null; ElMessage.warning('该节点未配置前端组件，不支持预览'); return }
   const fullPath = '/src/views/' + componentPath
@@ -408,7 +399,7 @@ function openFocusPreviewDialog() {
   previewDialogVisible.value = true
 }
 
-// 用户选择
+// ==================== 用户选择 ====================
 function openSelectUser() { selectUserRef.value?.show() }
 function onUserSelected(user) {
   if (selectedNode.value && selectedNode.value.menuType === 'F') {
@@ -416,7 +407,7 @@ function onUserSelected(user) {
   }
 }
 
-// 提交生成
+// ==================== 提交生成 ====================
 function handleSubmit() {
   formRef.value.validate(valid => {
     if (!valid) return
@@ -437,7 +428,7 @@ function handleSubmit() {
       return { dirMenuId: dir.menuId, workUnitId: dir.workUnitId, operators }
     })
     const dto = {
-      recordId: currentRecord.value.recordId,   // 关键修改：使用 recordId
+      recordId: currentRecord.value.recordId,
       releaseId: form.releaseId,
       planStart: form.planStart,
       planEnd: form.planEnd,

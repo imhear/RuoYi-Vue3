@@ -54,47 +54,15 @@ import { FullScreen, Aim } from '@element-plus/icons-vue'
 
 defineOptions({ name: 'DynamicComponentDialog' })
 
-// 定义对外事件
 const emit = defineEmits(['refresh'])
 
-/**
- * 使用 import.meta.glob 扫描 src/views 下所有 .vue 文件，
- * 生成一个以文件路径为键、加载函数为值的对象。
- * 加载函数返回 Promise，resolve 后得到模块对象（通常包含 default 导出）。
- */
 const modules = import.meta.glob('/src/views/**/*.vue')
 
-/**
- * 对话框可见性
- */
 const visible = ref(false)
-
-/**
- * 对话框是否全屏
- */
 const isFullscreen = ref(false)
-
-/**
- * 组件加载状态：
- * true 表示正在异步加载组件，显示遮罩；
- * false 表示加载完成或失败，隐藏遮罩。
- */
 const componentLoading = ref(false)
-
-/**
- * 当前需要动态渲染的组件定义。
- * 使用 shallowRef 避免对组件定义进行深度响应式包装，提升性能。
- */
 const currentComponent = shallowRef(null)
-
-/**
- * 对话框标题文字
- */
 const currentTitle = ref('操作')
-
-/**
- * 传递给动态组件的 props 对象
- */
 const componentProps = ref({})
 
 /**
@@ -109,25 +77,21 @@ const componentProps = ref({})
  * @param {String} params.backendRoute   后端接口路径
  * @param {String} params.tableName      物理表名
  * @param {String} params.menuName       菜单名称（按钮节点名称）
- * @param {String} params.buttonLabel    按钮标签（用于确认框和按钮文字）
+ * @param {String} params.buttonLabel    按钮标签
+ * @param {String} params.actionType     操作类型（大写：PREVIEW/EDIT/SUBMIT等）
  */
 async function open(params) {
-  // 兼容处理：去除传入 component 路径可能存在的多余前导斜杠
   const componentPath = params.component.replace(/^\/+/, '')
   const fullPath = '/src/views/' + componentPath
-
-  // 从模块映射中获取对应的加载函数
   const loader = modules[fullPath]
 
-  // 如果找不到对应模块，给出警告并终止
   if (!loader) {
     ElMessage.warning('前端组件未找到：' + componentPath)
     return
   }
 
-  // 准备传给动态组件的 props
   componentProps.value = {
-    mode: params.mode || 'approve',   // 新增：默认为 approve，兼容旧逻辑
+    actionType: params.actionType || 'APPROVE',   // 默认为 APPROVE，兼容旧逻辑（实际应传大写）
     recordId: params.recordId,
     menuId: params.menuId,
     businessRecordId: params.businessRecordId,
@@ -138,26 +102,15 @@ async function open(params) {
     buttonLabel: params.buttonLabel || ''
   }
 
-  // 设置标题
   currentTitle.value = `操作 - ${params.buttonLabel || params.operationCode}`
-
-  // 开启加载遮罩
   componentLoading.value = true
-
-  // 显示对话框
   visible.value = true
 
   try {
-    // 异步加载组件模块
     const module = await loader()
-
-    // 兼容模块导出格式：优先取 default，否则取模块本身
     currentComponent.value = module.default || module
-
-    // 加载成功，关闭遮罩
     componentLoading.value = false
   } catch (error) {
-    // 加载失败，关闭遮罩并提示
     componentLoading.value = false
     ElMessage.error('组件加载失败，请重试')
     console.error('动态组件加载失败:', error)
@@ -165,10 +118,7 @@ async function open(params) {
 }
 
 /**
- * 关闭前拦截：用户点击右上角关闭、按 ESC 或点击遮罩层时触发
- * 弹出二次确认，防止误操作关闭正在编辑的表单
- *
- * @param {Function} done 关闭回调，调用后才会真正关闭弹窗
+ * 关闭前拦截：二次确认
  */
 function handleBeforeClose(done) {
   ElMessageBox.confirm('确定要关闭吗？未保存的修改将丢失。', '提示', {
@@ -179,25 +129,19 @@ function handleBeforeClose(done) {
     closeOnClickModal: false,
     closeOnPressEscape: false
   })
-    .then(() => {
-      // 用户点击“确定关闭”
-      done()
-    })
-    .catch(() => {
-      // 用户点击“继续编辑”或右上角 X，不关闭
-      // 注意：catch 中不能调用 done()，否则会关闭
-    })
+    .then(() => done())
+    .catch(() => {})
 }
 
 /**
- * 子组件触发刷新事件时，向外继续触发
+ * 子组件触发刷新事件
  */
 function handleRefresh() {
   emit('refresh')
 }
 
 /**
- * 对话框关闭回调，清理所有状态
+ * 对话框关闭回调
  */
 function handleClosed() {
   currentComponent.value = null

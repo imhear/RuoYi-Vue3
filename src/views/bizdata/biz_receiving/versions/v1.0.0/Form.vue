@@ -200,10 +200,10 @@
       </el-table>
 
       <!-- 底部按钮 -->
-      <div v-if="mode === 'edit'" style="text-align: right; margin-top: 12px;">
+      <div v-if="isEditMode" style="text-align: right; margin-top: 12px;">
         <el-button type="primary" @click="handleEditSubmit">保 存</el-button>
       </div>
-      <div v-if="mode === 'approve'" style="text-align: right; margin-top: 12px;">
+      <div v-if="isApproveMode" style="text-align: right; margin-top: 12px;">
         <el-button type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
       </div>
     </div>
@@ -222,14 +222,14 @@ defineOptions({ name: 'ReceivingForm' })
 
 /**
  * 组件 Props 定义
- * mode: 表单模式（preview / edit / approve）
+ * actionType: 操作类型（大写：PREVIEW/EDIT/SUBMIT等）
  * recordId: 批记录ID（必填）
  * menuId: 按钮节点ID（编辑/审批时必填）
  * businessRecordId: 业务记录ID（编辑/审批/查看真实数据时必填；预览空模板时可不传）
  * 其余为按钮节点相关信息
  */
 const props = defineProps({
-  mode: { type: String, default: 'preview' },
+  actionType: { type: String, default: 'PREVIEW' },
   recordId: { type: Number, required: true },
   menuId: { type: Number, default: null },
   businessRecordId: { type: Number, default: null },
@@ -256,9 +256,9 @@ const editForm = reactive({
   deliveryDate: null
 })
 
-const isEditMode = computed(() => props.mode === 'edit')
-const isApproveMode = computed(() => props.mode === 'approve')
-const isPreviewMode = computed(() => props.mode === 'preview')
+const isEditMode = computed(() => props.actionType === 'EDIT')
+const isPreviewMode = computed(() => props.actionType === 'PREVIEW')
+const isApproveMode = computed(() => !isEditMode.value && !isPreviewMode.value)
 
 /**
  * 组件初始化：
@@ -386,11 +386,28 @@ function beforeSubmitCheck() {
 }
 
 /**
- * 编辑模式：保存修改
+ * 编辑模式：保存修改（带二次确认）
+ * 
+ * 先执行表单校验，校验通过后弹出二次确认框，用户确认后才提交保存请求。
+ * 若用户取消或关闭确认框，则终止操作。
  */
 async function handleEditSubmit() {
+  // 1. 先执行前端校验
   if (!beforeSubmitCheck()) return
 
+  // 2. 弹出二次确认框
+  try {
+    await ElMessageBox.confirm('确认保存当前编辑内容吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+  } catch (error) {
+    // 用户点击取消或关闭确认框，终止保存
+    return
+  }
+
+  // 3. 组装提交数据
   const payload = {
     receivingId: props.businessRecordId,
     receiveBy: editForm.receiveBy,
@@ -402,6 +419,7 @@ async function handleEditSubmit() {
     )
   }
 
+  // 4. 提交保存
   try {
     await updateBizReceiving(props.businessRecordId, props.menuId, payload)
     ElMessage.success('保存成功')

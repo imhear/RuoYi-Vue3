@@ -42,3 +42,11 @@ export function delOperation(operationId) {
     method: 'delete'
   })
 }
+
+// 获取操作码下拉树列表
+export function treeselect() {
+  return request({
+    url: '/fill/operation/treeselect',
+    method: 'get'
+  })
+}

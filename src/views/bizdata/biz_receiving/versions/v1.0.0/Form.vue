@@ -201,9 +201,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getBizReceivingDetail, updateBizReceiving } from '@/api/bizdata/biz_receiving'
+import { getBizReceivingDetail } from '@/api/bizdata/biz_receiving'
 import { getBatch_record } from '@/api/batch/batch_record'
-import { approveBatchRecordMenu, listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
+import { listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
+import request from '@/utils/request'
 import { parseTime } from '@/utils/ruoyi'
 
 defineOptions({ name: 'ReceivingForm' })
@@ -215,6 +216,7 @@ defineOptions({ name: 'ReceivingForm' })
  * menuId: 按钮节点ID（编辑/审批时必填）
  * businessRecordId: 业务记录ID（编辑/审批/查看真实数据时必填；预览空模板时可不传）
  * cMenuId: 当前表单对应的 C 节点 ID（用于获取签名行数据）
+ * backendRoute: 后端接口路径模板（来自操作码配置，需包含占位符）
  * 其余为按钮节点相关信息
  */
 const props = defineProps({
@@ -298,6 +300,39 @@ onMounted(async () => {
     await loadData()
   }
 })
+
+/**
+ * 动态调用后端接口
+ *
+ * 将路径模板中的占位符替换为实际参数值，然后发起请求。
+ * 占位符格式：{参数名}，例如 /batch/batch_record_menu/approve/{menuId}?remark={remark}
+ *
+ * @param {String} routeTemplate 路径模板
+ * @param {Object} pathParams 占位符参数映射，键为占位符名称，值为实际值
+ * @param {Object} data 请求体（POST/PUT 等需要时使用）
+ * @param {String} method 请求方法，默认为 post
+ * @returns {Promise} 请求 Promise
+ */
+async function dynamicRequest(routeTemplate, pathParams, data = {}, method = 'post') {
+  let url = routeTemplate
+  // 替换所有 {key} 占位符
+  Object.keys(pathParams).forEach(key => {
+    const value = pathParams[key] !== undefined && pathParams[key] !== null
+      ? encodeURIComponent(pathParams[key])
+      : ''
+    url = url.replace(new RegExp(`\\{${key}\\}`, 'g'), value)
+  })
+  // 移除未被替换的占位符所在的查询参数（如 ?remark={remark} 且 remark 为空时）
+  url = url.replace(/[?&][^=]*=\{[^}]*\}/g, '')
+  // 若替换后 URL 末尾为空查询符，清理
+  url = url.replace(/[?&]$/, '')
+
+  return request({
+    url,
+    method,
+    data
+  })
+}
 
 /**
  * 加载当前 C 节点下的所有 F 节点（用于签名行数据）
@@ -411,7 +446,7 @@ function beforeSubmitCheck() {
  * 编辑模式：保存修改（带二次确认）
  * 
  * 先执行表单校验，校验通过后弹出二次确认框，用户确认后才提交保存请求。
- * 签名行数据不在此提交，由审批操作在控制表中维护。
+ * 保存接口通过 props.backendRoute 动态拼接，不再硬编码具体 API。
  */
 async function handleEditSubmit() {
   if (!beforeSubmitCheck()) return
@@ -434,7 +469,12 @@ async function handleEditSubmit() {
   }
 
   try {
-    await updateBizReceiving(props.businessRecordId, props.menuId, payload)
+    // 使用后端路由模板动态调用编辑接口
+    const routeTemplate = props.backendRoute || '/bizdata/biz_receiving/edit/{businessRecordId}?menuId={menuId}'
+    await dynamicRequest(routeTemplate, {
+      businessRecordId: props.businessRecordId,
+      menuId: props.menuId
+    }, payload, 'post')
     ElMessage.success('保存成功')
     emit('refresh')
     emit('closed')
@@ -444,26 +484,60 @@ async function handleEditSubmit() {
 }
 
 /**
- * 审批模式：执行审批操作
+ * 审批模式：执行审批/反审操作
+ * 
+ * 根据操作类型判断是否需要强制输入意见（反审操作必须输入原因）。
+ * 审批接口通过 props.backendRoute 动态拼接，默认使用通用审批路径。
  */
 async function handleApproveSubmit() {
+  let remark = ''
+
+  // 反审操作必须输入原因，正向审批可选输入意见
+  if (props.actionType && props.actionType.toUpperCase().startsWith('CANCEL_')) {
+    try {
+      const { value } = await ElMessageBox.prompt('请输入取消原因', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputValidator: (val) => val && val.trim() ? true : '原因不能为空'
+      })
+      remark = value.trim()
+    } catch (error) {
+      return
+    }
+  } else {
+    try {
+      const { value } = await ElMessageBox.prompt(
+        `确认执行「${props.menuName || props.buttonLabel}」操作吗？可输入审批意见`,
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputValue: '',
+          inputPlaceholder: '审批意见（可选）'
+        }
+      )
+      remark = value ? value.trim() : ''
+    } catch (error) {
+      return
+    }
+  }
+
   try {
-    await ElMessageBox.confirm(`确认执行「${props.menuName || props.buttonLabel}」操作吗？`, '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
+    // 使用后端路由模板动态调用审批接口
+    const routeTemplate = props.backendRoute || '/batch/batch_record_menu/approve/{menuId}?remark={remark}'
+    await dynamicRequest(routeTemplate, {
+      menuId: props.menuId,
+      remark
     })
-    await approveBatchRecordMenu(props.menuId, '')
     ElMessage.success('操作成功')
     emit('refresh')
     emit('closed')
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('操作失败')
-    }
+    ElMessage.error('操作失败')
   }
 }
 </script>
+
 
 <style scoped>
 .receiving-form-container {

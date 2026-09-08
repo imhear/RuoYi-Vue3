@@ -122,14 +122,14 @@
           <el-col :span="24">
             <el-form-item label="上级节点">
               <el-tree-select
-  v-model="form.parentId"
-  :data="operationOptions"
-  :props="{ value: 'id', label: 'label', children: 'children' }"
-  value-key="id"
-  placeholder="选择上级节点"
-  check-strictly
-  style="width: 100%"
-/>
+                v-model="form.parentId"
+                :data="operationOptions"
+                :props="{ value: 'operationId', label: 'operationName', children: 'children' }"
+                value-key="operationId"
+                placeholder="选择上级节点"
+                check-strictly
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -258,7 +258,7 @@
 
 <script setup name="Operation">
 import { ref, reactive, computed, nextTick } from 'vue'
-import { listOperation, getOperation, delOperation, addOperation, updateOperation, treeselect } from "@/api/fill/operation"
+import { listOperation, getOperation, delOperation, addOperation, updateOperation, updateOperationSort } from "@/api/fill/operation"
 import { listMenu } from "@/api/system/menu"
 import SelectForm from "@/views/fill/components/SelectForm.vue"
 import FrontendFileSelector from "@/views/fill/components/FrontendFileSelector.vue"
@@ -378,12 +378,14 @@ function getActionTypeLabel(value) {
 
 /**
  * 查询操作码列表（树形）
- * 注意：后端接口需返回全部数据，前端通过 handleTree 构建树形结构
+ * 
+ * 调用 listOperation 获取平铺列表，使用 proxy.handleTree 构建树形结构。
+ * 与系统菜单管理保持一致。
  */
 function getList() {
   loading.value = true
   listOperation(queryParams.value).then(response => {
-    const list = response.data || response.rows || []
+    const list = response.data || []
     operationList.value = proxy.handleTree(list, "operationId")
     recordOriginalOrders(operationList.value)
     loading.value = false
@@ -393,65 +395,32 @@ function getList() {
 /**
  * 查询操作码下拉树结构
  * 
- * 后端接口 /fill/operation/treeselect 已返回完整的树形结构，
- * 前端直接使用该数据，并添加一个虚拟根节点“主类目”。
- * 注意：后端 TreeSelect 序列化字段为 id 和 label，因此根节点也使用相同字段。
+ * 完全参考系统菜单管理：调用 listOperation 获取平铺列表，
+ * 使用 proxy.handleTree 构建树，并添加虚拟根节点“主类目”。
+ * 字段契约使用 operationId / operationName。
  */
 function getTreeselect() {
   operationOptions.value = []
-  treeselect().then(response => {
-    const root = { id: 0, label: "主类目", children: [] }
-    root.children = response.data || []
+  listOperation({}).then(response => {
+    const root = { operationId: 0, operationName: "主类目", children: [] }
+    root.children = proxy.handleTree(response.data || [], "operationId")
     operationOptions.value.push(root)
   })
 }
 
 /**
- * 查询操作码下拉树结构
- */
-// function getTreeselect() {
-//   operationOptions.value = []
-//   treeselect().then(response => {
-//     const root = { operationId: 0, operationName: "主类目", children: [] }
-//     root.children = proxy.handleTree(response.data || [], "operationId")
-//     operationOptions.value.push(root)
-//   })
-// }
-
-/**
  * 加载系统菜单树（用于权限标识选择）
+ * 
+ * 使用官方推荐的 proxy.handleTree 构建树，不再自定义 buildSysMenuTree。
  */
 async function loadSysMenuTree() {
   try {
     const res = await listMenu()
     const list = res.data || []
-    sysMenuTreeData.value = buildSysMenuTree(list)
+    sysMenuTreeData.value = proxy.handleTree(list, "menuId")
   } catch (e) {
     proxy.$modal.msgError('加载系统菜单树失败')
   }
-}
-
-/**
- * 构建系统菜单树（将平铺数据转为树形）
- * @param {Array} list 平铺菜单列表
- * @returns {Array} 树形菜单列表
- */
-function buildSysMenuTree(list) {
-  const map = {}
-  list.forEach(item => {
-    item.children = []
-    map[item.menuId] = item
-  })
-  const tree = []
-  list.forEach(item => {
-    if (item.parentId === 0 || !map[item.parentId]) {
-      tree.push(item)
-    } else {
-      const parent = map[item.parentId]
-      if (parent) parent.children.push(item)
-    }
-  })
-  return tree
 }
 
 /**
@@ -616,7 +585,6 @@ async function handleUpdate(row) {
   await loadSysMenuTree()
   getOperation(row.operationId).then(response => {
     form.value = response.data
-    // 根据 perms 回显系统菜单选中项
     selectedSysMenuId.value = null
     if (form.value.perms) {
       const matched = findNodeByPerms(sysMenuTreeData.value, form.value.perms)

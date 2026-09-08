@@ -3,7 +3,7 @@
     <el-tree
       :data="operationTree"
       node-key="operationId"
-      :props="{ label: 'operationName', children: 'children' }"
+      :props="treeProps"
       highlight-current
       :expand-on-click-node="false"
       @node-click="handleNodeClick"
@@ -26,29 +26,58 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { treeselect } from '@/api/fill/operation'
+import { ref, computed } from 'vue'
+import { listOperation } from '@/api/fill/operation'
+
+defineOptions({ name: 'SelectOperation' })
+
+const { proxy } = getCurrentInstance()
 
 const visible = ref(false)
 const operationTree = ref([])
 const selectedNode = ref(null)
 
+/**
+ * el-tree 的 props 配置
+ * 仅允许选择按钮类型（F）节点，目录和菜单节点禁用
+ */
+const treeProps = computed(() => {
+  return {
+    label: 'operationName',
+    children: 'children',
+    disabled: (data) => data.menuType !== 'F'
+  }
+})
+
+/**
+ * 打开选择操作码对话框
+ * 
+ * 调用 listOperation 获取平铺列表，使用 proxy.handleTree 构建树形结构，
+ * 与操作码列表页保持一致，字段契约使用 operationId / operationName。
+ */
 function show() {
-  treeselect().then(res => {
-    operationTree.value = res.data || []
+  listOperation({}).then(res => {
+    const list = res.data || []
+    operationTree.value = proxy.handleTree(list, 'operationId')
     selectedNode.value = null
     visible.value = true
   })
 }
 
+/**
+ * 树节点点击回调
+ * 由于 treeProps 已禁用非 F 节点，此处仅需记录选中的 F 节点
+ * @param {Object} data 当前点击的节点数据
+ */
 function handleNodeClick(data) {
-  if (data.menuType !== 'F') {
-    selectedNode.value = null
-    return
-  }
+  // 仅 F 节点可点击，直接赋值
   selectedNode.value = data
 }
 
+/**
+ * 确认选择
+ * 将选中的操作码节点通过 emit('ok') 传递给父组件
+ */
 function handleConfirm() {
   if (selectedNode.value) {
     visible.value = false

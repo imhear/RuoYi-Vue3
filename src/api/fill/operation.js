@@ -43,10 +43,11 @@ export function delOperation(operationId) {
   })
 }
 
-// 获取操作码下拉树列表
-export function treeselect() {
+// 保存操作码排序
+export function updateOperationSort(data) {
   return request({
-    url: '/fill/operation/treeselect',
-    method: 'get'
+    url: '/fill/operation/updateSort',
+    method: 'put',
+    data: data
   })
 }

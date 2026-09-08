@@ -184,6 +184,9 @@ const data = reactive({
     releaseCode: undefined,
     schemeName: undefined,
     status: undefined,
+    delFlag: '0',
+    orderByColumn: 'create_time',
+    isAsc: 'desc'
   },
   rules: {
     schemeId: [

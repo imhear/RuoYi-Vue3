@@ -163,6 +163,20 @@ export const dynamicRoutes = [
         meta: { title: '修改生成配置', activeMenu: '/tool/gen' }
       }
     ]
+  },
+  {
+    path: '/system/bizDict-data',
+    component: Layout,
+    hidden: true,
+    permissions: ['system:bizDict:list'],
+    children: [
+      {
+        path: 'index/:dictId(\\d+)',
+        component: () => import('@/views/system/bizDict/data'),
+        name: 'BizDictData',
+        meta: { title: '业务字典数据', activeMenu: '/system/bizDict' }
+      }
+    ]
   }
 ]
 

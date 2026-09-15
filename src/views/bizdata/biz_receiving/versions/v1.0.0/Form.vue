@@ -1,10 +1,17 @@
 <template>
   <div class="receiving-form-container">
+      <!-- 顶部操作按钮（位于表单之上，打印时通过 print 或截图时可直接忽略） -->
+      <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px;margin-bottom: 1px; width: 220px;">
+        <el-button v-if="isEditMode" type="primary" @click="handleEditSubmit">保 存</el-button>
+        <el-button v-if="isApproveMode" type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
+      </div>
+
     <div
       v-if="actionType !== 'PREVIEW' || !loading"
       class="view-container"
       :class="actionType === 'PREVIEW' ? 'preview-mode' : ''"
     >
+      
       <!-- 公司名称 + 编号 -->
       <div style="display: flex; align-items: flex-end; margin-bottom: 0px;">
         <h3 style="flex: 1; text-align: center; margin: 0;">兰树化妆品股份有限公司</h3>
@@ -56,7 +63,7 @@
           <template #default="scope">{{ scope.$index + 1 }}</template>
         </el-table-column>
 
-        <el-table-column label="物料名称" min-width="160" align="center">
+        <el-table-column label="物料名称" min-width="120" align="center">
           <template #default="scope">
             <template v-if="isEditMode">
               <BaseCategorySelect
@@ -71,7 +78,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="规格" width="130" align="center">
+        <el-table-column label="规格" min-width="90" align="center">
           <template #default="scope">
             <template v-if="isEditMode">
               <BaseCategorySelect
@@ -86,7 +93,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="单位" width="110" align="center">
+        <el-table-column label="单位" min-width="60" align="center">
           <template #default="scope">
             <template v-if="isEditMode">
               <BaseCategorySelect
@@ -101,7 +108,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column width="70" align="center">
+        <el-table-column min-width="60" align="center">
           <template #header><div style="line-height: 1.2;">计划<br/>领用量</div></template>
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.requireQty" size="small" /></template>
@@ -110,64 +117,52 @@
         </el-table-column>
 
         <el-table-column label="物料核对" align="center">
-          <el-table-column width="80" align="center">
+          <el-table-column min-width="80" align="center">
             <template #header><div style="line-height: 1.2;">包装<br/>是否完整</div></template>
             <template #default="scope">
-              <template v-if="isEditMode">
-                <span style="white-space: nowrap;">
-                  是<el-checkbox v-model="scope.row.baozhuangFlag" true-value="Y" false-value="N" />
-                  否<el-checkbox v-model="scope.row.baozhuangFlag" true-value="N" false-value="Y" />
-                </span>
-              </template>
-              <template v-else>{{ scope.row.baozhuangFlag === 'Y' ? '是' : scope.row.baozhuangFlag === 'N' ? '否' : '' }}</template>
+              <div class="checkbox-pair">
+                <el-checkbox v-model="scope.row.baozhuangFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+                <el-checkbox v-model="scope.row.baozhuangFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+              </div>
             </template>
           </el-table-column>
-          <el-table-column width="80" align="center">
+          <el-table-column min-width="80" align="center">
             <template #header><div style="line-height: 1.2;">标签<br/>是否正确</div></template>
             <template #default="scope">
-              <template v-if="isEditMode">
-                <span style="white-space: nowrap;">
-                  是<el-checkbox v-model="scope.row.biaoqianFlag" true-value="Y" false-value="N" />
-                  否<el-checkbox v-model="scope.row.biaoqianFlag" true-value="N" false-value="Y" />
-                </span>
-              </template>
-              <template v-else>{{ scope.row.biaoqianFlag === 'Y' ? '是' : scope.row.biaoqianFlag === 'N' ? '否' : '' }}</template>
+              <div class="checkbox-pair">
+                <el-checkbox v-model="scope.row.biaoqianFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+                <el-checkbox v-model="scope.row.biaoqianFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+              </div>
             </template>
           </el-table-column>
           <el-table-column min-width="90" align="center">
             <template #header><div style="line-height: 1.2;">是否无<br/>发霉、无变质、无生<br/>虫、无变色等</div></template>
             <template #default="scope">
-              <template v-if="isEditMode">
-                <span style="white-space: nowrap;">
-                  是<el-checkbox v-model="scope.row.waiguanFlag" true-value="Y" false-value="N" />
-                  否<el-checkbox v-model="scope.row.waiguanFlag" true-value="N" false-value="Y" />
-                </span>
-              </template>
-              <template v-else>{{ scope.row.waiguanFlag === 'Y' ? '是' : scope.row.waiguanFlag === 'N' ? '否' : '' }}</template>
+              <div class="checkbox-pair">
+                <el-checkbox v-model="scope.row.waiguanFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+                <el-checkbox v-model="scope.row.waiguanFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+              </div>
             </template>
           </el-table-column>
-          <el-table-column width="80" align="center">
+          <el-table-column min-width="80" align="center">
             <template #header><div style="line-height: 1.2;">是否已放行</div></template>
             <template #default="scope">
-              <template v-if="isEditMode">
-                <span style="white-space: nowrap;">
-                  是<el-checkbox v-model="scope.row.fangxingFlag" true-value="Y" false-value="N" />
-                  否<el-checkbox v-model="scope.row.fangxingFlag" true-value="N" false-value="Y" />
-                </span>
-              </template>
-              <template v-else>{{ scope.row.fangxingFlag === 'Y' ? '是' : scope.row.fangxingFlag === 'N' ? '否' : '' }}</template>
+              <div class="checkbox-pair">
+                <el-checkbox v-model="scope.row.fangxingFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+                <el-checkbox v-model="scope.row.fangxingFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+              </div>
             </template>
           </el-table-column>
         </el-table-column>
 
-        <el-table-column label="物料批号" width="80" align="center">
+        <el-table-column label="物料批号" min-width="80" align="center">
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.batchNumber" size="small" /></template>
             <template v-else>{{ scope.row.batchNumber || '' }}</template>
           </template>
         </el-table-column>
 
-        <el-table-column width="70" align="center">
+        <el-table-column min-width="60" align="center">
           <template #header><div style="line-height: 1.2;">实际<br/>发料量</div></template>
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.actualQty" size="small" /></template>
@@ -175,7 +170,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="备注" min-width="70" align="center">
+        <el-table-column label="备注" min-width="60" align="center">
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.remark" size="small" /></template>
             <template v-else>{{ scope.row.remark || '' }}</template>
@@ -199,13 +194,6 @@
         </el-table-column>
       </el-table>
 
-      <!-- 底部按钮 -->
-      <div v-if="isEditMode" style="text-align: right; margin-top: 12px;">
-        <el-button type="primary" @click="handleEditSubmit">保 存</el-button>
-      </div>
-      <div v-if="isApproveMode" style="text-align: right; margin-top: 12px;">
-        <el-button type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
-      </div>
     </div>
   </div>
 </template>
@@ -584,10 +572,11 @@ async function handleApproveSubmit() {
 .view-container {
   overflow-x: hidden;
   overflow-y: auto;
-  height: 75vh;
+  height: 85vh;
   box-sizing: border-box;
   color: #000;
 }
+/* 预览模式固定高度，用于生成批记录时展示 A4 样式 */
 .preview-mode {
   height: 201mm;
   overflow: hidden;
@@ -603,9 +592,18 @@ async function handleApproveSubmit() {
 .mid-table :deep(.el-table__header) .cell { white-space: normal; word-break: break-all; line-height: 1.2; }
 .mid-table :deep(.el-table__header-wrapper th),
 .mid-table :deep(.el-table__fixed-header-wrapper th) { height: 30px !important; background-color: #ffffff !important; }
-.mid-table :deep(.el-checkbox) { margin-left: 0px; margin-right: 8px; }
-.mid-table :deep(.el-checkbox__label) { display: none; }
 .view-container :deep(.el-checkbox.is-checked .el-checkbox__inner) { background-color: #409eff; border-color: #409eff; }
 .view-container :deep(.el-checkbox.is-checked .el-checkbox__inner::after) { border-color: #fff; }
 .view-container :deep(.el-checkbox__inner) { border-radius: 2px; }
+/* 单元格内复选框对：flex 横排，gap 表示相邻元素之间的间距，最后一个之后天然无间距 */
+.checkbox-pair {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* 清除 el-checkbox 默认的 margin-right，避免与 gap 叠加 */
+.checkbox-pair :deep(.el-checkbox) {
+  margin-right: 0;
+}
 </style>

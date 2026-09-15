@@ -56,34 +56,46 @@
           <template #default="scope">{{ scope.$index + 1 }}</template>
         </el-table-column>
 
-        <el-table-column label="物料名称" min-width="120" align="center">
+        <el-table-column label="物料名称" min-width="160" align="center">
           <template #default="scope">
             <template v-if="isEditMode">
-              <el-select v-model="scope.row.materialName" size="small" placeholder="请选择" clearable>
-                <el-option v-for="dict in receiving_material" :key="dict.value" :label="dict.label" :value="dict.value" />
-              </el-select>
+              <BaseCategorySelect
+                v-model="scope.row.materialCode"
+                api-url="/basic/material/listByCategory"
+                :category-code="receiving?.materialType"
+                placeholder="请选择物料"
+                @change="(code, name) => handleSelectChange(scope.row, 'material', code, name)"
+              />
             </template>
             <template v-else>{{ scope.row.materialName || '' }}</template>
           </template>
         </el-table-column>
 
-        <el-table-column label="规格" width="90" align="center">
+        <el-table-column label="规格" width="130" align="center">
           <template #default="scope">
             <template v-if="isEditMode">
-              <el-select v-model="scope.row.spec" size="small" placeholder="请选择" clearable>
-                <el-option v-for="dict in receiving_spec" :key="dict.value" :label="dict.label" :value="dict.value" />
-              </el-select>
+              <BaseCategorySelect
+                v-model="scope.row.specCode"
+                api-url="/basic/spec/listByCategory"
+                :category-code="receiving?.materialType"
+                placeholder="请选择规格"
+                @change="(code, name) => handleSelectChange(scope.row, 'spec', code, name)"
+              />
             </template>
             <template v-else>{{ scope.row.spec || '' }}</template>
           </template>
         </el-table-column>
 
-        <el-table-column label="单位" width="70" align="center">
+        <el-table-column label="单位" width="110" align="center">
           <template #default="scope">
             <template v-if="isEditMode">
-              <el-select v-model="scope.row.unit" size="small" placeholder="请选择" clearable>
-                <el-option v-for="dict in pro_unit" :key="dict.value" :label="dict.label" :value="dict.value" />
-              </el-select>
+              <BaseCategorySelect
+                v-model="scope.row.unitCode"
+                api-url="/basic/unit/listByCategory"
+                :category-code="receiving?.materialType"
+                placeholder="请选择单位"
+                @change="(code, name) => handleSelectChange(scope.row, 'unit', code, name)"
+              />
             </template>
             <template v-else>{{ scope.row.unit || '' }}</template>
           </template>
@@ -204,6 +216,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBizReceivingDetail } from '@/api/bizdata/biz_receiving'
 import { getBatch_record } from '@/api/batch/batch_record'
 import { listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
+import BaseCategorySelect from '@/components/BaseCategorySelect/index.vue'
 import request from '@/utils/request'
 import { parseTime } from '@/utils/ruoyi'
 
@@ -233,9 +246,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['closed', 'refresh'])
-
-const { proxy } = getCurrentInstance()
-const { receiving_material, receiving_spec, pro_unit } = proxy.useDict('receiving_material', 'receiving_spec', 'pro_unit')
 
 const loading = ref(false)
 const receiving = ref(null)
@@ -302,6 +312,27 @@ onMounted(async () => {
 })
 
 /**
+ * 处理 BaseCategorySelect 的选中变化
+ * 
+ * 根据类型回填对应的 name 快照字段。
+ * code 已由 v-model 双向绑定，此处只需回填 name。
+ * 
+ * @param {Object} row 当前行数据对象
+ * @param {String} type 字段类型（material / spec / unit）
+ * @param {String} code 选中的 code（可忽略，因 v-model 已绑定）
+ * @param {String} name 选中的 name 快照
+ */
+function handleSelectChange(row, type, code, name) {
+  if (type === 'material') {
+    row.materialName = name || ''
+  } else if (type === 'spec') {
+    row.spec = name || ''
+  } else if (type === 'unit') {
+    row.unit = name || ''
+  }
+}
+
+/**
  * 动态调用后端接口
  *
  * 将路径模板中的占位符替换为实际参数值，然后发起请求。
@@ -315,16 +346,13 @@ onMounted(async () => {
  */
 async function dynamicRequest(routeTemplate, pathParams, data = {}, method = 'post') {
   let url = routeTemplate
-  // 替换所有 {key} 占位符
   Object.keys(pathParams).forEach(key => {
     const value = pathParams[key] !== undefined && pathParams[key] !== null
       ? encodeURIComponent(pathParams[key])
       : ''
     url = url.replace(new RegExp(`\\{${key}\\}`, 'g'), value)
   })
-  // 移除未被替换的占位符所在的查询参数（如 ?remark={remark} 且 remark 为空时）
   url = url.replace(/[?&][^=]*=\{[^}]*\}/g, '')
-  // 若替换后 URL 末尾为空查询符，清理
   url = url.replace(/[?&]$/, '')
 
   return request({
@@ -376,13 +404,23 @@ async function loadData() {
 function initEmptyItems() {
   const rows = []
   for (let i = 0; i < 14; i++) {
-    rows.push({
-      materialName: '', spec: '', unit: '', requireQty: '',
-      baozhuangFlag: null, biaoqianFlag: null, waiguanFlag: null,
-      fangxingFlag: null, batchNumber: '', actualQty: '', remark: ''
-    })
+    rows.push(createEmptyRow())
   }
   displayItems.value = rows
+}
+
+/**
+ * 创建空白行对象
+ */
+function createEmptyRow() {
+  return {
+    materialCode: '', materialName: '',
+    specCode: '', spec: '',
+    unitCode: '', unit: '',
+    requireQty: '',
+    baozhuangFlag: null, biaoqianFlag: null, waiguanFlag: null,
+    fangxingFlag: null, batchNumber: '', actualQty: '', remark: ''
+  }
 }
 
 /**
@@ -392,13 +430,9 @@ function initItems(items) {
   const rows = []
   for (let i = 0; i < 14; i++) {
     if (items[i]) {
-      rows.push({ ...items[i] })
+      rows.push({ ...createEmptyRow(), ...items[i] })
     } else {
-      rows.push({
-        materialName: '', spec: '', unit: '', requireQty: '',
-        baozhuangFlag: null, biaoqianFlag: null, waiguanFlag: null,
-        fangxingFlag: null, batchNumber: '', actualQty: '', remark: ''
-      })
+      rows.push(createEmptyRow())
     }
   }
   displayItems.value = rows
@@ -406,6 +440,12 @@ function initItems(items) {
 
 /**
  * 编辑提交前的校验（仅校验物料明细，不含签名）
+ * 
+ * 校验项：
+ * - 行内至少填写物料、规格、单位之一
+ * - 已填写的行必须连续，不允许中间空行
+ * - 每行的物料、规格、单位、计划领用量、物料批号、实际发料量均为必填
+ * 
  * @returns {Boolean} 校验是否通过
  */
 function beforeSubmitCheck() {
@@ -416,7 +456,7 @@ function beforeSubmitCheck() {
   for (let i = 0; i < displayItems.value.length; i++) {
     const item = displayItems.value[i]
     const rowNum = i + 1
-    const isEmpty = !item.materialName && !item.spec && !item.unit &&
+    const isEmpty = !item.materialCode && !item.specCode && !item.unitCode &&
                     !item.requireQty && !item.baozhuangFlag && !item.biaoqianFlag &&
                     !item.waiguanFlag && !item.fangxingFlag && !item.batchNumber &&
                     !item.actualQty && !item.remark
@@ -428,7 +468,9 @@ function beforeSubmitCheck() {
 
     hasItem = true
     if (foundEmpty) { ElMessage.error(`第${rowNum}行之前存在空行，请连续填写`); return false }
-    if (!item.materialName) { ElMessage.error(`第${rowNum}行物料名称不能为空`); return false }
+    if (!item.materialCode) { ElMessage.error(`第${rowNum}行物料名称不能为空`); return false }
+    if (!item.specCode) { ElMessage.error(`第${rowNum}行规格不能为空`); return false }
+    if (!item.unitCode) { ElMessage.error(`第${rowNum}行单位不能为空`); return false }
     if (!item.requireQty || !numberPattern.test(String(item.requireQty).trim()) || Number(item.requireQty) <= 0) {
       ElMessage.error(`第${rowNum}行计划领用量必须为正数`); return false
     }
@@ -464,12 +506,11 @@ async function handleEditSubmit() {
   const payload = {
     receivingId: props.businessRecordId,
     itemList: displayItems.value.filter(item =>
-      item.materialName || item.spec || item.unit || item.batchNumber || item.remark
+      item.materialCode || item.specCode || item.unitCode || item.batchNumber || item.remark
     )
   }
 
   try {
-    // 使用后端路由模板动态调用编辑接口
     const routeTemplate = props.backendRoute || '/bizdata/biz_receiving/edit/{businessRecordId}?menuId={menuId}'
     await dynamicRequest(routeTemplate, {
       businessRecordId: props.businessRecordId,
@@ -492,7 +533,6 @@ async function handleEditSubmit() {
 async function handleApproveSubmit() {
   let remark = ''
 
-  // 反审操作必须输入原因，正向审批可选输入意见
   if (props.actionType && props.actionType.toUpperCase().startsWith('CANCEL_')) {
     try {
       const { value } = await ElMessageBox.prompt('请输入取消原因', '提示', {
@@ -523,7 +563,6 @@ async function handleApproveSubmit() {
   }
 
   try {
-    // 使用后端路由模板动态调用审批接口
     const routeTemplate = props.backendRoute || '/batch/batch_record_menu/approve/{menuId}?remark={remark}'
     await dynamicRequest(routeTemplate, {
       menuId: props.menuId,
@@ -538,7 +577,6 @@ async function handleApproveSubmit() {
 }
 </script>
 
-
 <style scoped>
 .receiving-form-container {
   padding: 8px;
@@ -550,7 +588,6 @@ async function handleApproveSubmit() {
   box-sizing: border-box;
   color: #000;
 }
-/* 预览模式固定高度，用于生成批记录时展示 A4 样式 */
 .preview-mode {
   height: 201mm;
   overflow: hidden;

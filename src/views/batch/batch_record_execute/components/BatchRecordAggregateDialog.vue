@@ -125,6 +125,7 @@
                         <el-button
                           v-for="btn in getCardButtons(card)"
                           :key="btn.menuId"
+                          v-hasPermi="[btn.perms]"
                           size="small"
                           type="primary"
                           @click="handleActionClick(btn)"
@@ -161,6 +162,7 @@
                         <el-button
                           v-for="btn in getCardButtons(card)"
                           :key="btn.menuId"
+                          v-hasPermi="[btn.perms]"
                           size="small"
                           type="primary"
                           @click="handleActionClick(btn)"

@@ -73,9 +73,9 @@
       <el-row :gutter="20">
         <el-col :span="8" v-for="dir in dirSelections" :key="dir.menuId">
           <el-form label-width="90px">
-            <el-form-item :label="dir.menuName">
+                        <el-form-item :label="dir.menuName">
               <el-select v-model="dir.workUnitId" clearable placeholder="请选择工作单元" style="width: 100%" @change="handleWorkUnitChange(dir)">
-                <el-option v-for="wu in workUnitList" :key="wu.workUnitId" :label="wu.workUnitName" :value="wu.workUnitId" />
+                <el-option v-for="wu in workUnitList" :key="wu.id" :label="wu.name" :value="wu.id" />
               </el-select>
             </el-form-item>
           </el-form>
@@ -214,8 +214,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Folder, Document, Operation, FullScreen, Aim, Close } from '@element-plus/icons-vue'
 import { listScheme_release } from "@/api/fill/scheme_release"
 import { listScheme_release_menu } from "@/api/fill/scheme_release_menu"
-import { listWork_unit } from "@/api/fill/work_unit"
-import { listWork_unit_operator } from "@/api/fill/work_unit_operator"
+import { listWork_unit, getWork_unit } from "@/api/basic/work_unit"
 import { generateBatchRecord } from "@/api/batch/batch_record"
 import SelectUser from '@/views/fill/components/SelectUser.vue'
 
@@ -320,18 +319,52 @@ function buildDirSelections(menus) {
 }
 
 // ==================== 工作单元与操作人 ====================
+/**
+ * 工作单元切换回调
+ * 
+ * 行为：
+ * 1. 从已加载的 workUnitList 中查找工作单元名称，回填 dir.workUnitName
+ * 2. 调用 getWork_unit(id) 一次性获取主表 + 子表（主子表模式）
+ * 3. 将子表中的操作人映射成 { operationCode: operator } 结构，回填到菜单树的 F 节点
+ * 4. 若用户清空选择（dir.workUnitId 为 null），清空该目录下所有 F 节点的 operator
+ * 
+ * @param {Object} dir 当前一级目录对象（含 menuId、workUnitId 等字段）
+ */
 function handleWorkUnitChange(dir) {
-  const workUnit = workUnitList.value.find(w => w.workUnitId === dir.workUnitId)
-  dir.workUnitName = workUnit ? workUnit.workUnitName : ''
-  if (!dir.workUnitId) { clearOperatorsUnderDir(dir.menuId); return }
-  listWork_unit_operator({ workUnitId: dir.workUnitId, pageNum: 1, pageSize: 1000 })
-    .then(res => {
-      const operators = res.rows || res.data || []
-      const opMap = {}
-      operators.forEach(op => { opMap[op.operationCode] = op.operator })
-      fillOperatorsUnderDir(dir.menuId, opMap)
+  // 1. 查找名称并回填（用于树节点显示）
+  const workUnit = workUnitList.value.find(w => w.id === dir.workUnitId)
+  dir.workUnitName = workUnit ? workUnit.name : ''
+
+  // 2. 清空选择时，清空该目录下所有 F 节点的 operator
+  if (!dir.workUnitId) {
+    clearOperatorsUnderDir(dir.menuId)
+    return
+  }
+
+  // 3. 一次性获取主表 + 子表（主子表模式），子表数据在 basicWorkUnitOperatorList 字段中
+  getWork_unit(dir.workUnitId).then(res => {
+    const operators = res.data?.basicWorkUnitOperatorList || []
+    const opMap = {}
+    operators.forEach(op => {
+      opMap[op.operationCode] = op.operator
     })
+    // 4. 回填到菜单树的 F 节点
+    fillOperatorsUnderDir(dir.menuId, opMap)
+  })
 }
+
+// function handleWorkUnitChange(dir) {
+//   const workUnit = workUnitList.value.find(w => w.workUnitId === dir.workUnitId)
+//   dir.workUnitName = workUnit ? workUnit.workUnitName : ''
+//   if (!dir.workUnitId) { clearOperatorsUnderDir(dir.menuId); return }
+//   listWork_unit_operator({ workUnitId: dir.workUnitId, pageNum: 1, pageSize: 1000 })
+//     .then(res => {
+//       const operators = res.rows || res.data || []
+//       const opMap = {}
+//       operators.forEach(op => { opMap[op.operationCode] = op.operator })
+//       fillOperatorsUnderDir(dir.menuId, opMap)
+//     })
+// }
 function clearOperatorsUnderDir(dirMenuId) {
   const dirNode = findNode(menuTree.value, dirMenuId)
   if (!dirNode) return

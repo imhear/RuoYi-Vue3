@@ -196,6 +196,7 @@ import { ElMessage } from 'element-plus'
 import { FullScreen, Aim } from '@element-plus/icons-vue'
 import { listBatchRecordMenuTree } from '@/api/batch/batch_record_menu'
 import { listBatchRecordLogByRecordId } from '@/api/batch/batch_record_log'
+import { getMyWorkUnits } from '@/api/basic/work_unit'
 import DynamicComponentDialog from './DynamicComponentDialog.vue'
 
 defineOptions({ name: 'BatchRecordAggregateDialog' })
@@ -216,6 +217,21 @@ const dynamicDialogRef = ref(null)         // 动态组件弹窗引用
 // ==================== 日志相关状态 ====================
 const logList = ref([])                    // 当前批记录的全部操作日志
 const selectedCard = ref(null)             // 当前选中的卡片对象（C节点），null表示未选择
+
+// ==================== 权限相关状态 ====================
+/**
+ * 当前登录用户可操作的工作单元编码列表
+ * 
+ * 由 getMyWorkUnits 接口加载，用于对聚合入口的卡片按钮进行"工作单元级"数据权限过滤。
+ * 非当前用户工作单元下的操作按钮将被隐藏（查看按钮 PREVIEW 豁免）。
+ * 
+ * 数据来源：
+ * - 后端接口 getMyWorkUnits 查询 basic_work_unit_operator 中 operator = 当前登录用户名 AND status = '0' 的记录
+ * - 提取去重后的 workUnitId，关联 basic_work_unit 获取 code 列表
+ * 
+ * 初始为空数组，加载失败也降级为空数组（严格模式，非查看按钮全部隐藏）。
+ */
+const myWorkUnitCodes = ref([])
 
 /**
  * 过滤后的日志列表：
@@ -247,6 +263,14 @@ const allCards = computed(() => {
 
 /**
  * 打开聚合入口
+ * 
+ * 并行加载三类数据：
+ * 1. 批记录菜单树（含 M/C/F 节点结构）
+ * 2. 操作日志（用于卡片下方"最后编辑"及左侧日志面板）
+ * 3. 当前用户可操作的工作单元编码列表（用于双重认证的"数据权限"过滤）
+ * 
+ * 三个请求互不依赖，可并发执行以缩短加载时间。
+ * 
  * @param {Number} id 批记录ID
  * @param {String} orderNum 工单号
  */
@@ -257,8 +281,7 @@ async function open(id, orderNum) {
   activeWorkshop.value = 'all'
   activeForm.value = 'all'
   selectedCard.value = null
-  await loadMenus()
-  await loadLogs()
+  await Promise.all([loadMenus(), loadLogs(), loadMyWorkUnitCodes()])
 }
 
 /**
@@ -285,6 +308,26 @@ async function loadLogs() {
   } catch (error) {
     logList.value = []
     ElMessage.warning('加载操作日志失败')
+  }
+}
+
+/**
+ * 加载当前登录用户可操作的工作单元编码列表
+ * 
+ * 用于对聚合入口的卡片按钮进行"工作单元级"数据权限过滤。
+ * 加载失败时降级为空数组，此时非查看按钮将全部隐藏（严格模式）。
+ * 
+ * 容错策略：
+ * - 不弹出错误提示，避免干扰用户体验
+ * - 仅在控制台记录错误，便于排查
+ */
+async function loadMyWorkUnitCodes() {
+  try {
+    const res = await getMyWorkUnits()
+    myWorkUnitCodes.value = res.data || []
+  } catch (error) {
+    myWorkUnitCodes.value = []
+    console.error('加载当前用户工作单元列表失败', error)
   }
 }
 
@@ -322,9 +365,39 @@ function getWorkshopCards(workshopId, tabName) {
 
 /**
  * 获取卡片上应显示的按钮（F节点）
+ * 
+ * 双重过滤：
+ * 1. 基础条件：menuType='F'、parentId 匹配、operationVisible='1'
+ * 2. 工作单元过滤（卡片级数据权限）：
+ *    - 若 actionType='PREVIEW'（查看按钮），豁免此规则，任何登录用户均可查看
+ *    - 其他按钮：要求 card.workUnitCode 在 myWorkUnitCodes 中，否则隐藏
+ * 
+ * 双重认证架构：
+ * - 第一道关卡（功能权限）：v-hasPermi 处理按钮级 perms 校验，在模板层控制
+ * - 第二道关卡（数据权限）：此方法处理工作单元级过滤，在数据层控制
+ * - 两者是"与"关系，任一不满足则按钮不显示
+ * 
+ * 注意事项：
+ * - 若 card.workUnitCode 为空（历史数据未回填），非查看按钮将被全部隐藏
+ * - 若 myWorkUnitCodes 加载失败或为空，非查看按钮也将被全部隐藏（严格模式）
+ * 
+ * @param {Object} card C节点对象
+ * @returns {Array} 通过过滤条件的按钮列表
  */
 function getCardButtons(card) {
-  return menuList.value.filter(m => m.menuType === 'F' && m.parentId === card.menuId && m.operationVisible === '1')
+  return menuList.value.filter(m => {
+    // 基础条件：必须是当前卡片的 F 子节点且配置为可见
+    if (m.menuType !== 'F' || m.parentId !== card.menuId || m.operationVisible !== '1') {
+      return false
+    }
+    // 工作单元过滤：查看按钮（PREVIEW）豁免，其他按钮要求工作单元匹配
+    if (m.actionType !== 'PREVIEW') {
+      if (!card.workUnitCode || !myWorkUnitCodes.value.includes(card.workUnitCode)) {
+        return false
+      }
+    }
+    return true
+  })
 }
 
 /**
@@ -425,14 +498,21 @@ function handleActionClick(btn) {
 
 /**
  * 动态组件内操作成功后触发刷新
+ * 
+ * 操作成功后可能涉及工作单元权限变化（如首次提交后成为操作人），
+ * 因此同时刷新菜单树、日志和工作单元列表。
  */
 function handleRefresh() {
   loadMenus()
   loadLogs()
+  loadMyWorkUnitCodes()
 }
 
 /**
  * 对话框关闭回调
+ * 
+ * 清空所有状态，避免下次打开时残留数据。
+ * 特别注意清空 myWorkUnitCodes，防止上一个批记录的权限数据污染下一次会话。
  */
 function handleClosed() {
   recordId.value = null
@@ -441,6 +521,7 @@ function handleClosed() {
   selectedCard.value = null
   activeWorkshop.value = 'all'
   activeForm.value = 'all'
+  myWorkUnitCodes.value = []
 }
 
 defineExpose({ open })

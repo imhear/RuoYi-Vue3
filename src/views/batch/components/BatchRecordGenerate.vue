@@ -1,5 +1,4 @@
 <template>
-  <!-- 与 BatchPlanGenerate.vue 相同，仅内部变量调整 -->
   <el-dialog
     v-model="visible"
     title="生成批记录"
@@ -17,8 +16,7 @@
         <span style="flex: 1; font-size: 18px; font-weight: bold;">生成批记录</span>
         <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
           <el-icon style="cursor: pointer; font-size: 18px;" @click="isFullscreen = !isFullscreen">
-            <FullScreen v-if="!isFullscreen" />
-            <Aim v-else />
+            <FullScreen v-if="!isFullscreen" /><Aim v-else />
           </el-icon>
         </el-tooltip>
       </div>
@@ -41,39 +39,24 @@
         </el-col>
         <el-col :span="8">
           <el-form-item label="计划开始" prop="planStart">
-            <el-date-picker
-              v-model="form.planStart"
-              type="date"
-              value-format="YYYY-MM-DD"
-              placeholder="请选择计划开始"
-              style="width: 100%"
-            />
+            <el-date-picker v-model="form.planStart" type="date" value-format="YYYY-MM-DD" placeholder="请选择计划开始" style="width: 100%" />
           </el-form-item>
         </el-col>
         <el-col :span="8">
           <el-form-item label="计划结束" prop="planEnd">
-            <el-date-picker
-              v-model="form.planEnd"
-              type="date"
-              value-format="YYYY-MM-DD"
-              placeholder="请选择计划结束"
-              style="width: 100%"
-            />
+            <el-date-picker v-model="form.planEnd" type="date" value-format="YYYY-MM-DD" placeholder="请选择计划结束" style="width: 100%" />
           </el-form-item>
         </el-col>
       </el-row>
     </el-form>
 
-    <!-- 其余部分与 BatchPlanGenerate.vue 完全一致，包括工作单元分配、操作人配置、动态组件加载、专注预览等 -->
-    <!-- 为避免重复，此处省略，请将原有模板内容复制，注意修改组件名 -->
     <el-divider content-position="left">工作单元分配</el-divider>
-    <!-- 工作单元下拉框 -->
     <div v-loading="loadingMenus" class="workunit-section">
       <el-empty v-if="dirSelections.length === 0" description="请先选择发布方案" />
       <el-row :gutter="20">
         <el-col :span="8" v-for="dir in dirSelections" :key="dir.menuId">
           <el-form label-width="90px">
-                        <el-form-item :label="dir.menuName">
+            <el-form-item :label="dir.menuName">
               <el-select v-model="dir.workUnitId" clearable placeholder="请选择工作单元" style="width: 100%" @change="handleWorkUnitChange(dir)">
                 <el-option v-for="wu in workUnitList" :key="wu.id" :label="wu.name" :value="wu.id" />
               </el-select>
@@ -88,9 +71,9 @@
       </div>
     </div>
 
-    <!-- 操作人配置（左右分栏） -->
+    <!-- 表单预览与节点详情 -->
     <template v-if="showPreview && form.releaseId">
-      <el-divider content-position="left">操作人配置</el-divider>
+      <el-divider content-position="left">表单预览</el-divider>
       <el-row :gutter="16">
         <!-- 左侧：方案目录树 -->
         <el-col :span="7">
@@ -110,9 +93,6 @@
                       <template v-if="data.menuType === 'M'">
                         - <span :style="{ color: data.workUnitName ? 'inherit' : 'red' }">{{ data.workUnitName || '未设置' }}</span>
                       </template>
-                      <template v-if="data.menuType === 'F'">
-                        - <span :style="{ color: data.operator ? 'inherit' : 'red' }">{{ data.operator || '未设置' }}</span>
-                      </template>
                     </span>
                   </div>
                 </template>
@@ -120,7 +100,7 @@
             </div>
           </div>
         </el-col>
-        <!-- 右侧：节点详情（与之前一致） -->
+        <!-- 右侧：节点详情 -->
         <el-col :span="17">
           <div class="detail-panel">
             <div class="panel-header">
@@ -128,7 +108,7 @@
               <el-button v-if="selectedNode && selectedNode.menuType === 'C'" link type="primary" @click="openFocusPreviewDialog">专注预览</el-button>
             </div>
             <div class="detail-body">
-              <!-- 目录节点 -->
+              <!-- 目录节点：展示子节点列表 -->
               <div v-if="selectedNode && selectedNode.menuType === 'M'">
                 <el-table :data="getChildMenus(selectedNode)" border>
                   <el-table-column label="菜单名称" prop="menuName" />
@@ -136,49 +116,26 @@
                   <el-table-column label="前端组件" prop="component" show-overflow-tooltip />
                 </el-table>
               </div>
-              <!-- 菜单节点 -->
+              <!-- 菜单节点：提示点击查看按钮 -->
               <div v-else-if="selectedNode && selectedNode.menuType === 'C'">
                 <el-empty description="请点击该节点下的“查看”按钮预览空表单" />
               </div>
               <!-- 按钮节点 -->
               <div v-else-if="selectedNode && selectedNode.menuType === 'F'">
-                <!-- 预览按钮 -->
+                <!-- 预览按钮：加载动态组件 -->
                 <div v-if="selectedNode.actionType === 'PREVIEW' && currentComponent" class="component-container">
                   <component :is="currentComponent" v-bind="componentProps" />
                 </div>
                 <el-empty v-else-if="selectedNode.actionType === 'PREVIEW'" description="组件未加载" />
-                <!-- 其他按钮：操作人配置 -->
-                <el-form v-else label-width="80px">
-                  <el-form-item label="操作人">
-                    <el-input v-model="selectedNode.operator" placeholder="请选择用户" readonly>
-                      <template #append><el-button icon="Search" @click="openSelectUser" /></template>
-                    </el-input>
-                  </el-form-item>
-                  <el-form-item label="操作码"><el-tag>{{ selectedNode.operationCode }}</el-tag></el-form-item>
-                  <el-form-item label="组件路径"><span>{{ selectedNode.component || '-' }}</span></el-form-item>
-                  <el-form-item label="后端接口"><span>{{ selectedNode.backendRoute || '-' }}</span></el-form-item>
-                </el-form>
+                <!-- 其他按钮：仅展示配置信息（不再配置操作人） -->
+                <el-descriptions v-else :column="1" border>
+                  <el-descriptions-item label="操作码">{{ selectedNode.operationCode || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="按钮标签">{{ selectedNode.buttonLabel || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="组件路径">{{ selectedNode.component || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="后端接口">{{ selectedNode.backendRoute || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="权限标识">{{ selectedNode.perms || '-' }}</el-descriptions-item>
+                </el-descriptions>
               </div>
-              <!-- 菜单节点 -->
-              <!-- <div v-else-if="selectedNode && selectedNode.menuType === 'C'">
-                <div v-if="currentComponent" class="component-container">
-                  <component :is="currentComponent" />
-                </div>
-                <el-empty v-else description="该节点不支持预览（缺少前端组件）" />
-              </div> -->
-              <!-- 按钮节点 -->
-              <!-- <div v-else-if="selectedNode && selectedNode.menuType === 'F'">
-                <el-form label-width="80px">
-                  <el-form-item label="操作人">
-                    <el-input v-model="selectedNode.operator" placeholder="请选择用户" readonly>
-                      <template #append><el-button icon="Search" @click="openSelectUser" /></template>
-                    </el-input>
-                  </el-form-item>
-                  <el-form-item label="操作码"><el-tag>{{ selectedNode.operationCode }}</el-tag></el-form-item>
-                  <el-form-item label="组件路径"><span>{{ selectedNode.component || '-' }}</span></el-form-item>
-                  <el-form-item label="后端接口"><span>{{ selectedNode.backendRoute || '-' }}</span></el-form-item>
-                </el-form>
-              </div> -->
               <el-empty v-else description="请选择左侧节点查看详情" />
             </div>
           </div>
@@ -203,9 +160,6 @@
     <div v-if="currentComponent" class="focus-component-wrapper"><component :is="currentComponent" /></div>
     <el-empty v-else description="该节点不支持预览" />
   </el-dialog>
-
-  <!-- 独立用户选择组件 -->
-  <SelectUser ref="selectUserRef" @ok="onUserSelected" />
 </template>
 
 <script setup>
@@ -214,9 +168,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Folder, Document, Operation, FullScreen, Aim, Close } from '@element-plus/icons-vue'
 import { listScheme_release } from "@/api/fill/scheme_release"
 import { listScheme_release_menu } from "@/api/fill/scheme_release_menu"
-import { listWork_unit, getWork_unit } from "@/api/basic/work_unit"
+import { listWork_unit } from "@/api/basic/work_unit"
 import { generateBatchRecord } from "@/api/batch/batch_record"
-import SelectUser from '@/views/fill/components/SelectUser.vue'
 
 defineOptions({ name: 'BatchRecordGenerate' })
 
@@ -234,9 +187,8 @@ const menuTree = ref([])
 const dirSelections = ref([])
 const selectedNode = ref(null)
 const currentComponent = shallowRef(null)
-const componentProps = ref({})               // 新增：传给动态组件的 props
+const componentProps = ref({})
 const formRef = ref(null)
-const selectUserRef = ref(null)
 
 const form = reactive({ releaseId: null, planStart: null, planEnd: null })
 const rules = {
@@ -303,7 +255,6 @@ function buildMenuTree(menus) {
   const map = {}
   menus.forEach(item => {
     item.children = []
-    if (item.menuType === 'F') item.operator = ''
     if (item.menuType === 'M') { item.workUnitId = null; item.workUnitName = '' }
     map[item.menuId] = item
   })
@@ -318,82 +269,19 @@ function buildDirSelections(menus) {
   dirSelections.value = menus.filter(m => m.menuType === 'M' && m.parentId === 0)
 }
 
-// ==================== 工作单元与操作人 ====================
+// ==================== 工作单元切换 ====================
 /**
  * 工作单元切换回调
  * 
- * 行为：
+ * 简化后行为（与 basic_work_unit_operator 表删除后对齐）：
  * 1. 从已加载的 workUnitList 中查找工作单元名称，回填 dir.workUnitName
- * 2. 调用 getWork_unit(id) 一次性获取主表 + 子表（主子表模式）
- * 3. 将子表中的操作人映射成 { operationCode: operator } 结构，回填到菜单树的 F 节点
- * 4. 若用户清空选择（dir.workUnitId 为 null），清空该目录下所有 F 节点的 operator
+ * 2. 不再预设操作人（操作人由后续审批时填充当前登录用户）
  * 
- * @param {Object} dir 当前一级目录对象（含 menuId、workUnitId 等字段）
+ * @param {Object} dir 当前一级目录对象
  */
 function handleWorkUnitChange(dir) {
-  // 1. 查找名称并回填（用于树节点显示）
   const workUnit = workUnitList.value.find(w => w.id === dir.workUnitId)
   dir.workUnitName = workUnit ? workUnit.name : ''
-
-  // 2. 清空选择时，清空该目录下所有 F 节点的 operator
-  if (!dir.workUnitId) {
-    clearOperatorsUnderDir(dir.menuId)
-    return
-  }
-
-  // 3. 一次性获取主表 + 子表（主子表模式），子表数据在 basicWorkUnitOperatorList 字段中
-  getWork_unit(dir.workUnitId).then(res => {
-    const operators = res.data?.basicWorkUnitOperatorList || []
-    const opMap = {}
-    operators.forEach(op => {
-      opMap[op.operationCode] = op.operator
-    })
-    // 4. 回填到菜单树的 F 节点
-    fillOperatorsUnderDir(dir.menuId, opMap)
-  })
-}
-
-// function handleWorkUnitChange(dir) {
-//   const workUnit = workUnitList.value.find(w => w.workUnitId === dir.workUnitId)
-//   dir.workUnitName = workUnit ? workUnit.workUnitName : ''
-//   if (!dir.workUnitId) { clearOperatorsUnderDir(dir.menuId); return }
-//   listWork_unit_operator({ workUnitId: dir.workUnitId, pageNum: 1, pageSize: 1000 })
-//     .then(res => {
-//       const operators = res.rows || res.data || []
-//       const opMap = {}
-//       operators.forEach(op => { opMap[op.operationCode] = op.operator })
-//       fillOperatorsUnderDir(dir.menuId, opMap)
-//     })
-// }
-function clearOperatorsUnderDir(dirMenuId) {
-  const dirNode = findNode(menuTree.value, dirMenuId)
-  if (!dirNode) return
-  dirNode.children.forEach(menu => {
-    if (menu.menuType === 'C') {
-      (menu.children || []).forEach(btn => { if (btn.menuType === 'F') btn.operator = '' })
-    }
-  })
-}
-function fillOperatorsUnderDir(dirMenuId, opMap) {
-  const dirNode = findNode(menuTree.value, dirMenuId)
-  if (!dirNode) return
-  dirNode.children.forEach(menu => {
-    if (menu.menuType === 'C') {
-      (menu.children || []).forEach(btn => {
-        if (btn.menuType === 'F' && opMap[btn.operationCode] !== undefined) btn.operator = opMap[btn.operationCode]
-      })
-    }
-  })
-}
-function findNode(nodes, menuId) {
-  for (const node of nodes) {
-    if (node.menuId === menuId) return node
-    if (node.children && node.children.length > 0) {
-      const found = findNode(node.children, menuId)
-      if (found) return found
-    }
-  }
-  return null
 }
 
 // ==================== 预览与动态组件 ====================
@@ -413,7 +301,7 @@ function handleNodeClick(data) {
   } else if (data.menuType === 'F') {
     if (data.actionType === 'PREVIEW') {
       loadMenuComponent(data.component)
-      componentProps.value = { actionType: 'PREVIEW' }   // 直接传大写 actionType
+      componentProps.value = { actionType: 'PREVIEW' }
     } else {
       currentComponent.value = null
       componentProps.value = {}
@@ -432,34 +320,18 @@ function openFocusPreviewDialog() {
   previewDialogVisible.value = true
 }
 
-// ==================== 用户选择 ====================
-function openSelectUser() { selectUserRef.value?.show() }
-function onUserSelected(user) {
-  if (selectedNode.value && selectedNode.value.menuType === 'F') {
-    selectedNode.value.operator = user.userName || user.nickName || ''
-  }
-}
-
 // ==================== 提交生成 ====================
 function handleSubmit() {
   formRef.value.validate(valid => {
     if (!valid) return
     const selectedDirs = dirSelections.value.filter(d => d.workUnitId)
     if (selectedDirs.length === 0) { ElMessage.warning('请至少选择一个工作单元'); return }
-    const workshopItems = selectedDirs.map(dir => {
-      const dirNode = findNode(menuTree.value, dir.menuId)
-      const operators = []
-      if (dirNode) {
-        dirNode.children.forEach(menu => {
-          if (menu.menuType === 'C') {
-            (menu.children || []).forEach(btn => {
-              if (btn.menuType === 'F') operators.push({ operationCode: btn.operationCode, operator: btn.operator || '' })
-            })
-          }
-        })
-      }
-      return { dirMenuId: dir.menuId, workUnitId: dir.workUnitId, operators }
-    })
+    // 简化后：workshopItems 只传 dirMenuId 和 workUnitId，不再传 operators
+    const workshopItems = selectedDirs.map(dir => ({
+      dirMenuId: dir.menuId,
+      workUnitId: dir.workUnitId,
+      operators: []
+    }))
     const dto = {
       recordId: currentRecord.value.recordId,
       releaseId: form.releaseId,
@@ -479,86 +351,17 @@ defineExpose({ open })
 </script>
 
 <style scoped>
-/* ===== 工作单元分配区域 ===== */
-.workunit-section {
-  margin-bottom: 16px;
-}
-
-/* ===== 左右面板通用边框 ===== */
-.tree-panel,
-.detail-panel {
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-/* ===== 面板标题栏 ===== */
-.panel-header {
-  background: #f5f7fa;
-  padding: 10px 16px;
-  font-weight: 600;
-  border-bottom: 1px solid #e4e7ed;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* ===== 左侧树面板 ===== */
-.tree-panel {
-  height: 500px;
-}
-
-.tree-body {
-  height: calc(100% - 41px);
-  overflow-y: auto;
-  padding: 8px;
-}
-
-/* ===== 右侧详情面板 ===== */
-.detail-panel {
-  height: 500px;
-}
-
-.detail-body {
-  padding: 12px;
-  height: calc(100% - 41px);
-  overflow-y: auto;
-}
-
-/* ===== 树节点 ===== */
-.tree-node {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  width: 100%;
-}
-
-.node-icon {
-  font-size: 16px;
-  color: #909399;
-  flex-shrink: 0;
-}
-
-.node-label {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ===== 动态组件容器 ===== */
-.component-container {
-  min-height: 200px;
-  overflow: auto;
-}
-
-/* ===== 专注预览容器 ===== */
-.focus-component-wrapper {
-  height: 100%;
-  overflow: auto;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  padding: 8px;
-}
+/* 保留原有样式 */
+.workunit-section { margin-bottom: 16px; }
+.tree-panel, .detail-panel { border: 1px solid #e4e7ed; border-radius: 6px; overflow: hidden; }
+.panel-header { background: #f5f7fa; padding: 10px 16px; font-weight: 600; border-bottom: 1px solid #e4e7ed; display: flex; justify-content: space-between; align-items: center; }
+.tree-panel { height: 500px; }
+.tree-body { height: calc(100% - 41px); overflow-y: auto; padding: 8px; }
+.detail-panel { height: 500px; }
+.detail-body { padding: 12px; height: calc(100% - 41px); overflow-y: auto; }
+.tree-node { display: flex; align-items: center; gap: 6px; font-size: 14px; width: 100%; }
+.node-icon { font-size: 16px; color: #909399; flex-shrink: 0; }
+.node-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.component-container { min-height: 200px; overflow: auto; }
+.focus-component-wrapper { height: 100%; overflow: auto; border: 1px solid #e4e7ed; border-radius: 4px; padding: 8px; }
 </style>

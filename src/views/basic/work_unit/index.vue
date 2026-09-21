@@ -104,9 +104,10 @@
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="280">
         <template #default="scope">
           <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['basic:work_unit:edit']">修改</el-button>
+          <el-button link type="primary" icon="Check" @click="handleAuthRole(scope.row)" v-hasPermi="['basic:work_unit:edit']">分配角色</el-button>
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['basic:work_unit:remove']">删除</el-button>
         </template>
       </el-table-column>
@@ -240,7 +241,7 @@
 
 <script setup name="Work_unit">
 import { listWork_unit, getWork_unit, delWork_unit, addWork_unit, updateWork_unit } from "@/api/basic/work_unit"
-import SelectOperation from '@/views/fill/components/SelectOperation.vue'
+import SelectOperation from '@/views/basic/components/SelectOperation.vue'
 import SelectUser from '@/views/fill/components/SelectUser.vue'
 
 const { proxy } = getCurrentInstance()
@@ -474,6 +475,18 @@ function handleDelete(row) {
 }
 
 /**
+ * 分配角色按钮操作
+ * 
+ * 跳转到独立的角色分配子页面（与若依官方用户管理"分配角色"的交互一致）。
+ * 通过 $tab.openPage 打开新标签页，在子页面中展示角色列表并勾选。
+ * 
+ * @param {Object} row 当前工作单元行数据
+ */
+function handleAuthRole(row) {
+  proxy.$tab.openPage('分配角色', '/basic/work_unit-auth/role/' + row.id)
+}
+
+/**
  * 子表（作业人员）添加按钮操作
  * 
  * 向子表列表末尾追加一个空白行对象，所有字段初始化为 undefined，
@@ -534,19 +547,19 @@ function openOperationSelect(row) {
  * 操作码选择回调
  * 
  * 用户从 SelectOperation 组件选择操作码后，回填两个字段到目标行：
- * - operationCode：操作码（稳定契约，用于关联 fill_operation.operation_code）
- * - operationName：操作名称（冗余快照，供列表展示及后续批记录生成时使用）
+ * - operationCode：操作码的值（来自 BasicOperation.code，作为外键存储）
+ * - operationName：操作名称快照（来自 BasicOperation.name，供列表展示）
  * 
- * 冗余 operation_name 的原因：
- * 1. 避免每次查询都 JOIN fill_operation
- * 2. 与批记录生成时的快照机制保持一致（历史记录不受主数据修改影响）
+ * 说明：
+ * - 调用方实体字段名保持 operationCode / operationName 不变（它们是外键字段和冗余快照）
+ * - 选择器返回的原始对象字段名为 code / name（遵循 basic_xxx 表的通用字段约定）
  * 
- * @param {Object} selected 选中的操作码对象（含 operationCode、operationName、actionType 等字段）
+ * @param {Object} selected 选中的操作码对象（含 id、code、name、actionType 等字段）
  */
 function onOperationSelected(selected) {
   if (currentOperationRow.value) {
-    currentOperationRow.value.operationCode = selected.operationCode
-    currentOperationRow.value.operationName = selected.operationName
+    currentOperationRow.value.operationCode = selected.code
+    currentOperationRow.value.operationName = selected.name
   }
 }
 

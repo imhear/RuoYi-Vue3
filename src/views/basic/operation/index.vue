@@ -2,9 +2,9 @@
   <div class="app-container">
     <!-- 查询表单 -->
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="操作名称" prop="operationName">
+      <el-form-item label="操作名称" prop="name">
         <el-input
-          v-model="queryParams.operationName"
+          v-model="queryParams.name"
           placeholder="请输入操作名称"
           clearable
           style="width: 180px"
@@ -42,7 +42,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['fill:operation:add']"
+          v-hasPermi="['basic:operation:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -51,7 +51,7 @@
           plain
           icon="Check"
           @click="handleSaveSort"
-          v-hasPermi="['fill:operation:edit']"
+          v-hasPermi="['basic:operation:edit']"
         >保存排序</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -70,13 +70,13 @@
       v-if="refreshTable"
       v-loading="loading"
       :data="operationList"
-      row-key="operationId"
+      row-key="id"
       :default-expand-all="isExpandAll"
       :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
     >
-      <el-table-column prop="operationName" label="操作名称" :show-overflow-tooltip="true" width="220">
+      <el-table-column prop="name" label="操作名称" :show-overflow-tooltip="true" width="220">
         <template #default="scope">
-          <span class="ml5">{{ scope.row.operationName }}</span>
+          <span class="ml5">{{ scope.row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="menuType" label="类型" width="100" align="center">
@@ -86,7 +86,7 @@
           <el-tag v-else-if="scope.row.menuType === 'F'" type="warning" size="small">按钮</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="operationCode" label="操作码" width="120" align="center" />
+      <el-table-column prop="code" label="操作码" width="120" align="center" />
       <el-table-column prop="actionType" label="操作类型" width="120" align="center">
         <template #default="scope">
           <el-tag v-if="scope.row.actionType">{{ getActionTypeLabel(scope.row.actionType) }}</el-tag>
@@ -94,7 +94,6 @@
         </template>
       </el-table-column>
       <el-table-column prop="buttonLabel" label="按钮名称" width="100" align="center" />
-      <el-table-column prop="perms" label="权限标识" :show-overflow-tooltip="true" />
       <el-table-column prop="component" label="组件路径" :show-overflow-tooltip="true" />
       <el-table-column prop="orderNum" label="排序" width="200">
         <template #default="scope">
@@ -108,9 +107,9 @@
       </el-table-column>
       <el-table-column label="操作" align="center" width="210" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:operation:edit']">修改</el-button>
-          <el-button link type="primary" icon="Plus" @click="handleAdd(scope.row)" v-hasPermi="['fill:operation:add']">新增</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:operation:remove']">删除</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['basic:operation:edit']">修改</el-button>
+          <el-button link type="primary" icon="Plus" @click="handleAdd(scope.row)" v-hasPermi="['basic:operation:add']">新增</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['basic:operation:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -124,8 +123,8 @@
               <el-tree-select
                 v-model="form.parentId"
                 :data="operationOptions"
-                :props="{ value: 'operationId', label: 'operationName', children: 'children' }"
-                value-key="operationId"
+                :props="{ value: 'id', label: 'name', children: 'children' }"
+                value-key="id"
                 placeholder="选择上级节点"
                 check-strictly
                 style="width: 100%"
@@ -142,16 +141,16 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="操作名称" prop="operationName">
-              <el-input v-model="form.operationName" placeholder="请输入操作名称" />
+            <el-form-item label="操作名称" prop="name">
+              <el-input v-model="form.name" placeholder="请输入操作名称" />
             </el-form-item>
           </el-col>
 
           <!-- 按钮专用字段 -->
           <template v-if="form.menuType === 'F'">
             <el-col :span="24">
-              <el-form-item label="操作码" prop="operationCode">
-                <el-input v-model="form.operationCode" placeholder="请输入操作码，如 3001" />
+              <el-form-item label="操作码" prop="code">
+                <el-input v-model="form.code" placeholder="请输入操作码，如 3001" />
               </el-form-item>
             </el-col>
             <el-col :span="24">
@@ -178,20 +177,6 @@
                     <el-button icon="Search" @click="openSelectForm" />
                   </template>
                 </el-input>
-              </el-form-item>
-            </el-col>
-            <el-col :span="24">
-              <el-form-item label="权限标识" prop="perms">
-                <el-tree-select
-                  v-model="selectedSysMenuId"
-                  :data="sysMenuTreeData"
-                  :props="sysMenuTreeProps"
-                  node-key="menuId"
-                  check-strictly
-                  placeholder="请选择系统按钮权限标识"
-                  style="width: 100%"
-                  @change="handleSysMenuSelect"
-                />
               </el-form-item>
             </el-col>
             <el-col :span="24">
@@ -256,10 +241,9 @@
   </div>
 </template>
 
-<script setup name="Operation">
+<script setup name="BasicOperation">
 import { ref, reactive, computed, nextTick } from 'vue'
-import { listOperation, getOperation, delOperation, addOperation, updateOperation, updateOperationSort } from "@/api/fill/operation"
-import { listMenu } from "@/api/system/menu"
+import { listOperation, getOperation, delOperation, addOperation, updateOperation, updateOperationSort } from "@/api/basic/operation"
 import SelectForm from "@/views/fill/components/SelectForm.vue"
 import FrontendFileSelector from "@/views/fill/components/FrontendFileSelector.vue"
 
@@ -276,11 +260,6 @@ const isExpandAll = ref(false)
 const refreshTable = ref(true)
 const selectFormRef = ref(null)
 const frontendFileSelectorRef = ref(null)
-
-/** 系统菜单树数据（用于权限标识选择） */
-const sysMenuTreeData = ref([])
-/** 当前选中的系统菜单ID（权限标识回显） */
-const selectedSysMenuId = ref(null)
 
 /** 原始排序记录，用于保存排序时比对 */
 const originalOrders = ref({})
@@ -301,14 +280,13 @@ const actionTypeOptions = [
 
 const data = reactive({
   form: {
-    operationId: null,
+    id: null,
     parentId: 0,
     menuType: 'F',
-    operationCode: null,
+    code: null,
     actionType: null,
     buttonLabel: null,
     tableName: null,
-    perms: null,
     backendRoute: null,
     component: null,
     orderNum: 0,
@@ -318,15 +296,15 @@ const data = reactive({
     remark: null
   },
   queryParams: {
-    operationName: undefined,
+    name: undefined,
     menuType: undefined,
     status: undefined
   },
   rules: {
-    operationName: [{ required: true, message: "操作名称不能为空", trigger: "blur" }],
+    name: [{ required: true, message: "操作名称不能为空", trigger: "blur" }],
     menuType: [{ required: true, message: "节点类型不能为空", trigger: "change" }],
     orderNum: [{ required: true, message: "显示顺序不能为空", trigger: "blur" }],
-    operationCode: [
+    code: [
       {
         validator: (rule, value, callback) => {
           if (data.form.menuType === 'F' && !value) {
@@ -356,17 +334,6 @@ const data = reactive({
 const { queryParams, form, rules } = toRefs(data)
 
 /**
- * el-tree-select props：只允许选择系统菜单中的按钮类型（F）
- */
-const sysMenuTreeProps = computed(() => {
-  return {
-    label: 'menuName',
-    children: 'children',
-    disabled: (node) => node.menuType !== 'F'
-  }
-})
-
-/**
  * 获取操作类型标签文本
  * @param {String} value 操作类型值
  * @returns {String} 操作类型中文标签
@@ -386,7 +353,7 @@ function getList() {
   loading.value = true
   listOperation(queryParams.value).then(response => {
     const list = response.data || []
-    operationList.value = proxy.handleTree(list, "operationId")
+    operationList.value = proxy.handleTree(list, "id")
     recordOriginalOrders(operationList.value)
     loading.value = false
   })
@@ -397,64 +364,15 @@ function getList() {
  * 
  * 完全参考系统菜单管理：调用 listOperation 获取平铺列表，
  * 使用 proxy.handleTree 构建树，并添加虚拟根节点“主类目”。
- * 字段契约使用 operationId / operationName。
+ * 字段契约使用 id / name。
  */
 function getTreeselect() {
   operationOptions.value = []
   listOperation({}).then(response => {
-    const root = { operationId: 0, operationName: "主类目", children: [] }
-    root.children = proxy.handleTree(response.data || [], "operationId")
+    const root = { id: 0, name: "主类目", children: [] }
+    root.children = proxy.handleTree(response.data || [], "id")
     operationOptions.value.push(root)
   })
-}
-
-/**
- * 加载系统菜单树（用于权限标识选择）
- * 
- * 使用官方推荐的 proxy.handleTree 构建树，不再自定义 buildSysMenuTree。
- */
-async function loadSysMenuTree() {
-  try {
-    const res = await listMenu()
-    const list = res.data || []
-    sysMenuTreeData.value = proxy.handleTree(list, "menuId")
-  } catch (e) {
-    proxy.$modal.msgError('加载系统菜单树失败')
-  }
-}
-
-/**
- * 在系统菜单树中根据 ID 查找节点
- * @param {Array} nodes 节点数组
- * @param {Number} id 菜单ID
- * @returns {Object|null} 匹配节点
- */
-function findNodeById(nodes, id) {
-  for (const node of nodes) {
-    if (node.menuId === id) return node
-    if (node.children && node.children.length > 0) {
-      const found = findNodeById(node.children, id)
-      if (found) return found
-    }
-  }
-  return null
-}
-
-/**
- * 在系统菜单树中根据 perms 查找节点
- * @param {Array} nodes 节点数组
- * @param {String} perms 权限标识
- * @returns {Object|null} 匹配节点
- */
-function findNodeByPerms(nodes, perms) {
-  for (const node of nodes) {
-    if (node.perms === perms) return node
-    if (node.children && node.children.length > 0) {
-      const found = findNodeByPerms(node.children, perms)
-      if (found) return found
-    }
-  }
-  return null
 }
 
 /**
@@ -463,7 +381,7 @@ function findNodeByPerms(nodes, perms) {
  */
 function recordOriginalOrders(list) {
   list.forEach(item => {
-    originalOrders.value[item.operationId] = item.orderNum
+    originalOrders.value[item.id] = item.orderNum
     if (item.children && item.children.length) {
       recordOriginalOrders(item.children)
     }
@@ -475,12 +393,12 @@ function recordOriginalOrders(list) {
  * 遍历树形结构，收集发生变化的节点 ID 和排序值，调用后端排序接口保存
  */
 function handleSaveSort() {
-  const changedOperationIds = []
+  const changedIds = []
   const changedOrderNums = []
   const collectChanged = (list) => {
     list.forEach(item => {
-      if (String(originalOrders.value[item.operationId]) !== String(item.orderNum)) {
-        changedOperationIds.push(item.operationId)
+      if (String(originalOrders.value[item.id]) !== String(item.orderNum)) {
+        changedIds.push(item.id)
         changedOrderNums.push(item.orderNum)
       }
       if (item.children && item.children.length) {
@@ -489,11 +407,11 @@ function handleSaveSort() {
     })
   }
   collectChanged(operationList.value)
-  if (changedOperationIds.length === 0) {
+  if (changedIds.length === 0) {
     proxy.$modal.msgWarning("未检测到排序修改")
     return
   }
-  updateOperationSort({ operationIds: changedOperationIds.join(","), orderNums: changedOrderNums.join(",") }).then(() => {
+  updateOperationSort({ ids: changedIds.join(","), orderNums: changedOrderNums.join(",") }).then(() => {
     proxy.$modal.msgSuccess("排序保存成功")
     recordOriginalOrders(operationList.value)
   })
@@ -523,14 +441,13 @@ function cancel() {
  */
 function reset() {
   form.value = {
-    operationId: null,
+    id: null,
     parentId: 0,
     menuType: 'F',
-    operationCode: null,
+    code: null,
     actionType: null,
     buttonLabel: null,
     tableName: null,
-    perms: null,
     backendRoute: null,
     component: null,
     orderNum: 0,
@@ -539,7 +456,6 @@ function reset() {
     delFlag: '0',
     remark: null
   }
-  selectedSysMenuId.value = null
   proxy.resetForm("operationRef")
 }
 
@@ -565,9 +481,8 @@ function resetQuery() {
 function handleAdd(row) {
   reset()
   getTreeselect()
-  loadSysMenuTree()
-  if (row && row.operationId) {
-    form.value.parentId = row.operationId
+  if (row && row.id) {
+    form.value.parentId = row.id
   } else {
     form.value.parentId = 0
   }
@@ -582,16 +497,8 @@ function handleAdd(row) {
 async function handleUpdate(row) {
   reset()
   await getTreeselect()
-  await loadSysMenuTree()
-  getOperation(row.operationId).then(response => {
+  getOperation(row.id).then(response => {
     form.value = response.data
-    selectedSysMenuId.value = null
-    if (form.value.perms) {
-      const matched = findNodeByPerms(sysMenuTreeData.value, form.value.perms)
-      if (matched) {
-        selectedSysMenuId.value = matched.menuId
-      }
-    }
     open.value = true
     title.value = "修改操作码节点"
   })
@@ -603,7 +510,7 @@ async function handleUpdate(row) {
 function submitForm() {
   proxy.$refs["operationRef"].validate(valid => {
     if (valid) {
-      if (form.value.operationId != null) {
+      if (form.value.id != null) {
         updateOperation(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
@@ -625,8 +532,8 @@ function submitForm() {
  * @param {Object} row 当前行数据
  */
 function handleDelete(row) {
-  proxy.$modal.confirm('是否确认删除名称为"' + row.operationName + '"的数据项?').then(function() {
-    return delOperation(row.operationId)
+  proxy.$modal.confirm('是否确认删除名称为"' + row.name + '"的数据项?').then(function() {
+    return delOperation(row.id)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -637,7 +544,7 @@ function handleDelete(row) {
  * 导出按钮操作
  */
 function handleExport() {
-  proxy.download('fill/operation/export', {
+  proxy.download('basic/operation/export', {
     ...queryParams.value
   }, `operation_${new Date().getTime()}.xlsx`)
 }
@@ -670,24 +577,6 @@ function openFrontendFileSelector() {
  */
 function onFrontendFileSelected(filePath) {
   form.value.component = filePath
-}
-
-/**
- * 系统菜单选择回调（仅回填 perms 和名称）
- * @param {Number} menuId 系统菜单ID
- */
-function handleSysMenuSelect(menuId) {
-  if (!menuId) {
-    form.value.perms = ''
-    return
-  }
-  const node = findNodeById(sysMenuTreeData.value, menuId)
-  if (node) {
-    form.value.perms = node.perms || ''
-    if (!form.value.operationName) {
-      form.value.operationName = node.menuName || ''
-    }
-  }
 }
 
 // 初始化

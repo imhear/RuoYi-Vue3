@@ -177,6 +177,20 @@ export const dynamicRoutes = [
         meta: { title: '业务字典数据', activeMenu: '/system/bizDict' }
       }
     ]
+  },
+  {
+    path: '/basic/work_unit-auth',
+    component: Layout,
+    hidden: true,
+    permissions: ['basic:work_unit:edit'],
+    children: [
+      {
+        path: 'role/:workUnitId(\\d+)',
+        component: () => import('@/views/basic/work_unit/authRole'),
+        name: 'WorkUnitAuthRole',
+        meta: { title: '分配角色', activeMenu: '/basic/work_unit' }
+      }
+    ]
   }
 ]
 

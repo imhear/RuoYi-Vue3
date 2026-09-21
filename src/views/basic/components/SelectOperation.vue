@@ -2,7 +2,7 @@
   <el-dialog title="选择操作码" v-model="visible" width="700px" append-to-body>
     <el-tree
       :data="operationTree"
-      node-key="operationId"
+      node-key="id"
       :props="treeProps"
       highlight-current
       :expand-on-click-node="false"
@@ -13,8 +13,8 @@
           <el-tag v-if="data.menuType === 'M'" size="small" type="primary">目录</el-tag>
           <el-tag v-else-if="data.menuType === 'C'" size="small" type="success">菜单</el-tag>
           <el-tag v-else-if="data.menuType === 'F'" size="small" type="warning">按钮</el-tag>
-          <span style="margin-left: 8px;">{{ data.operationName }}</span>
-          <span v-if="data.menuType === 'F'" style="margin-left: 8px; color: #909399;">{{ data.operationCode }}</span>
+          <span style="margin-left: 8px;">{{ data.name }}</span>
+          <span v-if="data.menuType === 'F'" style="margin-left: 8px; color: #909399;">{{ data.code }}</span>
         </span>
       </template>
     </el-tree>
@@ -26,8 +26,26 @@
 </template>
 
 <script setup>
+/**
+ * 操作码选择器
+ * 
+ * 从原 ruoyi-fill 模块的 SelectOperation 迁移到 ruoyi-basic 模块。
+ * 主要改动：
+ * - import 路径：@/api/fill/operation → @/api/basic/operation
+ * - 字段名契约：operationId → id、operationCode → code、operationName → name
+ * - 不再返回 perms 字段（权限权威来源改为 sys_menu，权限设计态由用户独立选择）
+ *
+ * 使用示例：
+ * <SelectOperation ref="selectOperationRef" @ok="onOperationSelected" />
+ * 
+ * 回调参数：完整的操作码节点对象，含 id、code、name、actionType、buttonLabel、
+ *          backendRoute、component、isUnaudit 等字段
+ *
+ * @author wutao
+ * @date 2026-09-21
+ */
 import { ref, computed } from 'vue'
-import { listOperation } from '@/api/fill/operation'
+import { listOperation } from '@/api/basic/operation'
 
 defineOptions({ name: 'SelectOperation' })
 
@@ -43,7 +61,7 @@ const selectedNode = ref(null)
  */
 const treeProps = computed(() => {
   return {
-    label: 'operationName',
+    label: 'name',
     children: 'children',
     disabled: (data) => data.menuType !== 'F'
   }
@@ -53,12 +71,12 @@ const treeProps = computed(() => {
  * 打开选择操作码对话框
  * 
  * 调用 listOperation 获取平铺列表，使用 proxy.handleTree 构建树形结构，
- * 与操作码列表页保持一致，字段契约使用 operationId / operationName。
+ * 与操作码列表页保持一致，字段契约使用 id / name。
  */
 function show() {
   listOperation({}).then(res => {
     const list = res.data || []
-    operationTree.value = proxy.handleTree(list, 'operationId')
+    operationTree.value = proxy.handleTree(list, 'id')
     selectedNode.value = null
     visible.value = true
   })

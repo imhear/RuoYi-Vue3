@@ -330,7 +330,7 @@
           <!-- F 按钮专用：前端组件路径（自动回填，可修改） -->
           <el-col :span="24" v-if="editForm.menuType === 'F'">
             <el-form-item label="前端组件路径">
-              <el-input v-model="editForm.component" placeholder="自动带出，可修改" />
+              <el-input v-model="editForm.component" placeholder="自动带出，可修改" disabled/>
             </el-form-item>
           </el-col>
 
@@ -344,7 +344,7 @@
           <!-- F 按钮专用：后端接口路径 -->
           <el-col :span="24" v-if="editForm.menuType === 'F'">
             <el-form-item label="后端接口路径">
-              <el-input v-model="editForm.backendRoute" placeholder="自动带出，可修改" />
+              <el-input v-model="editForm.backendRoute" placeholder="自动带出，可修改" disabled/>
             </el-form-item>
           </el-col>
 
@@ -394,7 +394,7 @@ import { ref, reactive, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Folder, Document, Operation, Plus, Edit, Delete, Search } from '@element-plus/icons-vue'
 import SelectForm from '@/views/fill/components/SelectForm.vue'
-import SelectOperation from '@/views/fill/components/SelectOperation.vue'
+import SelectOperation from '@/views/basic/components/SelectOperation.vue'
 import { listMenu } from "@/api/system/menu"
 import { getScheme_design } from "@/api/fill/scheme_design"
 import { listScheme_design_menu, addScheme_design_menu, updateScheme_design_menu, delScheme_design_menu } from "@/api/fill/scheme_design_menu"
@@ -454,7 +454,13 @@ const editForm = reactive({
   operationVisible: '1'
 })
 
-/** 表单校验规则 */
+/**
+ * 表单校验规则
+ * 
+ * F 节点（按钮）的校验增加了 perms 必填：
+ * 权限标识的权威来源是 sys_menu.perms，设计态必须从系统菜单按钮中独立选择。
+ * 这是防止生成批记录后 v-hasPermi('') 空值导致前端异常的强校验。
+ */
 const editRules = computed(() => {
   const rules = {
     menuName: [{ required: true, message: '菜单名称不能为空', trigger: 'blur' }],
@@ -465,6 +471,7 @@ const editRules = computed(() => {
     rules.path = [{ required: true, message: '前端路由地址不能为空', trigger: 'blur' }]
   } else if (editForm.menuType === 'F') {
     rules.operationCode = [{ required: true, message: '请选择操作码', trigger: 'change' }]
+    rules.perms = [{ required: true, message: '请选择系统按钮权限（权限标识）', trigger: 'change' }]
   }
   return rules
 })
@@ -746,13 +753,32 @@ function openSelectOperation() {
   selectOperationRef.value.show()
 }
 
+/**
+ * 操作码选择回调
+ * 
+ * 用户从 SelectOperation 组件选择操作码后，回填以下字段到编辑表单：
+ * - operationCode：操作码（外键字段，存储 BasicOperation.code 的值）
+ * - actionType：操作类型（用于后端状态机推导）
+ * - menuName：菜单名称（优先用操作名称，否则用按钮标签）
+ * - component：前端组件路径
+ * - backendRoute：后端接口路径
+ * - buttonLabel：按钮标签
+ * 
+ * 重要：不再从操作码回填 perms！
+ * 
+ * 权限标识的权威来源是 sys_menu.perms。用户必须独立选择"系统按钮权限"
+ * （通过下方独立的 el-tree-select 组件），从而保证权限一致性：
+ * - 权限标识：设计态从 sys_menu 中选择并快照
+ * - 操作码字段：设计态从 basic_operation 中选择，仅用于业务逻辑
+ * 
+ * @param {Object} row 选中的操作码对象（含 id、code、name、actionType 等字段）
+ */
 function onOperationSelected(row) {
-  editForm.operationCode = row.operationCode
+  editForm.operationCode = row.code
   editForm.actionType = row.actionType || ''
-  editForm.menuName = row.operationName || row.buttonLabel || row.operationCode
+  editForm.menuName = row.name || row.buttonLabel || row.code
   editForm.component = row.component || ''
   editForm.backendRoute = row.backendRoute || ''
-  editForm.perms = row.perms || ''
   editForm.buttonLabel = row.buttonLabel || ''
 }
 

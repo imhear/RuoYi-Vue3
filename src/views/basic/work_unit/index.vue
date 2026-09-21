@@ -121,8 +121,8 @@
     />
 
     <!-- 添加或修改工作单元对话框 -->
-    <el-dialog :title="title" v-model="open" width="700px" append-to-body>
-      <el-form ref="work_unitRef" :model="form" :rules="rules" label-width="100px">
+    <el-dialog :title="title" v-model="open" width="800px" append-to-body>
+      <el-form ref="work_unitRef" :model="form" :rules="rules" label-width="130px">
         <el-row>
           <el-col :span="24">
             <el-form-item label="工作单元编码" prop="code">
@@ -178,7 +178,7 @@
             </template>
           </el-table-column>
           <!-- 操作码：只读输入框 + 搜索按钮，点击按钮弹出 SelectOperation 选择器 -->
-          <el-table-column label="操作码" prop="operationCode" min-width="180">
+          <el-table-column label="操作码" prop="operationCode" min-width="100">
             <template #default="scope">
               <el-input v-model="scope.row.operationCode" placeholder="请选择操作码" readonly>
                 <template #append>
@@ -188,7 +188,7 @@
             </template>
           </el-table-column>
           <!-- 操作人：只读输入框 + 搜索按钮，点击按钮弹出 SelectUser 选择器 -->
-          <el-table-column label="操作人" prop="operator" width="180">
+          <el-table-column label="操作人" prop="operator" min-width="130">
             <template #default="scope">
               <el-input v-model="scope.row.operator" placeholder="请选择操作人" readonly>
                 <template #append>
@@ -197,12 +197,18 @@
               </el-input>
             </template>
           </el-table-column>
+          <!-- 操作名称：由操作码选择器回调自动回填，只读展示 -->
+          <el-table-column label="操作名称" prop="operationName" min-width="150">
+            <template #default="scope">
+              <el-input v-model="scope.row.operationName" placeholder="选择操作码后自动带出" disabled />
+            </template>
+          </el-table-column>
           <!-- <el-table-column label="显示顺序" prop="orderNum" width="150">
             <template #default="scope">
               <el-input v-model="scope.row.orderNum" placeholder="请输入显示顺序" />
             </template>
           </el-table-column> -->
-          <el-table-column label="状态" prop="status" width="150">
+          <el-table-column label="状态" prop="status" width="100">
             <template #default="scope">
               <el-select v-model="scope.row.status" placeholder="请选择状态">
                 <el-option
@@ -212,12 +218,6 @@
                   :value="dict.value"
                 ></el-option>
               </el-select>
-            </template>
-          </el-table-column>
-          <!-- 操作名称：由操作码选择器回调自动回填，只读展示 -->
-          <el-table-column label="操作名称" prop="operationName" min-width="180">
-            <template #default="scope">
-              <el-input v-model="scope.row.operationName" placeholder="选择操作码后自动带出" readonly />
             </template>
           </el-table-column>
         </el-table>

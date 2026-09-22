@@ -366,36 +366,58 @@ function getWorkshopCards(workshopId, tabName) {
 /**
  * 获取卡片上应显示的按钮（F节点）
  * 
- * 双重过滤：
- * 1. 基础条件：menuType='F'、parentId 匹配、operationVisible='1'
- * 2. 工作单元过滤（卡片级数据权限）：
- *    - 若 actionType='PREVIEW'（查看按钮），豁免此规则，任何登录用户均可查看
- *    - 其他按钮：要求 card.workUnitCode 在 myWorkUnitCodes 中，否则隐藏
+ * 三重过滤（关卡逐步严格）：
  * 
- * 双重认证架构：
- * - 第一道关卡（功能权限）：v-hasPermi 处理按钮级 perms 校验，在模板层控制
- * - 第二道关卡（数据权限）：此方法处理工作单元级过滤，在数据层控制
- * - 两者是"与"关系，任一不满足则按钮不显示
+ * 关卡1：基础条件
+ *   - menuType='F'、parentId 匹配当前卡片、operationVisible='1'
  * 
- * 注意事项：
- * - 若 card.workUnitCode 为空（历史数据未回填），非查看按钮将被全部隐藏
- * - 若 myWorkUnitCodes 加载失败或为空，非查看按钮也将被全部隐藏（严格模式）
+ * 关卡2：工作单元过滤（数据权限）
+ *   - 若 actionType='PREVIEW'（查看按钮），豁免此规则，任何登录用户均可查看
+ *   - 其他按钮：要求 card.workUnitCode 在 myWorkUnitCodes 中，否则隐藏
+ * 
+ * 关卡3：状态过滤（业务规则）
+ *   - 由后端通过 card.allowedActions 提供当前状态下允许的操作类型列表
+ *   - 只有 actionType 在 allowedActions 中的按钮才显示
+ *   - 若 card.allowedActions 字段缺失或为空数组，降级为"隐藏所有按钮"
+ *     （严格模式，因为未知状态时不应放行任何操作）
+ * 
+ * 三重认证架构：
+ * - 关卡1：前端数据合法性检查
+ * - 关卡2：数据权限（用户角色 ∩ 工作单元角色）
+ * - 关卡3：业务状态机（当前状态允许的操作）
+ * - 三层是"与"关系，任一不满足则按钮不显示
+ * - 模板层的 v-hasPermi 指令处理功能权限（perms 校验），是额外的独立关卡
  * 
  * @param {Object} card C节点对象
- * @returns {Array} 通过过滤条件的按钮列表
+ * @returns {Array} 通过所有过滤条件的按钮列表
  */
 function getCardButtons(card) {
+  // 关卡3：提前取出当前卡片允许的操作列表
+  // 若 card.allowedActions 为 undefined/null，视为"未知状态"，降级为隐藏所有按钮
+  const allowedActions = card.allowedActions || []
+  if (allowedActions.length === 0) {
+    // 后端未返回 allowedActions 或状态未定义，严格模式下隐藏所有按钮
+    return []
+  }
+
   return menuList.value.filter(m => {
-    // 基础条件：必须是当前卡片的 F 子节点且配置为可见
+    // 关卡1：必须是当前卡片的 F 子节点且配置为可见
     if (m.menuType !== 'F' || m.parentId !== card.menuId || m.operationVisible !== '1') {
       return false
     }
-    // 工作单元过滤：查看按钮（PREVIEW）豁免，其他按钮要求工作单元匹配
+
+    // 关卡3：状态过滤——按钮的 actionType 必须在 allowedActions 中
+    if (!allowedActions.includes(m.actionType)) {
+      return false
+    }
+
+    // 关卡2：工作单元过滤——查看按钮（PREVIEW）豁免，其他按钮要求工作单元匹配
     if (m.actionType !== 'PREVIEW') {
       if (!card.workUnitCode || !myWorkUnitCodes.value.includes(card.workUnitCode)) {
         return false
       }
     }
+
     return true
   })
 }

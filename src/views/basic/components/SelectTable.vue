@@ -27,8 +27,8 @@
     </el-form>
     <el-row>
       <el-table
-        ref="formTableRef"
-        :data="formList"
+        ref="tableTableRef"
+        :data="tableList"
         @row-click="handleRowClick"
         style="width: 100%"
         height="460px"
@@ -58,15 +58,15 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { listForm } from "@/api/fill/form"
+import { listTable } from "@/api/basic/table"
 
 const { proxy } = getCurrentInstance()
 
 const visible = ref(false)
 const total = ref(0)
-const formList = ref([])
+const tableList = ref([])
 const selectedRows = ref([])
-const formTableRef = ref(null)
+const tableTableRef = ref(null)
 
 const queryParams = reactive({
   pageNum: 1,
@@ -85,13 +85,12 @@ function show() {
   visible.value = true
 }
 
-/** 查询表单模板列表 */
+/** 查询业务表注册列表 */
 function getList() {
-  listForm(queryParams).then(res => {
-    formList.value = res.rows
+  listTable(queryParams).then(res => {
+    tableList.value = res.rows
     total.value = res.total
-    // 清除所有选中
-    formTableRef.value?.clearSelection()
+    tableTableRef.value?.clearSelection()
     selectedRows.value = []
   })
 }
@@ -102,13 +101,11 @@ function getList() {
 function handleRowClick(row) {
   const isSelected = selectedRows.value.some(r => r.tableName === row.tableName)
   if (isSelected) {
-    // 取消选中当前行
-    formTableRef.value.toggleRowSelection(row, false)
+    tableTableRef.value.toggleRowSelection(row, false)
     selectedRows.value = []
   } else {
-    // 先清除所有选中，再选中当前行
-    formTableRef.value.clearSelection()
-    formTableRef.value.toggleRowSelection(row, true)
+    tableTableRef.value.clearSelection()
+    tableTableRef.value.toggleRowSelection(row, true)
     selectedRows.value = [row]
   }
 }

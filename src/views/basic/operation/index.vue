@@ -174,7 +174,7 @@
               <el-form-item label="物理表名" prop="tableName">
                 <el-input v-model="form.tableName" placeholder="请选择物理表" readonly>
                   <template #append>
-                    <el-button icon="Search" @click="openSelectForm" />
+                    <el-button icon="Search" @click="openSelectTable" />
                   </template>
                 </el-input>
               </el-form-item>
@@ -235,7 +235,7 @@
     </el-dialog>
 
     <!-- 选择物理表对话框 -->
-    <SelectForm ref="selectFormRef" @ok="onFormSelected" />
+    <SelectTable ref="selectTableRef" @ok="onFormSelected" />
     <!-- 选择前端组件文件对话框 -->
     <FrontendFileSelector ref="frontendFileSelectorRef" @ok="onFrontendFileSelected" />
   </div>
@@ -244,7 +244,7 @@
 <script setup name="BasicOperation">
 import { ref, reactive, computed, nextTick } from 'vue'
 import { listOperation, getOperation, delOperation, addOperation, updateOperation, updateOperationSort } from "@/api/basic/operation"
-import SelectForm from "@/views/fill/components/SelectForm.vue"
+import SelectTable from "@/views/basic/components/SelectTable.vue"
 import FrontendFileSelector from "@/views/fill/components/FrontendFileSelector.vue"
 
 const { proxy } = getCurrentInstance()
@@ -258,7 +258,7 @@ const title = ref("")
 const operationOptions = ref([])
 const isExpandAll = ref(false)
 const refreshTable = ref(true)
-const selectFormRef = ref(null)
+const selectTableRef = ref(null)
 const frontendFileSelectorRef = ref(null)
 
 /** 原始排序记录，用于保存排序时比对 */
@@ -552,8 +552,8 @@ function handleExport() {
 /**
  * 打开选择物理表对话框
  */
-function openSelectForm() {
-  selectFormRef.value.show()
+function openSelectTable() {
+  selectTableRef.value.show()
 }
 
 /**

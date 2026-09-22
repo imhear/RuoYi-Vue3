@@ -96,8 +96,8 @@
   </el-drawer>
 </template>
 
-<script setup name="FormViewDrawer">
-import { getForm } from '@/api/fill/form'
+<script setup name="BasicTableViewDrawer">
+import { getTable } from '@/api/basic/table'
 
 const { sys_normal_disable } = useDict('sys_normal_disable')
 
@@ -105,11 +105,11 @@ const visible = ref(false)
 const loading = ref(false)
 const info = reactive({})
 
-const open = async (formId) => {
+const open = async (tableId) => {
   visible.value = true
   loading.value = true
   try {
-    const res = await getForm(formId)
+    const res = await getTable(tableId)
     Object.assign(info, res.data || {})
   } catch (error) {
     console.error('获取业务表信息失败:', error)

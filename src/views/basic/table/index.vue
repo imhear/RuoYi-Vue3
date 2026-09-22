@@ -82,14 +82,13 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <!-- 同步按钮：从 information_schema 同步业务表 -->
       <el-col :span="1.5">
         <el-button
           type="info"
           plain
           icon="Refresh"
           @click="handleSync"
-          v-hasPermi="['fill:formtemplate:sync']"
+          v-hasPermi="['basic:table:sync']"
         >同步</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -98,7 +97,7 @@
           plain
           icon="Plus"
           @click="handleAdd"
-          v-hasPermi="['fill:form:add']"
+          v-hasPermi="['basic:table:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -108,7 +107,7 @@
           icon="Edit"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['fill:form:edit']"
+          v-hasPermi="['basic:table:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -118,7 +117,7 @@
           icon="Delete"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['fill:form:remove']"
+          v-hasPermi="['basic:table:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -127,15 +126,15 @@
           plain
           icon="Download"
           @click="handleExport"
-          v-hasPermi="['fill:form:export']"
+          v-hasPermi="['basic:table:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="formList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="表单主键" align="center" prop="formId" />
+      <el-table-column label="业务表主键" align="center" prop="tableId" />
       <el-table-column label="数据库schema" align="center" prop="tableSchema" />
       <el-table-column label="物理表名" align="center" prop="tableName" />
       <el-table-column label="物理表注释" align="center" prop="tableComment" />
@@ -160,9 +159,9 @@
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:form:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['fill:form:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:form:remove']">删除</el-button>
+          <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['basic:table:query']">详情</el-button>
+          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['basic:table:edit']">修改</el-button>
+          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['basic:table:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -175,9 +174,9 @@
       @pagination="getList"
     />
 
-    <!-- 业务表详情抽屉 -->
-    <form-view-drawer ref="formViewRef" />
-    <!-- 添加或修改业务表对话框 -->
+    <!-- 业务表注册详情抽屉 -->
+    <table-view-drawer ref="tableViewRef" />
+    <!-- 添加或修改业务表注册对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-row>
@@ -243,8 +242,8 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="删除标志" prop="delFlag">
-              <el-input v-model="form.delFlag" placeholder="请输入删除标志" />
+            <el-form-item label="备注" prop="remark">
+              <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -259,14 +258,14 @@
   </div>
 </template>
 
-<script setup name="Form">
-import { listForm, getForm, delForm, addForm, updateForm, syncForm } from "@/api/fill/form"
-import FormViewDrawer from "./view"
+<script setup name="BasicTable">
+import { listTable, getTable, delTable, addTable, updateTable, syncTable } from "@/api/basic/table"
+import TableViewDrawer from "./view"
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
 
-const formList = ref([])
+const tableList = ref([])
 const open = ref(false)
 const loading = ref(true)
 const showSearch = ref(true)
@@ -301,11 +300,11 @@ const data = reactive({
 
 const { queryParams, form, rules } = toRefs(data)
 
-/** 查询业务表列表 */
+/** 查询业务表注册列表 */
 function getList() {
   loading.value = true
-  listForm(queryParams.value).then(response => {
-    formList.value = response.rows
+  listTable(queryParams.value).then(response => {
+    tableList.value = response.rows
     total.value = response.total
     loading.value = false
   })
@@ -320,7 +319,7 @@ function cancel() {
 /** 表单重置 */
 function reset() {
   form.value = {
-    formId: null,
+    tableId: null,
     tableSchema: null,
     tableName: null,
     tableComment: null,
@@ -332,6 +331,7 @@ function reset() {
     orderNum: null,
     status: null,
     delFlag: null,
+    remark: null,
     createBy: null,
     createTime: null,
     updateBy: null,
@@ -354,7 +354,7 @@ function resetQuery() {
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {
-  ids.value = selection.map(item => item.formId)
+  ids.value = selection.map(item => item.tableId)
   single.value = selection.length != 1
   multiple.value = !selection.length
 }
@@ -363,17 +363,17 @@ function handleSelectionChange(selection) {
 function handleAdd() {
   reset()
   open.value = true
-  title.value = "添加业务表"
+  title.value = "添加业务表注册"
 }
 
 /** 修改按钮操作 */
 function handleUpdate(row) {
   reset()
-  const _formId = row.formId || ids.value
-  getForm(_formId).then(response => {
+  const _tableId = row.tableId || ids.value
+  getTable(_tableId).then(response => {
     form.value = response.data
     open.value = true
-    title.value = "修改业务表"
+    title.value = "修改业务表注册"
   })
 }
 
@@ -381,14 +381,14 @@ function handleUpdate(row) {
 function submitForm() {
   proxy.$refs["formRef"].validate(valid => {
     if (valid) {
-      if (form.value.formId != null) {
-        updateForm(form.value).then(() => {
+      if (form.value.tableId != null) {
+        updateTable(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addForm(form.value).then(() => {
+        addTable(form.value).then(() => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
@@ -400,9 +400,9 @@ function submitForm() {
 
 /** 删除按钮操作 */
 function handleDelete(row) {
-  const _formIds = row.formId || ids.value
-  proxy.$modal.confirm('是否确认删除业务表编号为"' + _formIds + '"的数据项？').then(function() {
-    return delForm(_formIds)
+  const _tableIds = row.tableId || ids.value
+  proxy.$modal.confirm('是否确认删除业务表注册编号为"' + _tableIds + '"的数据项？').then(function() {
+    return delTable(_tableIds)
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
@@ -411,20 +411,20 @@ function handleDelete(row) {
 
 /** 详情按钮操作 */
 function handleViewData(row) {
-  proxy.$refs["formViewRef"].open(row.formId)
+  proxy.$refs["tableViewRef"].open(row.tableId)
 }
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download('fill/form/export', {
+  proxy.download('basic/table/export', {
     ...queryParams.value
-  }, `form_${new Date().getTime()}.xlsx`)
+  }, `table_${new Date().getTime()}.xlsx`)
 }
 
 /** 同步业务表注册表：从 information_schema 读取未注册的业务表并自动填充 */
 function handleSync() {
   proxy.$modal.confirm('是否确认同步业务表到业务表注册表？').then(function() {
-    return syncForm()
+    return syncTable()
   }).then((response) => {
     proxy.$modal.msgSuccess(response.msg || '同步完成')
     getList()

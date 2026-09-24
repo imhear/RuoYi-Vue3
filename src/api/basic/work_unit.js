@@ -43,16 +43,55 @@ export function delWork_unit(id) {
   })
 }
 
-/**
- * 查询当前登录用户可操作的工作单元编码列表
- * 
- * 用于聚合入口的"工作单元级"权限过滤。
- * 
- * @returns {Promise} 返回工作单元编码列表，如 ["WORKSHOP_D", "WORKSHOP_F"]
- */
+// 查询当前登录用户可操作的工作单元编码列表
 export function getMyWorkUnits() {
   return request({
     url: '/basic/work_unit/getMyWorkUnits',
     method: 'get'
+  })
+}
+
+// 查询已分配角色列表
+export function allocatedRoleList(query) {
+  return request({
+    url: '/basic/work_unit/authRole/allocatedList',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询未分配角色列表
+export function unallocatedRoleList(query) {
+  return request({
+    url: '/basic/work_unit/authRole/unallocatedList',
+    method: 'get',
+    params: query
+  })
+}
+
+// 取消授权角色
+export function authRoleCancel(data) {
+  return request({
+    url: '/basic/work_unit/authRole/cancel',
+    method: 'put',
+    data: data
+  })
+}
+
+// 批量取消授权角色
+export function authRoleCancelAll(data) {
+  return request({
+    url: '/basic/work_unit/authRole/cancelAll',
+    method: 'put',
+    params: data
+  })
+}
+
+// 批量选择角色授权
+export function authRoleSelectAll(data) {
+  return request({
+    url: '/basic/work_unit/authRole/selectAll',
+    method: 'put',
+    params: data
   })
 }

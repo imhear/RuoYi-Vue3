@@ -17,12 +17,16 @@
           @keyup.enter="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="关联若依部门ID" prop="deptId">
-        <el-input
+      <el-form-item label="关联部门" prop="deptId">
+        <el-tree-select
           v-model="queryParams.deptId"
-          placeholder="请输入关联若依部门ID"
+          :data="enabledDeptOptions"
+          :props="{ value: 'id', label: 'label', children: 'children' }"
+          value-key="id"
+          placeholder="请选择关联部门"
           clearable
-          @keyup.enter="handleQuery"
+          check-strictly
+          style="width: 240px"
         />
       </el-form-item>
       <el-form-item label="显示顺序" prop="orderNum">
@@ -96,7 +100,11 @@
       <el-table-column label="主键" align="center" prop="id" />
       <el-table-column label="工作单元编码" align="center" prop="code" />
       <el-table-column label="工作单元名称" align="center" prop="name" />
-      <el-table-column label="关联若依部门ID" align="center" prop="deptId" />
+      <el-table-column label="关联部门" align="center" :show-overflow-tooltip="true">
+        <template #default="scope">
+          {{ getDeptName(scope.row.deptId) }}
+        </template>
+      </el-table-column>
       <el-table-column label="显示顺序" align="center" prop="orderNum" />
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
@@ -122,7 +130,7 @@
     />
 
     <!-- 添加或修改工作单元对话框 -->
-    <el-dialog :title="title" v-model="open" width="800px" append-to-body>
+    <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="work_unitRef" :model="form" :rules="rules" label-width="130px">
         <el-row>
           <el-col :span="24">
@@ -136,13 +144,23 @@
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="关联若依部门ID" prop="deptId">
-              <el-input v-model="form.deptId" placeholder="请输入关联若依部门ID" />
+            <el-form-item label="关联部门" prop="deptId">
+              <el-tree-select
+                v-model="form.deptId"
+                :data="enabledDeptOptions"
+                :props="{ value: 'id', label: 'label', children: 'children' }"
+                value-key="id"
+                placeholder="请选择关联部门"
+                clearable
+                check-strictly
+                style="width: 100%"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="显示顺序" prop="orderNum">
-              <el-input v-model="form.orderNum" placeholder="请输入显示顺序" />
+              <el-input-number v-model="form.orderNum" controls-position="right" :min="0" style="width: 100%" />
+              <!-- <el-input v-model="form.orderNum" placeholder="请输入显示顺序" /> -->
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -162,66 +180,6 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-divider content-position="center">基础数据-工作单元作业人员信息</el-divider>
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
-            <el-button type="primary" icon="Plus" @click="handleAddBasicWorkUnitOperator">添加</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button type="danger" icon="Delete" @click="handleDeleteBasicWorkUnitOperator">删除</el-button>
-          </el-col>
-        </el-row>
-        <el-table :data="basicWorkUnitOperatorList" @selection-change="handleBasicWorkUnitOperatorSelectionChange" ref="basicWorkUnitOperator">
-          <el-table-column type="selection" width="50" align="center" />
-          <el-table-column label="序号" width="60">
-            <template #default="{ $index }">
-              {{ $index + 1 }}
-            </template>
-          </el-table-column>
-          <!-- 操作码：只读输入框 + 搜索按钮，点击按钮弹出 SelectOperation 选择器 -->
-          <el-table-column label="操作码" prop="operationCode" min-width="100">
-            <template #default="scope">
-              <el-input v-model="scope.row.operationCode" placeholder="请选择操作码" readonly>
-                <template #append>
-                  <el-button icon="Search" @click="openOperationSelect(scope.row)" />
-                </template>
-              </el-input>
-            </template>
-          </el-table-column>
-          <!-- 操作人：只读输入框 + 搜索按钮，点击按钮弹出 SelectUser 选择器 -->
-          <el-table-column label="操作人" prop="operator" min-width="130">
-            <template #default="scope">
-              <el-input v-model="scope.row.operator" placeholder="请选择操作人" readonly>
-                <template #append>
-                  <el-button icon="Search" @click="openUserSelect(scope.row)" />
-                </template>
-              </el-input>
-            </template>
-          </el-table-column>
-          <!-- 操作名称：由操作码选择器回调自动回填，只读展示 -->
-          <el-table-column label="操作名称" prop="operationName" min-width="150">
-            <template #default="scope">
-              <el-input v-model="scope.row.operationName" placeholder="选择操作码后自动带出" disabled />
-            </template>
-          </el-table-column>
-          <!-- <el-table-column label="显示顺序" prop="orderNum" width="150">
-            <template #default="scope">
-              <el-input v-model="scope.row.orderNum" placeholder="请输入显示顺序" />
-            </template>
-          </el-table-column> -->
-          <el-table-column label="状态" prop="status" width="100">
-            <template #default="scope">
-              <el-select v-model="scope.row.status" placeholder="请选择状态">
-                <el-option
-                  v-for="dict in sys_normal_disable"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="dict.value"
-                ></el-option>
-              </el-select>
-            </template>
-          </el-table-column>
-        </el-table>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -230,28 +188,18 @@
         </div>
       </template>
     </el-dialog>
-
-    <!-- 操作码选择器：由子表"操作码"列的搜索按钮触发 -->
-    <SelectOperation ref="selectOperationRef" @ok="onOperationSelected" />
-
-    <!-- 用户选择器：由子表"操作人"列的搜索按钮触发 -->
-    <SelectUser ref="selectUserRef" @ok="onUserSelected" />
   </div>
 </template>
 
 <script setup name="Work_unit">
 import { listWork_unit, getWork_unit, delWork_unit, addWork_unit, updateWork_unit } from "@/api/basic/work_unit"
-import SelectOperation from '@/views/basic/components/SelectOperation.vue'
-import SelectUser from '@/views/fill/components/SelectUser.vue'
+import { deptTreeSelect } from "@/api/system/user"
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
 
 /** 工作单元列表数据 */
 const work_unitList = ref([])
-
-/** 当前编辑的子表（作业人员）数据列表 */
-const basicWorkUnitOperatorList = ref([])
 
 /** 对话框可见性 */
 const open = ref(false)
@@ -265,9 +213,6 @@ const showSearch = ref(true)
 /** 主表多选选中的 ID 集合 */
 const ids = ref([])
 
-/** 子表多选选中的行（此处存的是 selection 数组） */
-const checkedBasicWorkUnitOperator = ref([])
-
 /** 主表修改按钮是否禁用（单选） */
 const single = ref(true)
 
@@ -280,17 +225,35 @@ const total = ref(0)
 /** 对话框标题 */
 const title = ref("")
 
-/** 操作码选择器组件引用 */
-const selectOperationRef = ref(null)
+/** 部门树原始数据（含禁用节点） */
+const deptOptions = ref(undefined)
 
-/** 当前正在编辑操作码的子表行（供选择器回调定位目标行） */
-const currentOperationRow = ref(null)
+/** 部门树可用数据（已过滤禁用节点，用于下拉选择） */
+const enabledDeptOptions = ref(undefined)
 
-/** 用户选择器组件引用 */
-const selectUserRef = ref(null)
-
-/** 当前正在编辑操作人的子表行（供选择器回调定位目标行） */
-const currentUserRow = ref(null)
+/**
+ * deptId → deptName 映射
+ *
+ * 由 deptOptions 递归扁平化得到，用于在列表中将 deptId 快速转换为部门名称。
+ * 之所以在前端做映射而不在后端联表返回 deptName：
+ * - basic 模块只依赖 ruoyi-common，不依赖 ruoyi-system，Service 层无法注入 ISysDeptService
+ * - 修改 Mapper XML 联表会侵入基础数据层，与"不改官方基础设施"的约定冲突
+ * - 部门数据量小，一次性拉取到前端做映射，成本可忽略
+ */
+const deptNameMap = computed(() => {
+  const map = {}
+  const walk = (nodes) => {
+    if (!nodes || !nodes.length) return
+    nodes.forEach(node => {
+      map[node.id] = node.label
+      if (node.children && node.children.length) {
+        walk(node.children)
+      }
+    })
+  }
+  walk(deptOptions.value)
+  return map
+})
 
 /** 表单、查询参数与校验规则 */
 const data = reactive({
@@ -312,7 +275,7 @@ const data = reactive({
       { required: true, message: "工作单元名称不能为空", trigger: "blur" }
     ],
     deptId: [
-      { required: true, message: "关联若依部门ID不能为空", trigger: "blur" }
+      { required: true, message: "关联部门不能为空", trigger: "change" }
     ],
   }
 })
@@ -320,9 +283,24 @@ const data = reactive({
 const { queryParams, form, rules } = toRefs(data)
 
 /**
+ * 根据 deptId 获取部门名称
+ *
+ * 从 deptNameMap 中查找；若 deptId 为空或映射中不存在，返回空字符串。
+ * 用于列表"关联部门"列的展示。
+ *
+ * @param {Number|String} deptId 部门ID
+ * @returns {String} 部门名称，找不到时返回空字符串
+ */
+function getDeptName(deptId) {
+  if (deptId == null || deptId === '') return ''
+  return deptNameMap.value[deptId] || ''
+}
+
+/**
  * 查询工作单元列表
  * 
  * 分页查询主表数据，响应结果中的 rows 为当前页数据，total 为总条数。
+ * 关联部门名称由前端根据 deptId 从 deptNameMap 中查找，不依赖后端返回。
  */
 function getList() {
   loading.value = true
@@ -334,9 +312,45 @@ function getList() {
 }
 
 /**
+ * 查询部门下拉树结构
+ *
+ * 复用若依官方 deptTreeSelect 接口（与 system/user/index.vue 一致）。
+ * 返回值 data 为树形结构，每个节点含 id / label / children / disabled。
+ * - deptOptions：原始数据，保留完整信息，用于构建 deptNameMap
+ * - enabledDeptOptions：过滤掉禁用节点后的数据，用于表单/查询中的部门选择器
+ */
+function getDeptTree() {
+  deptTreeSelect().then(response => {
+    deptOptions.value = response.data
+    enabledDeptOptions.value = filterDisabledDept(JSON.parse(JSON.stringify(response.data)))
+  })
+}
+
+/**
+ * 过滤禁用的部门
+ *
+ * 递归遍历部门树，剔除 disabled 为 true 的节点。
+ * 与若依官方 system/user/index.vue 中的 filterDisabledDept 逻辑保持一致。
+ *
+ * @param {Array} deptList 部门树数组
+ * @returns {Array} 过滤后的部门树数组
+ */
+function filterDisabledDept(deptList) {
+  return deptList.filter(dept => {
+    if (dept.disabled) {
+      return false
+    }
+    if (dept.children && dept.children.length) {
+      dept.children = filterDisabledDept(dept.children)
+    }
+    return true
+  })
+}
+
+/**
  * 取消按钮
  * 
- * 关闭对话框并重置表单与子表数据。
+ * 关闭对话框并重置表单。
  */
 function cancel() {
   open.value = false
@@ -346,8 +360,7 @@ function cancel() {
 /**
  * 表单重置
  * 
- * 将主表字段恢复到初始状态，并清空子表列表。
- * 同时通过 proxy.resetForm 清理表单校验状态。
+ * 将主表字段恢复到初始状态，并通过 proxy.resetForm 清理表单校验状态。
  */
 function reset() {
   form.value = {
@@ -363,7 +376,6 @@ function reset() {
     updateTime: null,
     remark: null
   }
-  basicWorkUnitOperatorList.value = []
   proxy.resetForm("work_unitRef")
 }
 
@@ -414,8 +426,7 @@ function handleAdd() {
 /**
  * 修改按钮操作
  * 
- * 根据行数据或选中 ID 加载主表 + 子表详情，回填表单后打开对话框。
- * 主表信息填充到 form，子表列表填充到 basicWorkUnitOperatorList。
+ * 根据行数据或选中 ID 加载主表详情，回填表单后打开对话框。
  * 
  * @param {Object} row 当前点击的行数据（若从工具栏触发则为 undefined，使用 ids.value）
  */
@@ -424,7 +435,6 @@ function handleUpdate(row) {
   const _id = row.id || ids.value
   getWork_unit(_id).then(response => {
     form.value = response.data
-    basicWorkUnitOperatorList.value = response.data.basicWorkUnitOperatorList
     open.value = true
     title.value = "修改工作单元"
   })
@@ -433,13 +443,12 @@ function handleUpdate(row) {
 /**
  * 提交按钮
  * 
- * 先进行表单校验，校验通过后将子表数据挂载到 form 上，
- * 根据 form.id 是否为空判定是新增还是修改，分别调用对应接口。
+ * 先进行表单校验，校验通过后根据 form.id 是否为空判定是新增还是修改，
+ * 分别调用对应接口。
  */
 function submitForm() {
   proxy.$refs["work_unitRef"].validate(valid => {
     if (valid) {
-      form.value.basicWorkUnitOperatorList = basicWorkUnitOperatorList.value
       if (form.value.id != null) {
         updateWork_unit(form.value).then(() => {
           proxy.$modal.msgSuccess("修改成功")
@@ -487,113 +496,6 @@ function handleAuthRole(row) {
 }
 
 /**
- * 子表（作业人员）添加按钮操作
- * 
- * 向子表列表末尾追加一个空白行对象，所有字段初始化为 undefined，
- * 保证 Vue 的响应式系统能追踪到后续对 operationCode / operationName 等字段的赋值。
- */
-function handleAddBasicWorkUnitOperator() {
-  let obj = {}
-  obj.operationCode = undefined
-  obj.operationName = undefined
-  obj.operator = undefined
-  obj.orderNum = undefined
-  obj.status = undefined
-  basicWorkUnitOperatorList.value.push(obj)
-}
-
-/**
- * 子表（作业人员）删除按钮操作
- * 
- * 从子表列表中移除已选中的行。若未选中任何行则给出提示。
- */
-function handleDeleteBasicWorkUnitOperator() {
-  if (checkedBasicWorkUnitOperator.value.length == 0) {
-    proxy.$modal.msgError("请先选择要删除的基础数据-工作单元作业人员数据")
-  } else {
-    const basicWorkUnitOperators = basicWorkUnitOperatorList.value
-    const checkedBasicWorkUnitOperators = checkedBasicWorkUnitOperator.value
-    basicWorkUnitOperatorList.value = basicWorkUnitOperators.filter(function(item) {
-      return checkedBasicWorkUnitOperators.indexOf(item.index) == -1
-    })
-  }
-}
-
-/**
- * 子表多选框选中数据
- * 
- * 记录已选中的行索引集合，用于 handleDeleteBasicWorkUnitOperator 过滤。
- * 
- * @param {Array} selection 当前选中的行数据数组
- */
-function handleBasicWorkUnitOperatorSelectionChange(selection) {
-  checkedBasicWorkUnitOperator.value = selection.map(item => item.index)
-}
-
-/**
- * 打开操作码选择器
- * 
- * 记录当前正在编辑的行，供 onOperationSelected 回调时定位目标行。
- * 通过 ref 调用 SelectOperation 组件的 show 方法弹出选择器。
- * 
- * @param {Object} row 当前正在编辑的子表行对象
- */
-function openOperationSelect(row) {
-  currentOperationRow.value = row
-  selectOperationRef.value?.show()
-}
-
-/**
- * 操作码选择回调
- * 
- * 用户从 SelectOperation 组件选择操作码后，回填两个字段到目标行：
- * - operationCode：操作码的值（来自 BasicOperation.code，作为外键存储）
- * - operationName：操作名称快照（来自 BasicOperation.name，供列表展示）
- * 
- * 说明：
- * - 调用方实体字段名保持 operationCode / operationName 不变（它们是外键字段和冗余快照）
- * - 选择器返回的原始对象字段名为 code / name（遵循 basic_xxx 表的通用字段约定）
- * 
- * @param {Object} selected 选中的操作码对象（含 id、code、name、actionType 等字段）
- */
-function onOperationSelected(selected) {
-  if (currentOperationRow.value) {
-    currentOperationRow.value.operationCode = selected.code
-    currentOperationRow.value.operationName = selected.name
-  }
-}
-
-/**
- * 打开用户选择器
- * 
- * 记录当前正在编辑的行，供 onUserSelected 回调时定位目标行。
- * 通过 ref 调用 SelectUser 组件的 show 方法弹出选择器。
- * 
- * @param {Object} row 当前正在编辑的子表行对象
- */
-function openUserSelect(row) {
-  currentUserRow.value = row
-  selectUserRef.value?.show()
-}
-
-/**
- * 用户选择回调
- * 
- * 用户从 SelectUser 组件选择用户后，将选中用户的 userName 回填到目标行。
- * 
- * 选用 userName 而非 nickName 的原因：
- * - userName 是若依中稳定唯一的登录名，用于权限校验（与 basic_work_unit_operator.operator 语义一致）
- * - nickName 可重复、可修改，不适合做数据关联
- * 
- * @param {Object} selected 选中的用户对象（含 userName、nickName、userId 等字段）
- */
-function onUserSelected(selected) {
-  if (currentUserRow.value) {
-    currentUserRow.value.operator = selected.userName || ''
-  }
-}
-
-/**
  * 导出按钮操作
  * 
  * 以当前查询条件为参数请求导出接口。
@@ -604,5 +506,8 @@ function handleExport() {
   }, `work_unit_${new Date().getTime()}.xlsx`)
 }
 
-getList()
+onMounted(() => {
+  getDeptTree()
+  getList()
+})
 </script>

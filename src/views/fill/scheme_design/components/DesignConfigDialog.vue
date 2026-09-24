@@ -163,14 +163,29 @@
 
           <!-- 路由名称（C） -->
           <el-col :span="12" v-if="editForm.menuType === 'C'">
-            <el-form-item label="路由名称">
+            <el-form-item prop="routeName">
+              <template #label>
+                <span>
+                  <el-tooltip content="默认不填则和路由地址相同：如地址为：`user`，则名称为`User`（注意：因为router会删除名称相同路由，为避免名字的冲突，特殊情况下请自定义，保证唯一性）" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  路由名称
+                </span>
+              </template>
               <el-input v-model="editForm.routeName" placeholder="请输入路由名称" />
             </el-form-item>
           </el-col>
 
           <!-- 是否外链（非按钮） -->
           <el-col :span="12" v-if="editForm.menuType !== 'F'">
-            <el-form-item label="是否外链">
+            <el-form-item>
+              <template #label>
+                <span>
+                  <el-tooltip content="选择是外链则路由地址需要以`http(s)://`开头" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>是否外链
+                </span>
+              </template>
               <el-radio-group v-model="editForm.isFrame">
                 <el-radio value="0">是</el-radio>
                 <el-radio value="1">否</el-radio>
@@ -178,37 +193,77 @@
             </el-form-item>
           </el-col>
 
-          <!-- 前端路由地址（非按钮，但按钮需要显示，后面添加） -->
+          <!-- 前端路由地址（非按钮） -->
           <el-col :span="12" v-if="editForm.menuType !== 'F'">
-            <el-form-item label="前端路由地址" prop="path">
+            <el-form-item prop="path">
+              <template #label>
+                <span>
+                  <el-tooltip content="访问的路由地址，如：`user`，如外网地址需内链访问则以`http(s)://`开头" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  前端路由地址
+                </span>
+              </template>
               <el-input v-model="editForm.path" placeholder="请输入前端路由地址" />
             </el-form-item>
           </el-col>
 
           <!-- 前端组件路径（C） -->
           <el-col :span="12" v-if="editForm.menuType === 'C'">
-            <el-form-item label="前端组件路径">
+            <el-form-item>
+              <template #label>
+                <span>
+                  <el-tooltip content="访问的组件路径，如：`system/user/index`，默认在`views`目录下" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  前端组件路径
+                </span>
+              </template>
               <el-input v-model="editForm.component" placeholder="请输入前端组件路径" />
             </el-form-item>
           </el-col>
 
           <!-- 权限标识（非目录） -->
           <el-col :span="12" v-if="editForm.menuType !== 'M'">
-            <el-form-item label="权限标识">
+            <el-form-item>
               <el-input v-model="editForm.perms" placeholder="请输入权限标识" maxlength="100" disabled/>
+              <template #label>
+                <span>
+                  <el-tooltip content="控制器中定义的权限字符，如：@PreAuthorize(`@ss.hasPermi('system:user:list')`)" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  权限标识
+                </span>
+              </template>
             </el-form-item>
           </el-col>
 
           <!-- 路由参数（C） -->
           <el-col :span="12" v-if="editForm.menuType === 'C'">
-            <el-form-item label="路由参数">
+            <el-form-item>
               <el-input v-model="editForm.query" placeholder="请输入路由参数" maxlength="255" />
+              <template #label>
+                <span>
+                  <el-tooltip content='访问路由的默认传递参数，如：`{"id": 1, "name": "ry"}`' placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  路由参数
+                </span>
+              </template>
             </el-form-item>
           </el-col>
 
           <!-- 是否缓存（C） -->
           <el-col :span="12" v-if="editForm.menuType === 'C'">
-            <el-form-item label="是否缓存">
+            <el-form-item>
+              <template #label>
+                <span>
+                  <el-tooltip content="选择是则会被`keep-alive`缓存，需要匹配组件的`name`和地址保持一致" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  是否缓存
+                </span>
+              </template>
               <el-radio-group v-model="editForm.isCache">
                 <el-radio value="0">缓存</el-radio>
                 <el-radio value="1">不缓存</el-radio>
@@ -218,7 +273,15 @@
 
           <!-- 显示状态（非按钮） -->
           <el-col :span="12" v-if="editForm.menuType !== 'F'">
-            <el-form-item label="显示状态">
+            <el-form-item>
+              <template #label>
+                <span>
+                  <el-tooltip content="选择隐藏则路由将不会出现在侧边栏，但仍然可以访问" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  显示状态
+                </span>
+              </template>
               <el-radio-group v-model="editForm.visible">
                 <el-radio value="0">显示</el-radio>
                 <el-radio value="1">隐藏</el-radio>
@@ -228,7 +291,15 @@
 
           <!-- 菜单状态 -->
           <el-col :span="12">
-            <el-form-item label="菜单状态">
+            <el-form-item>
+              <template #label>
+                <span>
+                  <el-tooltip content="选择停用则路由将不会出现在侧边栏，也不能被访问" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  菜单状态
+                </span>
+              </template>
               <el-radio-group v-model="editForm.status">
                 <el-radio value="0">正常</el-radio>
                 <el-radio value="1">停用</el-radio>
@@ -259,7 +330,7 @@
             <el-form-item label="物理表名" prop="tableName">
               <el-input v-model="editForm.tableName" placeholder="请选择物理表" readonly>
                 <template #append>
-                  <el-button icon="Search" @click="openSelectForm" />
+                  <el-button icon="Search" @click="openSelectTable" />
                 </template>
               </el-input>
             </el-form-item>
@@ -382,8 +453,8 @@
       </template>
     </el-dialog>
 
-    <!-- 选择物理表对话框 -->
-    <SelectForm ref="selectFormRef" @ok="onFormSelected" />
+    <!-- 选择物理表对话框（来自 basic 模块） -->
+    <SelectTable ref="selectTableRef" @ok="onFormSelected" />
     <!-- 选择操作码对话框 -->
     <SelectOperation ref="selectOperationRef" @ok="onOperationSelected" />
   </el-dialog>
@@ -392,8 +463,8 @@
 <script setup>
 import { ref, reactive, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Folder, Document, Operation, Plus, Edit, Delete, Search } from '@element-plus/icons-vue'
-import SelectForm from '@/views/fill/components/SelectForm.vue'
+import { Folder, Document, Operation, Plus, Edit, Delete, Search, QuestionFilled } from '@element-plus/icons-vue'
+import SelectTable from '@/views/basic/components/SelectTable.vue'
 import SelectOperation from '@/views/basic/components/SelectOperation.vue'
 import { listMenu } from "@/api/system/menu"
 import { getScheme_design } from "@/api/fill/scheme_design"
@@ -415,7 +486,7 @@ const schemeInfo = ref(null)   // 方案基本信息
 
 const editDialogVisible = ref(false)
 const editFormRef = ref(null)
-const selectFormRef = ref(null)
+const selectTableRef = ref(null)
 const selectOperationRef = ref(null)
 
 /** 系统菜单树数据（用于 el-tree-select） */
@@ -738,10 +809,28 @@ function handleMenuTypeChange(val) {
 }
 
 // ==================== 选择器回调 ====================
-function openSelectForm() {
-  selectFormRef.value.show()
+
+/**
+ * 打开物理表选择对话框
+ *
+ * 调用 basic 模块的 SelectTable 组件（原 fill 模块的 SelectForm 已迁移），
+ * 通过 ref 触发组件的 show 方法打开对话框。
+ * 用户在对话框中选择一条物理表记录后，会通过 @ok 事件回调 onFormSelected。
+ */
+function openSelectTable() {
+  selectTableRef.value.show()
 }
 
+/**
+ * 物理表选择回调
+ *
+ * 用户在 SelectTable 对话框中点击"确定"后触发。
+ * 回填逻辑：
+ * - tableName：物理表名（必填字段，参与表单校验）
+ * - menuName：若当前菜单名称为空，则用物理表注释或表名作为默认菜单名称
+ *
+ * @param {Object} row 选中的物理表记录（含 tableName、tableComment、module、groupName 等字段）
+ */
 function onFormSelected(row) {
   editForm.tableName = row.tableName
   if (!editForm.menuName) {
@@ -749,6 +838,12 @@ function onFormSelected(row) {
   }
 }
 
+/**
+ * 打开操作码选择对话框
+ *
+ * 调用 basic 模块的 SelectOperation 组件，通过 ref 触发组件的 show 方法打开对话框。
+ * 用户在对话框中选择一条操作码后，会通过 @ok 事件回调 onOperationSelected。
+ */
 function openSelectOperation() {
   selectOperationRef.value.show()
 }
@@ -782,6 +877,18 @@ function onOperationSelected(row) {
   editForm.buttonLabel = row.buttonLabel || ''
 }
 
+/**
+ * 系统菜单选择回调
+ *
+ * 用户在 el-tree-select 中选择系统菜单节点后触发，根据当前编辑的节点类型回填相关字段：
+ * - C 节点（菜单）：回填菜单名称、路径、组件、权限标识、路由名称、路由参数、是否外链、
+ *   是否缓存、显示状态、图标
+ * - F 节点（按钮）：回填权限标识（perms），若菜单名称为空则用节点名称补全
+ *
+ * 注意：F 节点的 perms 只从此处回填，不从操作码回填，保证权限权威来源是 sys_menu。
+ *
+ * @param {Number} menuId 选中的系统菜单节点 ID
+ */
 function handleSysMenuSelect(menuId) {
   if (!menuId) return
   const node = findNodeById(sysMenuTreeData.value, menuId)

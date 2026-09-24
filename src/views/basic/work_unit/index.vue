@@ -369,7 +369,7 @@ function reset() {
     name: null,
     deptId: null,
     orderNum: null,
-    status: null,
+    status: "0",
     createBy: null,
     createTime: null,
     updateBy: null,

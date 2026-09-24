@@ -24,7 +24,7 @@
 
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['batch:record:add']">新增</el-button>
+        <el-button type="primary" plain icon="Plus" @click="handleAdd" v-hasPermi="['batch:batch_record:add']">新增</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -34,14 +34,14 @@
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width" min-width="180">
         <template #default="scope">
           <!-- 审核按钮：待审核状态显示 -->
-          <el-button v-if="scope.row.status === '0' && scope.row.releaseId" link type="warning" @click="handleAudit(scope.row)" v-hasPermi="['batch:record:audit']">审核</el-button>
+          <el-button v-if="scope.row.status === '0' && scope.row.releaseId" link type="warning" @click="handleAudit(scope.row)" v-hasPermi="['batch:batch_record:audit']">审核</el-button>
           <!-- 删除按钮 -->
-          <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['batch:record:remove']">删除</el-button>
+          <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_record:remove']">删除</el-button>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center" prop="status" width="90">
         <template #default="scope">
-          <dict-tag :options="batch_record_status" :value="scope.row.status" />
+          <dict-tag :options="biz_record_status" :value="scope.row.status" />
         </template>
       </el-table-column>
       <!-- 工单号：无值显示导入按钮，有值显示超链接 -->
@@ -58,7 +58,7 @@
             :on-error="handleImportError"
             style="display: inline-block;"
           >
-            <el-button link type="primary" v-hasPermi="['batch:record:import']">导入</el-button>
+            <el-button link type="primary" v-hasPermi="['batch:batch_order:import']">导入</el-button>
           </el-upload>
           <!-- 已导入工单：显示工单号链接 -->
           <el-button v-else link type="primary" @click="handleViewOrder(scope.row)">{{ scope.row.orderNum }}</el-button>
@@ -67,9 +67,9 @@
       <el-table-column label="批记录" align="center" min-width="120">
         <template #default="scope">
           <!-- 生成按钮：已导入工单且未生成方案时显示 -->
-          <el-button v-if="scope.row.orderNum && !scope.row.releaseId && scope.row.status === '0'" link type="success" @click="handleGenerate(scope.row)" v-hasPermi="['batch:record:generate']">生成</el-button>
+          <el-button v-if="scope.row.orderNum && !scope.row.releaseId && scope.row.status === '0'" link type="success" @click="handleGenerate(scope.row)" v-hasPermi="['batch:batch_record:generate']">生成</el-button>
           <!-- 查看批记录结构按钮：已生成后显示 -->
-          <el-button v-if="scope.row.releaseId" link type="primary" @click="handleViewRecord(scope.row)" v-hasPermi="['batch:record:query']">查看</el-button>
+          <el-button v-if="scope.row.releaseId" link type="primary" @click="handleViewRecord(scope.row)" v-hasPermi="['batch:batch_record:query']">查看</el-button>
         </template>
       </el-table-column>
       <el-table-column label="产品编码" align="center" prop="productCode" min-width="100" />
@@ -110,12 +110,13 @@
 import { ref, reactive, toRefs } from 'vue'
 import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord, deleteBatchRecordCascade } from "@/api/batch/batch_record"
 import { getToken } from '@/utils/auth'
+import { useBizDict } from '@/utils/bizDict'
 import BatchRecordGenerate from '@/views/batch/components/BatchRecordGenerate.vue'
 import BatchOrderView from '@/views/batch/components/BatchOrderView.vue'
 import BatchRecordView from '@/views/batch/components/BatchRecordView.vue'
 
 const { proxy } = getCurrentInstance()
-const { batch_record_status } = proxy.useDict('batch_record_status')
+const { biz_record_status } = useBizDict('biz_record_status')
 
 const recordList = ref([])
 const loading = ref(true)

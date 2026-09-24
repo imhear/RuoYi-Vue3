@@ -87,3 +87,11 @@ export function deleteBatchRecordCascade(recordId) {
     method: 'delete'
   })
 }
+
+// 取消批记录
+export function cancelBatchRecord(recordId) {
+  return request({
+    url: '/batch/batch_record/cancel/' + recordId,
+    method: 'put'
+  })
+}

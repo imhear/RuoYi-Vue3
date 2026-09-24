@@ -36,7 +36,9 @@
           <!-- 审核按钮：待审核状态显示 -->
           <el-button v-if="scope.row.status === '0' && scope.row.releaseId" link type="warning" @click="handleAudit(scope.row)" v-hasPermi="['batch:batch_record:audit']">审核</el-button>
           <!-- 删除按钮 -->
-          <el-button link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_record:remove']">删除</el-button>
+          <el-button v-if="scope.row.status === '0'" link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_record:remove']">删除</el-button>
+          <!-- 取消按钮 -->
+          <el-button v-if="scope.row.status === '1'" link type="danger" @click="handleUnAudit(scope.row)" v-hasPermi="['batch:batch_record:unaudit']">取消</el-button>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center" prop="status" width="90">
@@ -108,7 +110,7 @@
 
 <script setup name="BatchRecord">
 import { ref, reactive, toRefs } from 'vue'
-import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord, deleteBatchRecordCascade } from "@/api/batch/batch_record"
+import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord, deleteBatchRecordCascade, cancelBatchRecord } from "@/api/batch/batch_record"
 import { getToken } from '@/utils/auth'
 import { useBizDict } from '@/utils/bizDict'
 import BatchRecordGenerate from '@/views/batch/components/BatchRecordGenerate.vue'
@@ -252,15 +254,15 @@ function handleDelete(row) {
     getList()
   }).catch(() => {})
 }
-/** 删除按钮操作 */
-// function handleDelete(row) {
-//   proxy.$modal.confirm('确认删除该批记录？').then(() => {
-//     return delBatch_record(row.recordId)
-//   }).then(() => {
-//     proxy.$modal.msgSuccess('删除成功')
-//     getList()
-//   }).catch(() => {})
-// }
+/** 取消按钮操作 */
+function handleUnAudit(row) {
+  proxy.$modal.confirm('确认取消该批记录？此操作将同时标记关联数据，且不可恢复！').then(() => {
+    return cancelBatchRecord(row.recordId)
+  }).then(() => {
+    proxy.$modal.msgSuccess('取消成功')
+    getList()
+  }).catch(() => {})
+}
 
 /** 多选框选中数据 */
 function handleSelectionChange(selection) {

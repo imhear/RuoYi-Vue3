@@ -91,7 +91,7 @@
           v-hasPermi="['basic:table:sync']"
         >同步</el-button>
       </el-col>
-      <el-col :span="1.5">
+      <!-- <el-col :span="1.5">
         <el-button
           type="primary"
           plain
@@ -99,7 +99,7 @@
           @click="handleAdd"
           v-hasPermi="['basic:table:add']"
         >新增</el-button>
-      </el-col>
+      </el-col> -->
       <el-col :span="1.5">
         <el-button
           type="success"
@@ -134,7 +134,7 @@
 
     <el-table v-loading="loading" :data="tableList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="业务表主键" align="center" prop="tableId" />
+      <!-- <el-table-column label="业务表主键" align="center" prop="tableId" /> -->
       <el-table-column label="数据库schema" align="center" prop="tableSchema" />
       <el-table-column label="物理表名" align="center" prop="tableName" />
       <el-table-column label="物理表注释" align="center" prop="tableComment" />
@@ -178,21 +178,21 @@
     <table-view-drawer ref="tableViewRef" />
     <!-- 添加或修改业务表注册对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="140px">
         <el-row>
           <el-col :span="24">
             <el-form-item label="数据库schema" prop="tableSchema">
-              <el-input v-model="form.tableSchema" placeholder="请输入数据库schema" />
+              <el-input v-model="form.tableSchema" placeholder="请输入数据库schema" disabled/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="物理表名" prop="tableName">
-              <el-input v-model="form.tableName" placeholder="请输入物理表名" />
+              <el-input v-model="form.tableName" placeholder="请输入物理表名" disabled/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="物理表注释" prop="tableComment">
-              <el-input v-model="form.tableComment" placeholder="请输入物理表注释" />
+              <el-input v-model="form.tableComment" placeholder="请输入物理表注释" disabled/>
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -201,7 +201,7 @@
                 v-model="form.ddlCreateTime"
                 type="date"
                 value-format="YYYY-MM-DD"
-                placeholder="请选择物理表DDL创建时间">
+                placeholder="请选择物理表DDL创建时间" disabled>
               </el-date-picker>
             </el-form-item>
           </el-col>
@@ -211,7 +211,7 @@
                 v-model="form.ddlUpdateTime"
                 type="date"
                 value-format="YYYY-MM-DD"
-                placeholder="请选择物理表DDL修改时间">
+                placeholder="请选择物理表DDL修改时间" disabled>
               </el-date-picker>
             </el-form-item>
           </el-col>
@@ -227,7 +227,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item label="显示顺序" prop="orderNum">
-              <el-input v-model="form.orderNum" placeholder="请输入显示顺序" />
+              <el-input-number v-model="form.orderNum" controls-position="right" :min="0" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -290,6 +290,8 @@ const data = reactive({
     groupName: undefined,
     orderNum: undefined,
     status: undefined,
+    orderByColumn: 'order_num',
+    isAsc: 'asc'
   },
   rules: {
     tableName: [
@@ -328,8 +330,8 @@ function reset() {
     formType: null,
     module: null,
     groupName: null,
-    orderNum: null,
-    status: null,
+    orderNum: 0,
+    status: "0",
     delFlag: null,
     remark: null,
     createBy: null,

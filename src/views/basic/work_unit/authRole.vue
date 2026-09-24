@@ -1,15 +1,5 @@
 <template>
   <div class="app-container">
-    <h4 class="form-header">工作单元：{{ workUnit.name }}（{{ workUnit.code }}）</h4>
-    <el-form @submit.native.prevent>
-      <el-form-item label="工作单元名称">
-        <el-input v-model="workUnit.name" disabled />
-      </el-form-item>
-      <el-form-item label="工作单元编码">
-        <el-input v-model="workUnit.code" disabled />
-      </el-form-item>
-    </el-form>
-
     <el-form :model="queryParams" ref="queryRef" v-show="showSearch" :inline="true" label-width="68px">
       <el-form-item label="角色名称" prop="roleName">
         <el-input
@@ -99,23 +89,17 @@
     />
 
     <!-- 选择角色对话框 -->
-    <select-role ref="selectRef" :workUnitId="workUnitId" @ok="getList" />
+    <select-role ref="selectRef" :workUnitId="queryParams.workUnitId" @ok="handleQuery" />
   </div>
 </template>
 
 <script setup name="WorkUnitAuthRole">
 import SelectRole from "./selectRole"
-import { getWork_unit, allocatedRoleList, authRoleCancel, authRoleCancelAll } from '@/api/basic/work_unit'
+import { allocatedRoleList, authRoleCancel, authRoleCancelAll } from '@/api/basic/work_unit'
 
 const route = useRoute()
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict("sys_normal_disable")
-
-/** 工作单元 ID（从路由参数获取） */
-const workUnitId = ref(null)
-
-/** 当前工作单元信息 */
-const workUnit = ref({})
 
 /** 已分配角色列表（当前页） */
 const roleList = ref([])
@@ -124,7 +108,7 @@ const roleList = ref([])
 const selectedRoleIds = ref([])
 
 /** 加载状态 */
-const loading = ref(false)
+const loading = ref(true)
 
 /** 是否显示搜索区域 */
 const showSearch = ref(true)
@@ -138,11 +122,11 @@ const total = ref(0)
 /** 角色选择对话框引用 */
 const selectRef = ref(null)
 
-/** 查询参数 */
+/** 查询参数（含从路由参数解析的 workUnitId） */
 const queryParams = reactive({
   pageNum: 1,
   pageSize: 10,
-  workUnitId: undefined,
+  workUnitId: route.params.workUnitId,
   roleName: undefined,
   roleKey: undefined
 })
@@ -163,21 +147,9 @@ function getList() {
 }
 
 /**
- * 加载工作单元基本信息
- *
- * 用于在页面顶部展示工作单元名称与编码。
- */
-async function loadWorkUnit() {
-  try {
-    const res = await getWork_unit(workUnitId.value)
-    workUnit.value = res.data || {}
-  } catch (e) {
-    proxy.$modal.msgError('加载工作单元信息失败')
-  }
-}
-
-/**
  * 搜索按钮操作
+ *
+ * 重置页码到第 1 页后重新查询列表。
  */
 function handleQuery() {
   queryParams.pageNum = 1
@@ -186,6 +158,8 @@ function handleQuery() {
 
 /**
  * 重置按钮操作
+ *
+ * 清空查询条件后重新查询列表。
  */
 function resetQuery() {
   proxy.resetForm("queryRef")
@@ -208,7 +182,7 @@ function handleSelectionChange(selection) {
  * 对话框内部调用 /authRole/unallocatedList 分页接口，只展示未分配角色。
  */
 function openSelectRole() {
-  selectRef.value.show()
+  proxy.$refs["selectRef"].show()
 }
 
 /**
@@ -220,7 +194,7 @@ function openSelectRole() {
  */
 function cancelAuthRole(row) {
   proxy.$modal.confirm('确认要取消该角色"' + row.roleName + '"的授权吗？').then(function() {
-    return authRoleCancel({ workUnitId: workUnitId.value, roleId: row.roleId })
+    return authRoleCancel({ workUnitId: queryParams.workUnitId, roleId: row.roleId })
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("取消授权成功")
@@ -235,7 +209,7 @@ function cancelAuthRole(row) {
 function cancelAuthRoleAll() {
   const ids = selectedRoleIds.value.join(",")
   proxy.$modal.confirm("是否取消选中角色的授权数据项?").then(function() {
-    return authRoleCancelAll({ workUnitId: workUnitId.value, roleIds: ids })
+    return authRoleCancelAll({ workUnitId: queryParams.workUnitId, roleIds: ids })
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("取消授权成功")
@@ -244,6 +218,8 @@ function cancelAuthRoleAll() {
 
 /**
  * 关闭并返回工作单元列表页
+ *
+ * 与若依官方分配用户页面的"关闭"行为一致：通过 $tab.closeOpenPage 关闭当前标签页并回到列表页。
  */
 function handleClose() {
   const obj = { path: '/basic/work_unit' }
@@ -253,18 +229,15 @@ function handleClose() {
 /**
  * 初始化
  *
- * 从路由参数中解析工作单元ID，加载工作单元基本信息与已分配角色列表。
+ * 校验路由参数，若 workUnitId 缺失则给出错误提示并终止。
+ * 与官方 authUser.vue 一致：在 setup 顶层直接调用 getList()。
  */
-async function init() {
-  const id = route.params && route.params.workUnitId
-  if (!id) {
+function init() {
+  if (!queryParams.workUnitId) {
     proxy.$modal.msgError('工作单元ID无效')
     return
   }
-  workUnitId.value = id
-  queryParams.workUnitId = id
-  await loadWorkUnit()
-  await getList()
+  getList()
 }
 
 init()

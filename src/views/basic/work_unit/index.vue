@@ -29,14 +29,14 @@
           style="width: 240px"
         />
       </el-form-item>
-      <el-form-item label="显示顺序" prop="orderNum">
+      <!-- <el-form-item label="显示顺序" prop="orderNum">
         <el-input
           v-model="queryParams.orderNum"
           placeholder="请输入显示顺序"
           clearable
           @keyup.enter="handleQuery"
         />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择状态" clearable>
           <el-option
@@ -97,7 +97,7 @@
 
     <el-table v-loading="loading" :data="work_unitList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="id" />
+      <!-- <el-table-column label="主键" align="center" prop="id" /> -->
       <el-table-column label="工作单元编码" align="center" prop="code" />
       <el-table-column label="工作单元名称" align="center" prop="name" />
       <el-table-column label="关联部门" align="center" :show-overflow-tooltip="true">
@@ -160,7 +160,6 @@
           <el-col :span="24">
             <el-form-item label="显示顺序" prop="orderNum">
               <el-input-number v-model="form.orderNum" controls-position="right" :min="0" style="width: 100%" />
-              <!-- <el-input v-model="form.orderNum" placeholder="请输入显示顺序" /> -->
             </el-form-item>
           </el-col>
           <el-col :span="24">
@@ -266,6 +265,8 @@ const data = reactive({
     deptId: undefined,
     orderNum: undefined,
     status: undefined,
+    orderByColumn: 'order_num',
+    isAsc: 'asc'
   },
   rules: {
     code: [
@@ -368,7 +369,7 @@ function reset() {
     code: null,
     name: null,
     deptId: null,
-    orderNum: null,
+    orderNum: 0,
     status: "0",
     createBy: null,
     createTime: null,
@@ -492,7 +493,8 @@ function handleDelete(row) {
  * @param {Object} row 当前工作单元行数据
  */
 function handleAuthRole(row) {
-  proxy.$tab.openPage('分配角色', '/basic/work_unit-auth/role/' + row.id)
+  proxy.$tab.openPage('分配角色 - ' + row.name, '/basic/work_unit-auth/role/' + row.id)
+  // proxy.$tab.openPage('分配角色', '/basic/work_unit-auth/role/' + row.id)
 }
 
 /**

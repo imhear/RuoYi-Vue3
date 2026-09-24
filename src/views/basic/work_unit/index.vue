@@ -494,7 +494,6 @@ function handleDelete(row) {
  */
 function handleAuthRole(row) {
   proxy.$tab.openPage('分配角色 - ' + row.name, '/basic/work_unit-auth/role/' + row.id)
-  // proxy.$tab.openPage('分配角色', '/basic/work_unit-auth/role/' + row.id)
 }
 
 /**

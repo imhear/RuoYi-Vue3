@@ -1,27 +1,51 @@
 <template>
   <el-dialog
     v-model="visible"
-    title="设计态配置"
-    width="1400px"
-    top="2vh"
+    :fullscreen="isFullscreen"
+    width="1600px"
+    top="1vh"
     append-to-body
     class="design-config-dialog"
     @closed="handleClosed"
   >
-    <el-row :gutter="16">
+    <!-- 自定义 header：左侧标题（设计态配置 [方案名称|方案编码]），右侧全屏按钮（切换对话框 fullscreen） -->
+    <template #header>
+      <div class="design-config-header">
+        <span class="design-config-title">{{ dialogTitle }}</span>
+        <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
+          <svg-icon
+            :icon-class="isFullscreen ? 'exit-fullscreen' : 'fullscreen'"
+            class="design-config-fullscreen-icon"
+            @click="toggleFullscreen"
+          />
+        </el-tooltip>
+      </div>
+    </template>
+
+    <el-row :gutter="16" class="design-config-body-row">
       <!-- 左侧：方案菜单树 -->
-      <el-col :span="7">
+      <el-col :span="5">
         <div class="tree-panel">
           <div class="panel-header">
             <span>方案目录树</span>
-            <el-button link type="primary" icon="Plus" @click="handleAddRoot">新增根目录</el-button>
+            <span class="panel-actions">
+              <!-- 折叠/展开按钮：放在"新增根目录"前，点击切换整棵树的展开状态 -->
+              <el-button
+                link
+                type="primary"
+                :icon="isExpandAll ? 'Fold' : 'Expand'"
+                @click="toggleExpandAll"
+              >{{ isExpandAll ? '折叠' : '展开' }}</el-button>
+              <el-button link type="primary" icon="Plus" @click="handleAddRoot">新增根目录</el-button>
+            </span>
           </div>
           <div class="tree-body" v-loading="treeLoading">
             <el-tree
+              v-if="refreshTree"
               ref="treeRef"
               :data="treeData"
               node-key="menuId"
-              default-expand-all
+              :default-expand-all="isExpandAll"
               :expand-on-click-node="false"
               highlight-current
               @node-click="handleNodeClick"
@@ -35,6 +59,12 @@
                   </el-icon>
                   <span class="node-label">{{ data.menuName }}</span>
                   <span class="node-actions">
+                    <!-- 预览按钮：仅 C 类型节点显示，放在其他图标按钮之前 -->
+                    <el-tooltip v-if="data.menuType === 'C'" content="预览组件" placement="top">
+                      <el-button link type="primary" size="small" @click.stop="handlePreview(data)">
+                        <svg-icon icon-class="eye-open" class="action-icon" />
+                      </el-button>
+                    </el-tooltip>
                     <el-tooltip v-if="data.menuType !== 'F'" content="新增子节点" placement="top">
                       <el-button link type="primary" icon="Plus" size="small" @click.stop="handleAddChild(data)"></el-button>
                     </el-tooltip>
@@ -52,54 +82,60 @@
         </div>
       </el-col>
 
-      <!-- 右侧：方案信息 + 节点详情 -->
-      <el-col :span="17">
+      <!-- 右侧：节点详情 / 组件预览 -->
+      <el-col :span="19">
         <div class="detail-panel">
-          <div class="panel-header">方案信息</div>
+          <div class="panel-header">
+            <!-- 标题动态切换：预览模式下显示"组件预览：xxx"，否则显示"节点详情" -->
+            <span>{{ previewNode ? '组件预览：' + previewNode.menuName : '节点详情' }}</span>
+            <!-- 预览模式下提供"返回详情"按钮 -->
+            <el-button
+              v-if="previewNode"
+              link
+              type="primary"
+              icon="Back"
+              @click="handleBackToDetail"
+            >返回详情</el-button>
+          </div>
           <div class="detail-body">
-            <!-- 方案基本信息 -->
-            <el-descriptions :column="2" border>
-              <el-descriptions-item label="方案ID">{{ schemeInfo?.schemeId || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="方案编码">{{ schemeInfo?.schemeCode || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="方案名称">{{ schemeInfo?.schemeName || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="方案类型">{{ schemeInfo?.schemeType || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="分组类型数量">{{ schemeInfo?.groupTypeCount || 0 }}</el-descriptions-item>
-              <el-descriptions-item label="当前发布版本ID">{{ schemeInfo?.currentReleaseId || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="状态">{{ schemeInfo?.status === '0' ? '正常' : '停用' }}</el-descriptions-item>
-              <el-descriptions-item label="备注">{{ schemeInfo?.remark || '-' }}</el-descriptions-item>
-            </el-descriptions>
-
-            <el-divider content-position="left">选中节点详情</el-divider>
-
-            <div v-if="currentNode">
-              <el-descriptions :column="2" border>
-                <el-descriptions-item label="菜单ID">{{ currentNode.menuId }}</el-descriptions-item>
-                <el-descriptions-item label="菜单名称">{{ currentNode.menuName }}</el-descriptions-item>
-                <el-descriptions-item label="菜单类型">
-                  <el-tag :type="menuTypeTag(currentNode.menuType)">{{ menuTypeText(currentNode.menuType) }}</el-tag>
-                </el-descriptions-item>
-                <el-descriptions-item label="父菜单ID">{{ currentNode.parentId }}</el-descriptions-item>
-                <el-descriptions-item label="显示顺序">{{ currentNode.orderNum }}</el-descriptions-item>
-                <el-descriptions-item label="前端路由地址">{{ currentNode.path || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="前端组件路径">{{ currentNode.component || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="后端接口路径">{{ currentNode.backendRoute || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="操作码">{{ currentNode.operationCode || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="物理表名">{{ currentNode.tableName || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="权限标识">{{ currentNode.perms || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="路由参数">{{ currentNode.query || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="自定义参数">{{ currentNode.customParams || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="前置菜单ID">{{ currentNode.predecessorDetailId || '-' }}</el-descriptions-item>
-                <el-descriptions-item label="卡片显示">{{ currentNode.operationVisible === '1' ? '是' : '否' }}</el-descriptions-item>
-                <el-descriptions-item label="状态">{{ currentNode.status === '0' ? '正常' : '停用' }}</el-descriptions-item>
-                <el-descriptions-item label="是否可反审">{{ currentNode.isUnaudit === '0' ? '是' : '否' }}</el-descriptions-item>
-                <el-descriptions-item label="备注">{{ currentNode.remark || '-' }}</el-descriptions-item>
-              </el-descriptions>
-              <div class="detail-actions">
-                <el-button type="primary" @click="handleEdit(currentNode)">编辑</el-button>
-                <el-button v-if="currentNode.menuType !== 'F'" @click="handleAddChild(currentNode)">新增子节点</el-button>
-              </div>
+            <!-- 预览模式：动态渲染 C 节点的前端组件 -->
+            <div v-if="previewNode" class="component-preview">
+              <component v-if="previewComponent" :is="previewComponent" />
+              <el-empty v-else description="该节点不支持预览" />
             </div>
-            <el-empty v-else description="请选择左侧节点查看详情" />
+
+            <!-- 详情模式：显示当前选中节点详情 -->
+            <template v-else>
+              <div v-if="currentNode">
+                <el-descriptions :column="2" border>
+                  <el-descriptions-item label="菜单ID">{{ currentNode.menuId }}</el-descriptions-item>
+                  <el-descriptions-item label="菜单名称">{{ currentNode.menuName }}</el-descriptions-item>
+                  <el-descriptions-item label="菜单类型">
+                    <el-tag :type="menuTypeTag(currentNode.menuType)">{{ menuTypeText(currentNode.menuType) }}</el-tag>
+                  </el-descriptions-item>
+                  <el-descriptions-item label="父菜单ID">{{ currentNode.parentId }}</el-descriptions-item>
+                  <el-descriptions-item label="显示顺序">{{ currentNode.orderNum }}</el-descriptions-item>
+                  <el-descriptions-item label="前端路由地址">{{ currentNode.path || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="前端组件路径">{{ currentNode.component || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="后端接口路径">{{ currentNode.backendRoute || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="操作码">{{ currentNode.operationCode || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="物理表名">{{ currentNode.tableName || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="权限标识">{{ currentNode.perms || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="路由参数">{{ currentNode.query || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="自定义参数">{{ currentNode.customParams || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="前置菜单ID">{{ currentNode.predecessorDetailId || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="卡片显示">{{ currentNode.operationVisible === '1' ? '是' : '否' }}</el-descriptions-item>
+                  <el-descriptions-item label="状态">{{ currentNode.status === '0' ? '正常' : '停用' }}</el-descriptions-item>
+                  <el-descriptions-item label="是否可反审">{{ currentNode.isUnaudit === '0' ? '是' : '否' }}</el-descriptions-item>
+                  <el-descriptions-item label="备注">{{ currentNode.remark || '-' }}</el-descriptions-item>
+                </el-descriptions>
+                <div class="detail-actions">
+                  <el-button type="primary" @click="handleEdit(currentNode)">编辑</el-button>
+                  <el-button v-if="currentNode.menuType !== 'F'" @click="handleAddChild(currentNode)">新增子节点</el-button>
+                </div>
+              </div>
+              <el-empty v-else description="请选择左侧节点查看详情" />
+            </template>
           </div>
         </div>
       </el-col>
@@ -461,7 +497,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, nextTick } from 'vue'
+import { ref, reactive, computed, nextTick, shallowRef, defineAsyncComponent } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Folder, Document, Operation, Plus, Edit, Delete, Search, QuestionFilled } from '@element-plus/icons-vue'
 import SelectTable from '@/views/basic/components/SelectTable.vue'
@@ -495,6 +531,31 @@ const sysMenuTreeData = ref([])
 /** 当前选中的系统菜单ID（用于 el-tree-select 回显） */
 const selectedSysMenuId = ref(null)
 
+/** 方案目录树的展开状态：true 全部展开，false 全部折叠 */
+const isExpandAll = ref(true)
+
+/** 强制重渲染方案目录树的开关：切换展开/折叠时先置 false 再置 true，让 el-tree 重新应用 default-expand-all */
+const refreshTree = ref(true)
+
+/** 当前预览的节点（非空时右侧显示组件预览） */
+const previewNode = ref(null)
+
+/** 当前预览的动态组件（由 previewNode.component 异步加载得到） */
+const previewComponent = shallowRef(null)
+
+/** 对话框全屏状态：true 时 el-dialog 通过 fullscreen 属性铺满整个屏幕 */
+const isFullscreen = ref(false)
+
+/**
+ * 前端组件模块映射表
+ *
+ * 使用 Vite 的 import.meta.glob 在构建时收集 /src/views 下所有 .vue 文件，
+ * 返回一个 key=文件绝对路径、value=动态 import 函数的对象。
+ * 点击 C 类型节点的 eye-open 按钮时，根据 component 字段拼出完整路径并从中查找。
+ * 参考 src/views/batch/components/BatchRecordView.vue 的实现方式。
+ */
+const modules = import.meta.glob('/src/views/**/*.vue')
+
 /** 编辑表单（包含 sys_menu 全部字段 + 设计态专用字段） */
 const editForm = reactive({
   menuId: null,
@@ -523,6 +584,24 @@ const editForm = reactive({
   actionType: '', 
   buttonLabel: '',
   operationVisible: '1'
+})
+
+/**
+ * 对话框标题
+ *
+ * 格式：设计态配置 [方案名称|方案编码]
+ * - 方案信息未加载时，仅显示"设计态配置"
+ * - 只有名称或只有编码时，只显示有值的那一项
+ */
+const dialogTitle = computed(() => {
+  const s = schemeInfo.value
+  if (!s) return '设计态配置'
+  const name = s.schemeName || ''
+  const code = s.schemeCode || ''
+  if (name && code) return `设计态配置 [${name}|${code}]`
+  if (name) return `设计态配置 [${name}]`
+  if (code) return `设计态配置 [${code}]`
+  return '设计态配置'
 })
 
 /**
@@ -699,6 +778,8 @@ function findNodeByPerms(nodes, perms) {
 async function open() {
   visible.value = true
   currentNode.value = null
+  previewNode.value = null
+  previewComponent.value = null
   await Promise.all([loadTree(), loadSysMenuTree(), loadSchemeInfo()])
 }
 
@@ -708,11 +789,61 @@ function close() {
 
 function handleClosed() {
   currentNode.value = null
+  previewNode.value = null
+  previewComponent.value = null
+  // 关闭对话框时，同步退出全屏状态，避免下次打开时仍保持全屏
+  isFullscreen.value = false
+}
+
+// ==================== 全屏切换 ====================
+
+/**
+ * 切换对话框全屏
+ *
+ * 通过 el-dialog 的 fullscreen 属性控制，让对话框铺满整个屏幕（不是浏览器级全屏）。
+ * 与浏览器 API（Screenfull / useFullscreen）不同，这里只影响对话框自身，
+ * 不会触发页面级的全屏状态变化，是"对话框占满屏幕"的标准做法。
+ */
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value
 }
 
 // ==================== 树节点操作 ====================
+
+/**
+ * 折叠/展开方案目录树
+ *
+ * 实现方式：先关闭 el-tree 的 v-if 让组件销毁，切换 isExpandAll 后再重新挂载，
+ * 使 el-tree 重新应用 default-expand-all 属性。
+ * 参考 src/views/system/menu/index.vue 中"展开/折叠"的官方实现方式。
+ * 重新渲染后，通过 treeRef.setCurrentKey 恢复之前选中的节点高亮。
+ */
+function toggleExpandAll() {
+  refreshTree.value = false
+  isExpandAll.value = !isExpandAll.value
+  nextTick(() => {
+    refreshTree.value = true
+    // 树重新渲染后恢复选中高亮
+    nextTick(() => {
+      if (currentNode.value && treeRef.value) {
+        treeRef.value.setCurrentKey(currentNode.value.menuId)
+      }
+    })
+  })
+}
+
+/**
+ * 单击树节点
+ *
+ * 更新 currentNode 用于右侧详情展示；同时退出预览模式，
+ * 保证点击非预览按钮的节点时，右侧立即回到详情视图。
+ */
 function handleNodeClick(data) {
   currentNode.value = data
+  if (previewNode.value) {
+    previewNode.value = null
+    previewComponent.value = null
+  }
 }
 
 function handleAddRoot() {
@@ -806,6 +937,65 @@ function handleMenuTypeChange(val) {
     editForm.visible = '0'
     editForm.actionType = ''
   }
+}
+
+// ==================== 预览组件 ====================
+
+/**
+ * 预览 C 类型节点对应的前端组件
+ *
+ * 用户在树节点上点击 eye-open 按钮时触发：
+ * - 校验 component 是否已配置
+ * - 将 previewNode 设为当前节点，右侧 panel 切换到预览模式
+ * - 通过 loadPreviewComponent 异步加载组件
+ *
+ * @param {Object} data 当前 C 类型节点数据（含 menuId、menuName、component 等字段）
+ */
+function handlePreview(data) {
+  if (!data.component) {
+    ElMessage.warning('该节点未配置前端组件路径')
+    return
+  }
+  previewNode.value = data
+  loadPreviewComponent(data.component)
+}
+
+/**
+ * 异步加载前端组件
+ *
+ * 从 modules 映射表中查找组件文件：
+ * - component 字段值可能是 "bizdata/biz_receiving/versions/v1.0.0/Form"（不带后缀）
+ *   或 "bizdata/biz_receiving/versions/v1.0.0/Form.vue"（带后缀）
+ * - 统一补全 .vue 后缀后拼成 /src/views/xxx.vue 作为查找 key
+ * - 找到后通过 defineAsyncComponent 包装为异步组件赋值给 previewComponent
+ *
+ * @param {String} componentPath 组件路径（来自节点 component 字段）
+ */
+function loadPreviewComponent(componentPath) {
+  if (!componentPath) {
+    previewComponent.value = null
+    return
+  }
+  // 兼容带/不带 .vue 后缀的配置
+  const normalized = componentPath.endsWith('.vue') ? componentPath : componentPath + '.vue'
+  const fullPath = '/src/views/' + normalized
+  const loader = modules[fullPath]
+  if (loader) {
+    previewComponent.value = defineAsyncComponent(loader)
+  } else {
+    previewComponent.value = null
+    ElMessage.warning('未找到组件文件：' + fullPath)
+  }
+}
+
+/**
+ * 返回详情视图
+ *
+ * 清空预览状态，右侧 panel 切回节点详情展示。
+ */
+function handleBackToDetail() {
+  previewNode.value = null
+  previewComponent.value = null
 }
 
 // ==================== 选择器回调 ====================
@@ -928,6 +1118,10 @@ function handleDelete(node) {
     if (currentNode.value && currentNode.value.menuId === node.menuId) {
       currentNode.value = null
     }
+    if (previewNode.value && previewNode.value.menuId === node.menuId) {
+      previewNode.value = null
+      previewComponent.value = null
+    }
     await loadTree()
   }).catch(() => {})
 }
@@ -958,15 +1152,111 @@ defineExpose({ open, close })
 </script>
 
 <style scoped>
-.design-config-dialog :deep(.el-dialog__body) {
-  padding: 12px;
+/* ============================================================
+ * 对话框本体：高度固定 + flex 列布局
+ *
+ * 关键修正：`.design-config-dialog` 是加在 el-dialog 根元素上的 class，
+ * 与 `.el-dialog` 是同一个元素，所以**不能**写成
+ * `.design-config-dialog :deep(.el-dialog)`（那会要求 .el-dialog 是后代，永远不匹配）。
+ * 直接选择 `.design-config-dialog` 即可。
+ *
+ * 之前 CSS 未生效导致 dialog 高度 auto → body 被内容撑高 → overflow: hidden 裁掉底部，
+ * 预览组件的底部内容被遮挡。此处修正后 dialog 高度固定为 96vh。
+ * ============================================================ */
+.design-config-dialog {
+  display: flex;
+  flex-direction: column;
+  height: 96vh;
+  margin: 2vh auto;
 }
 
+/* 全屏模式下 el-dialog 会自己处理高度（100vh），这里只需确保仍是 flex 列布局 */
+.design-config-dialog.is-fullscreen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+}
+
+/* dialog header：固定高度，不参与弹性伸缩 */
+.design-config-dialog :deep(.el-dialog__header) {
+  flex-shrink: 0;
+  padding: 16px 20px;
+  margin-right: 0;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+/* dialog body：撑满剩余高度，内部单独滚动 */
+.design-config-dialog :deep(.el-dialog__body) {
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  overflow: hidden;
+}
+
+/* ============================================================
+ * 自定义对话框标题栏
+ * 左侧：标题（设计态配置 [方案名称|方案编码]）
+ * 右侧：全屏按钮（切换 el-dialog 的 fullscreen 属性）
+ * ============================================================ */
+.design-config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 为 el-dialog 默认的关闭按钮留出右侧空间 */
+  padding-right: 28px;
+}
+
+.design-config-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 全屏图标：与若依 Navbar 的全屏图标样式保持一致 */
+.design-config-fullscreen-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  fill: #5a5e66;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.design-config-fullscreen-icon:hover {
+  fill: #409eff;
+  transform: scale(1.1);
+}
+
+/* ============================================================
+ * 内部 el-row / el-col 撑满 body 高度
+ * 让左侧树面板与右侧详情面板等高，由 flex 列布局分配内部空间。
+ * 使用自定义 class `design-config-body-row` 避免误伤内部编辑对话框的 el-row。
+ * ============================================================ */
+.design-config-dialog :deep(.design-config-body-row) {
+  height: 100%;
+}
+
+.design-config-dialog :deep(.design-config-body-row > .el-col) {
+  height: 100%;
+}
+
+/* ============================================================
+ * 左右面板：卡片风格 + flex 列布局
+ * - panel-header 固定高度
+ * - tree-body / detail-body 使用 flex:1 撑满剩余空间，各自独立滚动
+ * ============================================================ */
 .tree-panel,
 .detail-panel {
   border: 1px solid #e4e7ed;
   border-radius: 6px;
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-header {
@@ -977,16 +1267,22 @@ defineExpose({ open, close })
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
-.tree-panel {
-  height: calc(100vh - 220px);   /* 原为 650px */
+/* 左侧 panel-header 中的操作按钮区：折叠 + 新增根目录 */
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
+/* 左侧树内容区：flex 撑满，独立纵向滚动 */
 .tree-body {
-  height: calc(100% - 41px);
+  flex: 1;
   overflow-y: auto;
   padding: 8px;
+  min-height: 0;
 }
 
 .tree-node {
@@ -1023,18 +1319,34 @@ defineExpose({ open, close })
   opacity: 1;
 }
 
-.detail-panel {
-  height: calc(100vh - 220px);   /* 原为 650px */
+/* eye-open 图标尺寸：让 svg-icon 与 Element Plus 图标视觉对齐 */
+.action-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
 }
 
+/* 右侧详情内容区：flex 撑满，独立纵向滚动 */
 .detail-body {
-  padding: 16px;
-  height: calc(100% - 41px);
+  flex: 1;
+  padding: 0px;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .detail-actions {
   margin-top: 16px;
   text-align: right;
+}
+
+/* ============================================================
+ * 组件预览容器
+ *
+ * 不再设置 min-height / overflow，避免嵌套滚动容器
+ * 与 .detail-body 的滚动条互相干扰，导致预览组件底部被裁剪。
+ * 让预览组件的内部内容自然撑高，统一由外层 .detail-body 承担滚动。
+ * ============================================================ */
+.component-preview {
+  width: 100%;
 }
 </style>

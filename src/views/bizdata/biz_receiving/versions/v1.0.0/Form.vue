@@ -135,7 +135,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column min-width="90" align="center">
+          <el-table-column min-width="95" align="center">
             <template #header><div style="line-height: 1.2;">是否无<br/>发霉、无变质、无生<br/>虫、无变色等</div></template>
             <template #default="scope">
               <div class="checkbox-pair">

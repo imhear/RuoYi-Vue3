@@ -77,17 +77,7 @@
 
     <el-table v-loading="loading" :data="scheme_releaseList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="发布主键" align="center" prop="releaseId" />
-      <el-table-column label="关联方案ID" align="center" prop="schemeId" />
-      <el-table-column label="发布版本号" align="center" prop="releaseCode" />
-      <el-table-column label="方案类型" align="center" prop="schemeType" />
-      <el-table-column label="方案名称" align="center" prop="schemeName" />
-      <el-table-column label="发布说明" align="center" prop="releaseNote" />
-      <el-table-column label="状态" align="center" prop="status">
-        <template #default="scope">
-          <dict-tag :options="sys_normal_disable" :value="scope.row.status"/>
-        </template>
-      </el-table-column>
+      <!-- <el-table-column label="发布主键" align="center" prop="releaseId" /> -->
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['fill:scheme_release:query']">详情</el-button>
@@ -95,6 +85,21 @@
           <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['fill:scheme_release:remove']">删除</el-button>
         </template>
       </el-table-column>
+      <!-- <el-table-column label="方案名称" align="center" prop="schemeName" /> -->
+      <el-table-column label="方案名称" align="center" prop="schemeName">
+        <template #default="scope">
+          <el-link type="primary" @click="openView(scope.row)">{{ scope.row.schemeName }}</el-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" align="center" prop="status">
+        <template #default="scope">
+          <dict-tag :options="sys_normal_disable" :value="scope.row.status"/>
+        </template>
+      </el-table-column>
+      <el-table-column label="关联方案ID" align="center" prop="schemeId" />
+      <el-table-column label="发布版本号" align="center" prop="releaseCode" />
+      <el-table-column label="方案类型" align="center" prop="schemeType" />
+      <!-- <el-table-column label="发布说明" align="center" prop="releaseNote" /> -->
     </el-table>
     
     <pagination
@@ -105,8 +110,12 @@
       @pagination="getList"
     />
 
+    <!-- 发布态方案结构预览对话框 -->
+    <ReleaseViewDialog ref="viewDialogRef" :release-id="currentReleaseId" />
+
     <!-- 填报方案发布态详情抽屉 -->
     <scheme_release-view-drawer ref="scheme_releaseViewRef" />
+
     <!-- 添加或修改填报方案发布态对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
       <el-form ref="scheme_releaseRef" :model="form" :rules="rules" label-width="100px">
@@ -162,6 +171,7 @@
 <script setup name="Scheme_release">
 import { listScheme_release, getScheme_release, delScheme_release, addScheme_release, updateScheme_release } from "@/api/fill/scheme_release"
 import Scheme_releaseViewDrawer from "./view"
+import ReleaseViewDialog from './components/ReleaseViewDialog.vue'
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
@@ -202,6 +212,28 @@ const data = reactive({
 })
 
 const { queryParams, form, rules } = toRefs(data)
+
+/** 预览对话框引用 */
+const viewDialogRef = ref(null)
+
+/** 当前预览的发布版本ID（props 传给对话框） */
+const currentReleaseId = ref(null)
+
+/**
+ * 打开发布态方案结构预览对话框
+ *
+ * 将当前行的 releaseId 记录到 currentReleaseId，
+ * 通过 nextTick 保证 props 更新后再调用对话框的 open 方法。
+ * 与 src/views/fill/scheme_design/index.vue 中 openConfig 的调用方式一致。
+ *
+ * @param {Object} row 当前点击的方案行数据（含 releaseId、schemeName 等字段）
+ */
+function openView(row) {
+  currentReleaseId.value = row.releaseId
+  nextTick(() => {
+    viewDialogRef.value?.open()
+  })
+}
 
 /** 查询填报方案发布态列表 */
 function getList() {

@@ -104,7 +104,7 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
+      <!-- <el-col :span="1.5">
         <el-button
           type="primary"
           plain
@@ -112,8 +112,8 @@
           @click="handleAdd"
           v-hasPermi="['batch:batch_record_log:add']"
         >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
+      </el-col> -->
+      <!-- <el-col :span="1.5">
         <el-button
           type="success"
           plain
@@ -122,8 +122,8 @@
           @click="handleUpdate"
           v-hasPermi="['batch:batch_record_log:edit']"
         >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
+      </el-col> -->
+      <!-- <el-col :span="1.5">
         <el-button
           type="danger"
           plain
@@ -132,8 +132,8 @@
           @click="handleDelete"
           v-hasPermi="['batch:batch_record_log:remove']"
         >删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
+      </el-col> -->
+      <!-- <el-col :span="1.5">
         <el-button
           type="warning"
           plain
@@ -141,36 +141,50 @@
           @click="handleExport"
           v-hasPermi="['batch:batch_record_log:export']"
         >导出</el-button>
-      </el-col>
+      </el-col> -->
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="batch_record_logList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="日志主键" align="center" prop="logId" />
-      <el-table-column label="关联批记录ID" align="center" prop="recordId" />
-      <el-table-column label="关联批记录按钮节点ID" align="center" prop="menuId" />
-      <el-table-column label="关联批记录菜单节点ID" align="center" prop="cMenuId" />
-      <el-table-column label="物理表名" align="center" prop="tableName" />
-      <el-table-column label="业务表主键" align="center" prop="businessRecordId" />
-      <el-table-column label="前端路由地址" align="center" prop="path" />
-      <el-table-column label="后端接口路径" align="center" prop="backendRoute" />
+      <!-- <el-table-column label="日志主键" align="center" prop="logId" /> -->
       <el-table-column label="操作码" align="center" prop="operationCode" />
-      <el-table-column label="操作类型" align="center" prop="actionType" />
+      <!-- 操作类型：从业务字典 biz_action_type 显示中文标签 -->
+      <el-table-column label="操作类型" align="center" prop="actionType">
+        <template #default="scope">
+          <el-tag v-if="scope.row.actionType">{{ getActionTypeLabel(scope.row.actionType) }}</el-tag>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作人" align="center" prop="operator" />
       <el-table-column label="操作时间" align="center" prop="actionTime" width="180">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.actionTime, '{y}-{m}-{d}') }}</span>
+          <span>{{ scope.row.createTime }}</span>
+          <!-- <span>{{ parseTime(scope.row.actionTime, '{y}-{m}-{d}') }}</span> -->
         </template>
       </el-table-column>
       <el-table-column label="备注" align="center" prop="remark" />
-      <el-table-column label="乐观锁版本号" align="center" prop="revision" />
-      <el-table-column label="系统版本号" align="center" prop="sysVersion" />
+      <!-- <el-table-column label="关联批记录ID" align="center" prop="recordId" /> -->
+      <!-- <el-table-column label="关联批记录按钮节点ID" align="center" prop="menuId" /> -->
+      <!-- <el-table-column label="关联批记录菜单节点ID" align="center" prop="cMenuId" /> -->
+      <!-- <el-table-column label="业务表名" align="center" prop="tableName" /> -->
+      <!-- <el-table-column label="业务表主键" align="center" prop="businessRecordId" /> -->
+      <!-- <el-table-column label="前端路由地址" align="center" prop="path" /> -->
+      <!-- 后端接口路径：超长不换行，hover 显示完整内容 -->
+      <el-table-column
+        label="后端接口路径"
+        align="center"
+        prop="backendRoute"
+        :show-overflow-tooltip="true"
+        min-width="200"
+      />
+      <!-- <el-table-column label="乐观锁版本号" align="center" prop="revision" /> -->
+      <!-- <el-table-column label="系统版本号" align="center" prop="sysVersion" /> -->
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button link type="primary" icon="View" @click="handleViewData(scope.row)" v-hasPermi="['batch:batch_record_log:query']">详情</el-button>
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['batch:batch_record_log:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_record_log:remove']">删除</el-button>
+          <!-- <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['batch:batch_record_log:edit']">修改</el-button> -->
+          <!-- <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_record_log:remove']">删除</el-button> -->
         </template>
       </el-table-column>
     </el-table>
@@ -274,8 +288,12 @@
 <script setup name="Batch_record_log">
 import { listBatch_record_log, getBatch_record_log, delBatch_record_log, addBatch_record_log, updateBatch_record_log } from "@/api/batch/batch_record_log"
 import Batch_record_logViewDrawer from "./view"
+// 引入业务字典 Hook（项目自定义 hook，需显式 import，不依赖 auto-import）
+import { useBizDict } from '@/utils/bizDict'
 
 const { proxy } = getCurrentInstance()
+// 操作类型下拉/展示的数据源改为业务字典 biz_action_type
+const { biz_action_type } = useBizDict('biz_action_type')
 
 const batch_record_logList = ref([])
 const open = ref(false)
@@ -305,6 +323,8 @@ const data = reactive({
     actionTime: undefined,
     revision: undefined,
     sysVersion: undefined,
+    orderByColumn: 'create_time',
+    isAsc: 'desc'
   },
   rules: {
     recordId: [
@@ -320,6 +340,23 @@ const data = reactive({
 })
 
 const { queryParams, form, rules } = toRefs(data)
+
+/**
+ * 获取操作类型标签文本
+ *
+ * 数据源为业务字典 biz_action_type。
+ * 业务字典结构：[{ label: '查看', value: 'PREVIEW' }, ...]，与官方字典一致。
+ * 若字典尚未加载或未匹配到值，返回原始 value，避免展示空白。
+ *
+ * @param {String} value 操作类型值（如 PREVIEW / EDIT / SUBMIT 等）
+ * @returns {String} 操作类型中文标签
+ */
+function getActionTypeLabel(value) {
+  if (!value) return value
+  const list = biz_action_type.value || []
+  const found = list.find(item => item.value === value)
+  return found ? found.label : value
+}
 
 /** 查询批记录操作日志列表 */
 function getList() {

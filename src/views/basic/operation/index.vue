@@ -155,12 +155,13 @@
             </el-col>
             <el-col :span="24">
               <el-form-item label="操作类型" prop="actionType">
+                <!-- 操作类型下拉：数据源改为业务字典 biz_action_type -->
                 <el-select v-model="form.actionType" placeholder="请选择操作类型" style="width: 100%">
                   <el-option
-                    v-for="type in actionTypeOptions"
-                    :key="type.value"
-                    :label="type.label"
-                    :value="type.value"
+                    v-for="dict in biz_action_type"
+                    :key="dict.value"
+                    :label="dict.label"
+                    :value="dict.value"
                   />
                 </el-select>
               </el-form-item>
@@ -246,9 +247,13 @@ import { ref, reactive, computed, nextTick } from 'vue'
 import { listOperation, getOperation, delOperation, addOperation, updateOperation, updateOperationSort } from "@/api/basic/operation"
 import SelectTable from "@/views/basic/components/SelectTable.vue"
 import FrontendFileSelector from "@/views/fill/components/FrontendFileSelector.vue"
+// 引入业务字典 Hook（项目自定义 hook，需显式 import，不依赖 auto-import）
+import { useBizDict } from '@/utils/bizDict'
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict('sys_normal_disable')
+// 操作类型下拉的数据源改为业务字典 biz_action_type
+const { biz_action_type } = useBizDict('biz_action_type')
 
 const operationList = ref([])
 const open = ref(false)
@@ -263,20 +268,6 @@ const frontendFileSelectorRef = ref(null)
 
 /** 原始排序记录，用于保存排序时比对 */
 const originalOrders = ref({})
-
-/** 操作类型选项 */
-const actionTypeOptions = [
-  { value: 'PREVIEW', label: '查看' },
-  { value: 'EDIT', label: '编辑' },
-  { value: 'SUBMIT', label: '提交' },
-  { value: 'REVIEW', label: '复核' },
-  { value: 'INSPECT', label: '检查' },
-  { value: 'ARCHIVE', label: '归档' },
-  { value: 'CANCEL_SUBMIT', label: '取消提交' },
-  { value: 'CANCEL_REVIEW', label: '取消复核' },
-  { value: 'CANCEL_INSPECT', label: '取消检查' },
-  { value: 'CANCEL_ARCHIVE', label: '取消归档' }
-]
 
 const data = reactive({
   form: {
@@ -335,11 +326,18 @@ const { queryParams, form, rules } = toRefs(data)
 
 /**
  * 获取操作类型标签文本
+ *
+ * 数据源改为业务字典 biz_action_type（原为硬编码的 actionTypeOptions 数组）。
+ * 业务字典结构：[{ label: '查看', value: 'PREVIEW' }, ...]，与官方字典一致。
+ * 若字典尚未加载或未匹配到值，返回原始 value，避免展示空白。
+ *
  * @param {String} value 操作类型值
  * @returns {String} 操作类型中文标签
  */
 function getActionTypeLabel(value) {
-  const found = actionTypeOptions.find(item => item.value === value)
+  if (!value) return value
+  const list = biz_action_type.value || []
+  const found = list.find(item => item.value === value)
   return found ? found.label : value
 }
 

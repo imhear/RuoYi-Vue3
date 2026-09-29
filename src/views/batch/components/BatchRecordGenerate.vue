@@ -2,7 +2,7 @@
   <el-dialog
     v-model="visible"
     title="生成批记录"
-    width="1200px"
+    width="1600px"
     top="3vh"
     append-to-body
     :fullscreen="isFullscreen"
@@ -76,11 +76,31 @@
       <el-divider content-position="left">表单预览</el-divider>
       <el-row :gutter="16">
         <!-- 左侧：方案目录树 -->
-        <el-col :span="7">
+        <el-col :span="5">
           <div class="tree-panel">
-            <div class="panel-header">方案目录树</div>
+            <div class="panel-header">
+              <span>方案目录树</span>
+              <!-- 折叠/展开按钮：点击切换整棵树的展开状态 -->
+              <el-button
+                link
+                type="primary"
+                :icon="isExpandAll ? 'Fold' : 'Expand'"
+                @click="toggleExpandAll"
+              >{{ isExpandAll ? '折叠' : '展开' }}</el-button>
+            </div>
             <div class="tree-body">
-              <el-tree ref="treeRef" :data="menuTree" node-key="menuId" default-expand-all :expand-on-click-node="false" highlight-current @node-click="handleNodeClick">
+              <!-- 通过 v-if="refreshTree" 强制 el-tree 在展开/折叠切换时重新挂载，
+                   使 :default-expand-all 生效；重挂载后通过 setCurrentKey 恢复选中高亮 -->
+              <el-tree
+                v-if="refreshTree"
+                ref="treeRef"
+                :data="menuTree"
+                node-key="menuId"
+                :default-expand-all="isExpandAll"
+                :expand-on-click-node="false"
+                highlight-current
+                @node-click="handleNodeClick"
+              >
                 <template #default="{ data }">
                   <div class="tree-node">
                     <el-icon class="node-icon">
@@ -101,11 +121,10 @@
           </div>
         </el-col>
         <!-- 右侧：节点详情 -->
-        <el-col :span="17">
+        <el-col :span="19">
           <div class="detail-panel">
             <div class="panel-header">
               <span>节点详情</span>
-              <el-button v-if="selectedNode && selectedNode.menuType === 'C'" link type="primary" @click="openFocusPreviewDialog">专注预览</el-button>
             </div>
             <div class="detail-body">
               <!-- 目录节点：展示子节点列表 -->
@@ -116,18 +135,21 @@
                   <el-table-column label="前端组件" prop="component" show-overflow-tooltip />
                 </el-table>
               </div>
-              <!-- 菜单节点：提示点击查看按钮 -->
+              <!-- 菜单节点：直接加载 component 指向的表单组件，预览空表单 -->
               <div v-else-if="selectedNode && selectedNode.menuType === 'C'">
-                <el-empty description="请点击该节点下的“查看”按钮预览空表单" />
+                <div v-if="currentComponent" class="component-container">
+                  <component :is="currentComponent" v-bind="componentProps" />
+                </div>
+                <el-empty v-else description="该节点未配置前端组件路径，无法预览" />
               </div>
               <!-- 按钮节点 -->
               <div v-else-if="selectedNode && selectedNode.menuType === 'F'">
-                <!-- 预览按钮：加载动态组件 -->
+                <!-- 预览按钮：加载动态组件（保留兼容，正常流程下不再需要点击此按钮） -->
                 <div v-if="selectedNode.actionType === 'PREVIEW' && currentComponent" class="component-container">
                   <component :is="currentComponent" v-bind="componentProps" />
                 </div>
                 <el-empty v-else-if="selectedNode.actionType === 'PREVIEW'" description="组件未加载" />
-                <!-- 其他按钮：仅展示配置信息（不再配置操作人） -->
+                <!-- 其他按钮：仅展示配置信息 -->
                 <el-descriptions v-else :column="1" border>
                   <el-descriptions-item label="操作码">{{ selectedNode.operationCode || '-' }}</el-descriptions-item>
                   <el-descriptions-item label="按钮标签">{{ selectedNode.buttonLabel || '-' }}</el-descriptions-item>
@@ -148,24 +170,13 @@
       <el-button type="primary" @click="handleSubmit" :disabled="!showPreview">确 认 生 成</el-button>
     </template>
   </el-dialog>
-
-  <!-- 独立专注预览对话框（全屏） -->
-  <el-dialog v-model="previewDialogVisible" title="专注预览" width="100%" fullscreen append-to-body :show-close="false" :close-on-click-modal="false">
-    <template #header>
-      <div style="display: flex; align-items: center; width: 100%;">
-        <span style="flex: 1; font-size: 18px; font-weight: bold;">{{ selectedNode?.menuName || '预览' }}</span>
-        <el-button link type="primary" icon="Close" @click="previewDialogVisible = false">关闭</el-button>
-      </div>
-    </template>
-    <div v-if="currentComponent" class="focus-component-wrapper"><component :is="currentComponent" /></div>
-    <el-empty v-else description="该节点不支持预览" />
-  </el-dialog>
 </template>
 
 <script setup>
 import { ref, reactive, shallowRef, defineAsyncComponent, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Folder, Document, Operation, FullScreen, Aim, Close } from '@element-plus/icons-vue'
+// 移除了原 Close 图标（仅被已删除的"专注预览"对话框使用）
+import { Folder, Document, Operation, FullScreen, Aim } from '@element-plus/icons-vue'
 import { listScheme_release } from "@/api/fill/scheme_release"
 import { listScheme_release_menu } from "@/api/fill/scheme_release_menu"
 import { listWork_unit } from "@/api/basic/work_unit"
@@ -176,7 +187,7 @@ defineOptions({ name: 'BatchRecordGenerate' })
 const { proxy } = getCurrentInstance()
 
 const visible = ref(false)
-const previewDialogVisible = ref(false)
+// 已移除 previewDialogVisible（"专注预览"功能整体删除）
 const isFullscreen = ref(false)
 const showPreview = ref(false)
 const loadingMenus = ref(false)
@@ -189,6 +200,23 @@ const selectedNode = ref(null)
 const currentComponent = shallowRef(null)
 const componentProps = ref({})
 const formRef = ref(null)
+const treeRef = ref(null)
+
+/**
+ * 方案目录树的展开状态
+ *
+ * true = 全部展开（默认），false = 全部折叠。
+ * 与 :default-expand-all 绑定，切换时通过 refreshTree 强制 el-tree 重挂载生效。
+ */
+const isExpandAll = ref(true)
+
+/**
+ * 强制重渲染方案目录树的开关
+ *
+ * 切换展开/折叠时先置 false 让 el-tree 销毁，nextTick 后置 true 重新挂载，
+ * 使 :default-expand-all 重新应用。参考 DesignConfigDialog.vue 的实现方式。
+ */
+const refreshTree = ref(true)
 
 const form = reactive({ releaseId: null, planStart: null, planEnd: null })
 const rules = {
@@ -214,12 +242,15 @@ function resetDialogState() {
   form.planEnd = null
   showPreview.value = false
   isFullscreen.value = false
-  previewDialogVisible.value = false
+  // 已移除 previewDialogVisible 的重置（该状态已不存在）
   dirSelections.value = []
   menuTree.value = []
   selectedNode.value = null
   currentComponent.value = null
   componentProps.value = {}
+  // 重置折叠状态，保证下次打开时默认全部展开
+  isExpandAll.value = true
+  refreshTree.value = true
 }
 
 function handleBeforeClose(done) {
@@ -293,31 +324,66 @@ function togglePreview() {
   componentProps.value = {}
 }
 function getChildMenus(node) { return node.children || [] }
+
+/**
+ * 树节点点击回调
+ *
+ * 三种节点类型的处理：
+ * - M（目录）：右侧展示该目录下的子节点列表
+ * - C（菜单）：右侧直接加载 component 指向的表单组件，预览空表单
+ *   （本次改造：由原来的"提示点击子按钮预览"改为"点击菜单节点直接预览"）
+ * - F（按钮）：如果是 PREVIEW 类型，仍加载组件（兼容保留）；
+ *   否则仅展示该按钮的配置信息
+ *
+ * @param {Object} data 当前点击的树节点数据
+ */
 function handleNodeClick(data) {
   selectedNode.value = data
+  currentComponent.value = null
+  componentProps.value = {}
+
   if (data.menuType === 'C') {
-    currentComponent.value = null
-    componentProps.value = {}
+    // 菜单节点：直接加载组件，用于预览空表单
+    loadMenuComponent(data.component)
+    componentProps.value = { actionType: 'PREVIEW' }
   } else if (data.menuType === 'F') {
     if (data.actionType === 'PREVIEW') {
       loadMenuComponent(data.component)
       componentProps.value = { actionType: 'PREVIEW' }
-    } else {
-      currentComponent.value = null
-      componentProps.value = {}
     }
+    // 其他 F 类型：保持 currentComponent 为 null，模板中会走 el-descriptions 分支
   }
+  // M 类型：保持 currentComponent 为 null，模板中会走 el-table 分支
 }
+
+/**
+ * 折叠/展开方案目录树
+ *
+ * 先关闭 el-tree 的 v-if 让组件销毁，切换 isExpandAll 后再重新挂载，
+ * 使 el-tree 重新应用 default-expand-all 属性。
+ * 参考 DesignConfigDialog.vue 与 src/views/system/menu/index.vue 的官方实现方式。
+ * 重新渲染后，通过 treeRef.setCurrentKey 恢复之前选中的节点高亮。
+ */
+function toggleExpandAll() {
+  refreshTree.value = false
+  isExpandAll.value = !isExpandAll.value
+  nextTick(() => {
+    refreshTree.value = true
+    // 树重新渲染后恢复选中高亮
+    nextTick(() => {
+      if (selectedNode.value && treeRef.value) {
+        treeRef.value.setCurrentKey(selectedNode.value.menuId)
+      }
+    })
+  })
+}
+
 function loadMenuComponent(componentPath) {
   if (!componentPath) { currentComponent.value = null; ElMessage.warning('该节点未配置前端组件，不支持预览'); return }
   const fullPath = '/src/views/' + componentPath
   const loader = modules[fullPath]
   if (loader) currentComponent.value = defineAsyncComponent(loader)
   else { currentComponent.value = null; ElMessage.warning('前端组件未找到：' + componentPath) }
-}
-function openFocusPreviewDialog() {
-  if (!currentComponent) { ElMessage.warning('当前菜单节点不支持预览'); return }
-  previewDialogVisible.value = true
 }
 
 // ==================== 提交生成 ====================
@@ -363,5 +429,5 @@ defineExpose({ open })
 .node-icon { font-size: 16px; color: #909399; flex-shrink: 0; }
 .node-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .component-container { min-height: 200px; overflow: auto; }
-.focus-component-wrapper { height: 100%; overflow: auto; border: 1px solid #e4e7ed; border-radius: 4px; padding: 8px; }
+/* 已移除 .focus-component-wrapper 样式（"专注预览"对话框已删除） */
 </style>

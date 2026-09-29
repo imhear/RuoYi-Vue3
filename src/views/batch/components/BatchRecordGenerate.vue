@@ -14,10 +14,13 @@
     <template #header>
       <div style="display: flex; align-items: center; width: 100%;">
         <span style="flex: 1; font-size: 18px; font-weight: bold;">生成批记录</span>
+        <!-- 全屏按钮：与 ReleaseViewDialog / BatchRecordView / DesignConfigDialog 一致 -->
         <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
-          <el-icon style="cursor: pointer; font-size: 18px;" @click="isFullscreen = !isFullscreen">
-            <FullScreen v-if="!isFullscreen" /><Aim v-else />
-          </el-icon>
+          <svg-icon
+            :icon-class="isFullscreen ? 'exit-fullscreen' : 'fullscreen'"
+            class="batch-record-generate-fullscreen-icon"
+            @click="toggleFullscreen"
+          />
         </el-tooltip>
       </div>
     </template>
@@ -175,8 +178,9 @@
 <script setup>
 import { ref, reactive, shallowRef, defineAsyncComponent, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-// 移除了原 Close 图标（仅被已删除的"专注预览"对话框使用）
-import { Folder, Document, Operation, FullScreen, Aim } from '@element-plus/icons-vue'
+// 全屏图标改用 svg-icon（与 ReleaseViewDialog / BatchRecordView / DesignConfigDialog 一致），
+// 因此不再需要从 @element-plus/icons-vue 引入 FullScreen 与 Aim
+import { Folder, Document, Operation } from '@element-plus/icons-vue'
 import { listScheme_release } from "@/api/fill/scheme_release"
 import { listScheme_release_menu } from "@/api/fill/scheme_release_menu"
 import { listWork_unit } from "@/api/basic/work_unit"
@@ -187,7 +191,6 @@ defineOptions({ name: 'BatchRecordGenerate' })
 const { proxy } = getCurrentInstance()
 
 const visible = ref(false)
-// 已移除 previewDialogVisible（"专注预览"功能整体删除）
 const isFullscreen = ref(false)
 const showPreview = ref(false)
 const loadingMenus = ref(false)
@@ -242,7 +245,6 @@ function resetDialogState() {
   form.planEnd = null
   showPreview.value = false
   isFullscreen.value = false
-  // 已移除 previewDialogVisible 的重置（该状态已不存在）
   dirSelections.value = []
   menuTree.value = []
   selectedNode.value = null
@@ -264,6 +266,17 @@ function handleCancelClick() {
 function handleClosed() {
   currentRecord.value = null
   resetDialogState()
+}
+
+// ==================== 全屏切换 ====================
+/**
+ * 切换对话框全屏
+ *
+ * 通过 el-dialog 的 fullscreen 属性控制，让对话框铺满整个屏幕（不是浏览器级全屏）。
+ * 与 ReleaseViewDialog / BatchRecordView / DesignConfigDialog 的行为一致。
+ */
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value
 }
 
 // ==================== 数据加载 ====================
@@ -331,7 +344,7 @@ function getChildMenus(node) { return node.children || [] }
  * 三种节点类型的处理：
  * - M（目录）：右侧展示该目录下的子节点列表
  * - C（菜单）：右侧直接加载 component 指向的表单组件，预览空表单
- *   （本次改造：由原来的"提示点击子按钮预览"改为"点击菜单节点直接预览"）
+ *   （由原来的"提示点击子按钮预览"改为"点击菜单节点直接预览"）
  * - F（按钮）：如果是 PREVIEW 类型，仍加载组件（兼容保留）；
  *   否则仅展示该按钮的配置信息
  *
@@ -429,5 +442,22 @@ defineExpose({ open })
 .node-icon { font-size: 16px; color: #909399; flex-shrink: 0; }
 .node-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .component-container { min-height: 200px; overflow: auto; }
-/* 已移除 .focus-component-wrapper 样式（"专注预览"对话框已删除） */
+
+/* ============================================================
+ * 全屏图标：与 ReleaseViewDialog / BatchRecordView / DesignConfigDialog
+ * 使用的 svg-icon 样式保持一致
+ * ============================================================ */
+.batch-record-generate-fullscreen-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  fill: #5a5e66;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.batch-record-generate-fullscreen-icon:hover {
+  fill: #409eff;
+  transform: scale(1.1);
+}
 </style>

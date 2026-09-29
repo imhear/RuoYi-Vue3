@@ -55,6 +55,10 @@
                       </template>
                     </el-table-column>
                     <el-table-column label="操作人" prop="operator" align="center" min-width="70" show-overflow-tooltip />
+                    <!--
+                      操作类型列：仅显示操作类型标签，语义单一
+                      备注信息由下一列"备注"独立承载，避免同一列塞入两类语义
+                    -->
                     <el-table-column label="操作类型" align="center" min-width="80">
                       <template #default="scope">
                         <el-tag size="small" :type="getActionTypeTag(scope.row.actionType)">
@@ -62,12 +66,72 @@
                         </el-tag>
                       </template>
                     </el-table-column>
+                    <!--
+                      备注列：独立展示 remark 字段
+                      - 使用 show-overflow-tooltip 单行显示，超长时省略 + hover 显示完整内容
+                      - remark 典型长度为 5~10 字（如反审原因、审批意见），min-width 120 足以容纳大部分内容
+                      - 为空时单元格保持空白，不显示额外占位
+                    -->
+                    <el-table-column
+                      label="备注"
+                      prop="remark"
+                      align="center"
+                      min-width="120"
+                      :show-overflow-tooltip="true"
+                    />
                   </el-table>
                 </div>
               </div>
 
-              <!-- 右侧：车间卡片列表（全览卡片不显示操作按钮） -->
+              <!-- 右侧：车间分组卡片列表（全览卡片不显示操作按钮） -->
               <div class="overview-right">
+                <div class="card-scroll-wrapper">
+                  <!-- 按车间分组渲染：每组显示车间标题 + 组内卡片 + 组间分割线 -->
+                  <div
+                    v-for="(group, index) in workshopCardGroups"
+                    :key="group.workshop.menuId"
+                    class="overview-group"
+                  >
+                    <!-- 组标题：车间名 + 卡片数量 -->
+                    <div class="overview-group-header">
+                      <span class="overview-group-title">{{ group.workshop.menuName }}</span>
+                      <span class="overview-group-count">（{{ group.cards.length }}）</span>
+                    </div>
+                    <!-- 组内卡片网格：横向排列，超宽换行 -->
+                    <div class="overview-card-list">
+                      <div
+                        v-for="card in group.cards"
+                        :key="card.menuId"
+                        class="overview-card"
+                        :class="{ 'is-selected': selectedCard && selectedCard.menuId === card.menuId }"
+                        @click="handleCardClick(card)"
+                      >
+                        <!-- 第一行：菜单名称 + 状态 tag -->
+                        <div class="overview-card-row">
+                          <span class="overview-card-title">{{ card.menuName }}</span>
+                          <el-tag size="small" :type="card.instanceControlStatus === '0' ? 'info' : 'success'">
+                            {{ getControlStatusText(card.instanceControlStatus) }}
+                          </el-tag>
+                        </div>
+                        <!-- 第二行：工作单元 · 最后编辑信息 -->
+                        <div class="overview-card-meta">
+                          <span class="overview-card-unit">{{ card.workUnitName || '未分配工作单元' }}</span>
+                          <span v-if="getLastEditInfo(card)" class="overview-card-edit">
+                            · {{ getLastEditInfo(card).operator }} {{ parseTime(getLastEditInfo(card).createTime, '{m}-{d} {h}:{i}') }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- 分组之间的分割线（最后一组不显示） -->
+                    <el-divider
+                      v-if="index < workshopCardGroups.length - 1"
+                      class="overview-group-divider"
+                    />
+                  </div>
+                </div>
+              </div>
+              <!-- 右侧：车间卡片列表（全览卡片不显示操作按钮） -->
+              <!-- <div class="overview-right">
                 <div class="card-scroll-wrapper">
                   <div class="card-list">
                     <div
@@ -90,7 +154,7 @@
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> -->
             </div>
           </el-tab-pane>
 
@@ -262,6 +326,26 @@ const allCards = computed(() => {
 })
 
 /**
+ * 按车间分组的卡片列表（仅全览 Tab 使用）
+ *
+ * 结构：[{ workshop, cards }, ...]
+ * - workshop：车间节点（menuType='M' 且 parentId=0）
+ * - cards：该车间下的所有卡片（menuType='C' 且 parentId=workshop.menuId）
+ *
+ * 过滤掉 cards 为空的车间（避免出现只有标题没有卡片的空组）。
+ * 之所以不直接复用 allCards（平铺全量），是因为总览 Tab 需要按车间视觉分组，
+ * 便于用户快速定位到某个车间的表单卡片。
+ */
+const workshopCardGroups = computed(() => {
+  return workshopGroups.value
+    .map(ws => ({
+      workshop: ws,
+      cards: getWorkshopCards(ws.menuId, 'all')
+    }))
+    .filter(g => g.cards.length > 0)
+})
+
+/**
  * 打开聚合入口
  * 
  * 并行加载三类数据：
@@ -300,6 +384,8 @@ async function loadMenus() {
 
 /**
  * 加载当前批记录的全部操作日志（不分页）
+ * 
+ * 返回的日志记录中 remark 字段用于在"备注"列独立展示（如审批意见、反审原因）。
  */
 async function loadLogs() {
   try {
@@ -514,7 +600,7 @@ function handleActionClick(btn) {
     menuName: btn.menuName,
     buttonLabel: btn.buttonLabel,
     actionType: btn.actionType,
-    cMenuId: parentCard.menuId   // 新增：当前表单对应的 C 节点 ID
+    cMenuId: parentCard.menuId   // 当前表单对应的 C 节点 ID
   })
 }
 
@@ -584,9 +670,10 @@ defineExpose({ open })
   min-height: 0;
 }
 
+/* 左侧日志面板：宽度从 300px 加宽到 400px，容纳 4 列（时间 + 人 + 类型 + 备注） */
 .overview-left {
-  flex: 0 0 300px;
-  width: 300px;
+  flex: 0 0 400px;
+  width: 400px;
   display: flex;
   flex-direction: column;
   border: 1px solid #e4e7ed;
@@ -637,6 +724,107 @@ defineExpose({ open })
   overflow: hidden;
 }
 
+/* ===== 总览 Tab：按车间分组的卡片样式 =====
+ * 只作用于总览 Tab（.overview-card / .overview-group），
+ * 不影响其他车间 Tab 使用的 .preview-card。
+ * 目标：卡片更宽（260px）、更矮（2 行结构）、一屏显示更多。
+ */
+.overview-group {
+  margin-bottom: 4px;
+}
+
+/* 组标题：车间名 + 卡片数量，小字号加粗，作为视觉分隔锚点 */
+.overview-group-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 6px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.overview-group-count {
+  font-size: 12px;
+  color: #909399;
+  font-weight: normal;
+}
+
+/* 组内卡片列表：横向排列，超宽换行 */
+.overview-card-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 组间分割线：压缩上下间距，视觉更紧凑 */
+.overview-group-divider {
+  margin: 8px 0 !important;
+}
+
+/* 紧凑卡片：宽度 260px，两行结构，总高约 55px */
+.overview-card {
+  width: 260px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  padding: 8px 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.overview-card:hover {
+  border-color: #409eff;
+}
+
+.overview-card.is-selected {
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+/* 第一行：菜单名（左）+ 状态 tag（右） */
+.overview-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.overview-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 第二行：工作单元 · 最后编辑信息 */
+.overview-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #909399;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-card-unit {
+  flex-shrink: 0;
+}
+
+.overview-card-edit {
+  color: #a8abb2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 /* ===== 卡片区域 ===== */
 .card-scroll-wrapper {
   height: 100%;

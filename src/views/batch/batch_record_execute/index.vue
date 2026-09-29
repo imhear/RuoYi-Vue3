@@ -30,7 +30,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="状态" align="center" prop="status" width="90">
         <template #default="scope">
-          <dict-tag :options="batch_record_status" :value="scope.row.status" />
+          <dict-tag :options="biz_record_status" :value="scope.row.status" />
         </template>
       </el-table-column>
       <!-- 工单号：点击打开聚合入口 -->
@@ -74,9 +74,10 @@
 import { ref, reactive, toRefs } from 'vue'
 import { listBatch_record } from "@/api/batch/batch_record"
 import BatchRecordAggregateDialog from './components/BatchRecordAggregateDialog.vue'
+import { useBizDict } from '@/utils/bizDict'
 
 const { proxy } = getCurrentInstance()
-const { batch_record_status } = proxy.useDict('batch_record_status')
+const { biz_record_status } = useBizDict('biz_record_status')
 
 const recordList = ref([])
 const loading = ref(true)

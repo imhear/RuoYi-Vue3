@@ -69,8 +69,7 @@
                     <!--
                       备注列：独立展示 remark 字段
                       - 使用 show-overflow-tooltip 单行显示，超长时省略 + hover 显示完整内容
-                      - 左侧面板宽度收窄为 300px 后，若备注较长会被省略号截断，
-                        可通过拖动表格下方横向滚动条查看完整内容（已保留 el-table 横向滚动能力）
+                      - 左侧面板宽度 300px，备注较长时会被省略号截断，可通过拖动表格下方横向滚动条查看完整内容
                     -->
                     <el-table-column
                       label="备注"
@@ -86,13 +85,6 @@
               <!-- 右侧：按车间折叠分组的卡片列表（全览卡片不显示操作按钮） -->
               <div class="overview-right">
                 <div class="card-scroll-wrapper">
-                  <!-- 一键展开/折叠所有分组：方便车间较多时快速收起全部 -->
-                  <div class="overview-toolbar">
-                    <el-button link type="primary" size="small" @click="toggleAllCollapse">
-                      {{ isAllCollapsed ? '全部展开' : '全部折叠' }}
-                    </el-button>
-                  </div>
-
                   <!--
                     使用 el-collapse 按车间分组渲染卡片：
                     - v-model="activeCollapseNames" 绑定所有展开的车间 menuId 数组
@@ -284,16 +276,6 @@ const dynamicDialogRef = ref(null)         // 动态组件弹窗引用
  */
 const activeCollapseNames = ref([])
 
-/**
- * 是否所有车间分组已折叠
- *
- * 用于"全部展开/折叠"按钮的文案切换。
- * 判断依据：activeCollapseNames 长度是否为 0。
- */
-const isAllCollapsed = computed(() => {
-  return activeCollapseNames.value.length === 0
-})
-
 // ==================== 日志相关状态 ====================
 const logList = ref([])                    // 当前批记录的全部操作日志
 const selectedCard = ref(null)             // 当前选中的卡片对象（C节点），null表示未选择
@@ -468,20 +450,6 @@ function getFormCards(workshopId, formId) {
 function getWorkshopCards(workshopId, tabName) {
   if (tabName === 'all') return getWorkshopForms(workshopId)
   return getFormCards(workshopId, tabName)
-}
-
-/**
- * 一键展开/折叠全览 Tab 的所有车间分组
- *
- * 若当前所有分组均已折叠，则展开所有；
- * 否则折叠所有（清空 activeCollapseNames）。
- */
-function toggleAllCollapse() {
-  if (isAllCollapsed.value) {
-    activeCollapseNames.value = workshopCardGroups.value.map(g => String(g.workshop.menuId))
-  } else {
-    activeCollapseNames.value = []
-  }
 }
 
 /**
@@ -707,7 +675,7 @@ defineExpose({ open })
   min-height: 0;
 }
 
-/* 左侧日志面板：宽度回到 300px
+/* 左侧日志面板：宽度 300px
  * 备注列较长时会被省略号截断，可通过表格下方横向滚动条查看完整内容。
  * 由于反审核操作极少，备注列被截断的业务影响可接受。
  */
@@ -763,12 +731,6 @@ defineExpose({ open })
   flex: 1;
   min-width: 0;
   overflow: hidden;
-}
-
-/* 折叠面板上方的工具条：右对齐"全部展开/折叠"按钮 */
-.overview-toolbar {
-  text-align: right;
-  padding: 0 4px 4px 4px;
 }
 
 /* ===== 总览 Tab：el-collapse 折叠面板紧凑样式覆盖 ===== */
@@ -923,7 +885,7 @@ defineExpose({ open })
 .card-scroll-wrapper {
   height: 100%;
   overflow-y: auto;
-  padding: 8px;
+  padding: 0px;
 }
 .card-list {
   display: flex;

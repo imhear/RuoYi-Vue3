@@ -642,7 +642,7 @@ defineExpose({ open })
 
 <style scoped>
 .aggregate-container {
-  height: 70vh;
+  height: 80vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;

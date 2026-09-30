@@ -24,10 +24,10 @@
       <template v-else-if="workshopGroups.length > 0">
         <!-- 第一层：车间 Tabs -->
         <el-tabs v-model="activeWorkshop" type="border-card" class="aggregate-tabs">
-          <!-- 全览 Tab：左侧日志 + 右侧卡片 -->
+          <!-- 全览 Tab：左侧日志 + 右侧折叠分组卡片 -->
           <el-tab-pane label="全 览" name="all">
             <div class="overview-container">
-              <!-- 左侧：操作日志 -->
+              <!-- 左侧：操作日志（宽度 300px，如备注列超宽可横向滚动查看） -->
               <div class="overview-left">
                 <div class="log-panel-header">
                   <span v-if="selectedCard">操作日志 - {{ selectedCard.menuName }}</span>
@@ -69,8 +69,8 @@
                     <!--
                       备注列：独立展示 remark 字段
                       - 使用 show-overflow-tooltip 单行显示，超长时省略 + hover 显示完整内容
-                      - remark 典型长度为 5~10 字（如反审原因、审批意见），min-width 120 足以容纳大部分内容
-                      - 为空时单元格保持空白，不显示额外占位
+                      - 左侧面板宽度收窄为 300px 后，若备注较长会被省略号截断，
+                        可通过拖动表格下方横向滚动条查看完整内容（已保留 el-table 横向滚动能力）
                     -->
                     <el-table-column
                       label="备注"
@@ -83,82 +83,78 @@
                 </div>
               </div>
 
-              <!-- 右侧：车间分组卡片列表（全览卡片不显示操作按钮） -->
+              <!-- 右侧：按车间折叠分组的卡片列表（全览卡片不显示操作按钮） -->
               <div class="overview-right">
                 <div class="card-scroll-wrapper">
-                  <!-- 按车间分组渲染：每组显示车间标题 + 组内卡片 + 组间分割线 -->
-                  <div
-                    v-for="(group, index) in workshopCardGroups"
-                    :key="group.workshop.menuId"
-                    class="overview-group"
-                  >
-                    <!-- 组标题：车间名 + 卡片数量 -->
-                    <div class="overview-group-header">
-                      <span class="overview-group-title">{{ group.workshop.menuName }}</span>
-                      <span class="overview-group-count">（{{ group.cards.length }}）</span>
-                    </div>
-                    <!-- 组内卡片网格：横向排列，超宽换行 -->
-                    <div class="overview-card-list">
-                      <div
-                        v-for="card in group.cards"
-                        :key="card.menuId"
-                        class="overview-card"
-                        :class="{ 'is-selected': selectedCard && selectedCard.menuId === card.menuId }"
-                        @click="handleCardClick(card)"
-                      >
-                        <!-- 第一行：菜单名称 + 状态 tag -->
-                        <div class="overview-card-row">
-                          <span class="overview-card-title">{{ card.menuName }}</span>
-                          <el-tag size="small" :type="card.instanceControlStatus === '0' ? 'info' : 'success'">
-                            {{ getControlStatusText(card.instanceControlStatus) }}
-                          </el-tag>
-                        </div>
-                        <!-- 第二行：工作单元 · 最后编辑信息 -->
-                        <div class="overview-card-meta">
-                          <span class="overview-card-unit">{{ card.workUnitName || '未分配工作单元' }}</span>
-                          <span v-if="getLastEditInfo(card)" class="overview-card-edit">
-                            · {{ getLastEditInfo(card).operator }} {{ parseTime(getLastEditInfo(card).createTime, '{m}-{d} {h}:{i}') }}
+                  <!-- 一键展开/折叠所有分组：方便车间较多时快速收起全部 -->
+                  <div class="overview-toolbar">
+                    <el-button link type="primary" size="small" @click="toggleAllCollapse">
+                      {{ isAllCollapsed ? '全部展开' : '全部折叠' }}
+                    </el-button>
+                  </div>
+
+                  <!--
+                    使用 el-collapse 按车间分组渲染卡片：
+                    - v-model="activeCollapseNames" 绑定所有展开的车间 menuId 数组
+                    - 不加 accordion 属性，支持同时展开多个组，组间互不影响
+                    - 每个 el-collapse-item 的 name 为车间 menuId 的字符串形式
+                    - 默认打开时由 loadMenus 成功后自动展开所有车间分组
+                  -->
+                  <el-collapse v-model="activeCollapseNames" class="overview-collapse">
+                    <el-collapse-item
+                      v-for="group in workshopCardGroups"
+                      :key="group.workshop.menuId"
+                      :name="String(group.workshop.menuId)"
+                    >
+                      <!-- 组标题：车间名 + 卡片数量 + 工作单元名称 -->
+                      <template #title>
+                        <div class="overview-group-header">
+                          <span class="overview-group-title">{{ group.workshop.menuName }}</span>
+                          <span class="overview-group-count">（{{ group.cards.length }}）</span>
+                          <span class="overview-group-unit">
+                            · {{ group.workshop.workUnitName || '未分配工作单元' }}
                           </span>
                         </div>
+                      </template>
+                      <!-- 组内卡片网格：宽度 188px，一行放 3 个 -->
+                      <div class="overview-card-list">
+                        <div
+                          v-for="card in group.cards"
+                          :key="card.menuId"
+                          class="overview-card"
+                          :class="{ 'is-selected': selectedCard && selectedCard.menuId === card.menuId }"
+                          @click="handleCardClick(card)"
+                        >
+                          <!-- 第一行：菜单名称 + 状态 tag -->
+                          <div class="overview-card-row">
+                            <span class="overview-card-title">{{ card.menuName }}</span>
+                            <el-tag size="small" :type="card.instanceControlStatus === '0' ? 'info' : 'success'">
+                              {{ getControlStatusText(card.instanceControlStatus) }}
+                            </el-tag>
+                          </div>
+                          <!--
+                            第二行：最后编辑信息（操作人 + 时间）
+                            - 原"工作单元"信息已上移到组标题，卡片内不再重复
+                            - 无编辑记录时显示"暂无编辑记录"，保持占位一致，避免卡片高度参差
+                          -->
+                          <div class="overview-card-meta">
+                            <template v-if="getLastEditInfo(card)">
+                              最后编辑：{{ getLastEditInfo(card).operator }} {{ parseTime(getLastEditInfo(card).createTime, '{m}-{d} {h}:{i}') }}
+                            </template>
+                            <template v-else>
+                              <span class="overview-card-empty">暂无编辑记录</span>
+                            </template>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <!-- 分组之间的分割线（最后一组不显示） -->
-                    <el-divider
-                      v-if="index < workshopCardGroups.length - 1"
-                      class="overview-group-divider"
-                    />
-                  </div>
+                    </el-collapse-item>
+                  </el-collapse>
                 </div>
               </div>
-              <!-- 右侧：车间卡片列表（全览卡片不显示操作按钮） -->
-              <!-- <div class="overview-right">
-                <div class="card-scroll-wrapper">
-                  <div class="card-list">
-                    <div
-                      v-for="card in allCards"
-                      :key="card.menuId"
-                      class="preview-card"
-                      :class="{ 'is-selected': selectedCard && selectedCard.menuId === card.menuId }"
-                      @click="handleCardClick(card)"
-                    >
-                      <div class="card-title">{{ card.menuName }}</div>
-                      <div class="card-meta">{{ card.workUnitName || '未分配工作单元' }}</div>
-                      <div class="card-status">
-                        <el-tag size="small" :type="card.instanceControlStatus === '0' ? 'info' : 'success'">
-                          {{ getControlStatusText(card.instanceControlStatus) }}
-                        </el-tag>
-                      </div>
-                      <div v-if="getLastEditInfo(card)" class="card-last-edit">
-                        最后编辑：{{ getLastEditInfo(card).operator }} {{ parseTime(getLastEditInfo(card).createTime, '{m}-{d} {h}:{i}') }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div> -->
             </div>
           </el-tab-pane>
 
-          <!-- 各车间 Tab（保留操作按钮） -->
+          <!-- 各车间 Tab（保留操作按钮，样式完全不变） -->
           <el-tab-pane
             v-for="ws in workshopGroups"
             :key="ws.menuId"
@@ -255,7 +251,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { FullScreen, Aim } from '@element-plus/icons-vue'
 import { listBatchRecordMenuTree } from '@/api/batch/batch_record_menu'
@@ -277,6 +273,26 @@ const menuList = ref([])                   // 批记录菜单列表（平铺）
 const activeWorkshop = ref('all')          // 当前车间Tab
 const activeForm = ref('all')              // 当前表单Tab
 const dynamicDialogRef = ref(null)         // 动态组件弹窗引用
+
+// ==================== 全览 Tab 折叠面板状态 ====================
+/**
+ * 全览 Tab 中已展开的车间分组 menuId 数组
+ *
+ * el-collapse 的 v-model 绑定值，元素类型为字符串（与 el-collapse-item 的 :name 一致）。
+ * 初始为空数组，loadMenus 成功后会默认展开所有车间分组。
+ * 支持同时展开多个组（未使用 accordion 属性）。
+ */
+const activeCollapseNames = ref([])
+
+/**
+ * 是否所有车间分组已折叠
+ *
+ * 用于"全部展开/折叠"按钮的文案切换。
+ * 判断依据：activeCollapseNames 长度是否为 0。
+ */
+const isAllCollapsed = computed(() => {
+  return activeCollapseNames.value.length === 0
+})
 
 // ==================== 日志相关状态 ====================
 const logList = ref([])                    // 当前批记录的全部操作日志
@@ -329,12 +345,10 @@ const allCards = computed(() => {
  * 按车间分组的卡片列表（仅全览 Tab 使用）
  *
  * 结构：[{ workshop, cards }, ...]
- * - workshop：车间节点（menuType='M' 且 parentId=0）
+ * - workshop：车间节点（menuType='M' 且 parentId=0），含 workUnitName 字段
  * - cards：该车间下的所有卡片（menuType='C' 且 parentId=workshop.menuId）
  *
  * 过滤掉 cards 为空的车间（避免出现只有标题没有卡片的空组）。
- * 之所以不直接复用 allCards（平铺全量），是因为总览 Tab 需要按车间视觉分组，
- * 便于用户快速定位到某个车间的表单卡片。
  */
 const workshopCardGroups = computed(() => {
   return workshopGroups.value
@@ -370,6 +384,9 @@ async function open(id, orderNum) {
 
 /**
  * 加载批记录菜单树（平铺列表）
+ *
+ * 加载成功后自动展开全览 Tab 的所有车间分组，
+ * 通过 nextTick 等待 workshopCardGroups 计算属性重算完成后再赋值。
  */
 async function loadMenus() {
   loading.value = true
@@ -377,6 +394,10 @@ async function loadMenus() {
     const res = await listBatchRecordMenuTree(recordId.value)
     const list = res.data || []
     menuList.value = buildMenuTree(list)
+    // 数据加载完成后，默认展开所有车间分组
+    nextTick(() => {
+      activeCollapseNames.value = workshopCardGroups.value.map(g => String(g.workshop.menuId))
+    })
   } finally {
     loading.value = false
   }
@@ -447,6 +468,20 @@ function getFormCards(workshopId, formId) {
 function getWorkshopCards(workshopId, tabName) {
   if (tabName === 'all') return getWorkshopForms(workshopId)
   return getFormCards(workshopId, tabName)
+}
+
+/**
+ * 一键展开/折叠全览 Tab 的所有车间分组
+ *
+ * 若当前所有分组均已折叠，则展开所有；
+ * 否则折叠所有（清空 activeCollapseNames）。
+ */
+function toggleAllCollapse() {
+  if (isAllCollapsed.value) {
+    activeCollapseNames.value = workshopCardGroups.value.map(g => String(g.workshop.menuId))
+  } else {
+    activeCollapseNames.value = []
+  }
 }
 
 /**
@@ -620,7 +655,8 @@ function handleRefresh() {
  * 对话框关闭回调
  * 
  * 清空所有状态，避免下次打开时残留数据。
- * 特别注意清空 myWorkUnitCodes，防止上一个批记录的权限数据污染下一次会话。
+ * 特别注意清空 myWorkUnitCodes 与 activeCollapseNames，
+ * 防止上一个批记录的状态污染下一次会话。
  */
 function handleClosed() {
   recordId.value = null
@@ -630,6 +666,7 @@ function handleClosed() {
   activeWorkshop.value = 'all'
   activeForm.value = 'all'
   myWorkUnitCodes.value = []
+  activeCollapseNames.value = []
 }
 
 defineExpose({ open })
@@ -670,10 +707,13 @@ defineExpose({ open })
   min-height: 0;
 }
 
-/* 左侧日志面板：宽度从 300px 加宽到 400px，容纳 4 列（时间 + 人 + 类型 + 备注） */
+/* 左侧日志面板：宽度回到 300px
+ * 备注列较长时会被省略号截断，可通过表格下方横向滚动条查看完整内容。
+ * 由于反审核操作极少，备注列被截断的业务影响可接受。
+ */
 .overview-left {
-  flex: 0 0 400px;
-  width: 400px;
+  flex: 0 0 300px;
+  width: 300px;
   display: flex;
   flex-direction: column;
   border: 1px solid #e4e7ed;
@@ -718,60 +758,114 @@ defineExpose({ open })
   padding: 4px 0;
 }
 
+/* 右侧卡片区：宽度自动撑满剩余空间 */
 .overview-right {
   flex: 1;
   min-width: 0;
   overflow: hidden;
 }
 
-/* ===== 总览 Tab：按车间分组的卡片样式 =====
- * 只作用于总览 Tab（.overview-card / .overview-group），
- * 不影响其他车间 Tab 使用的 .preview-card。
- * 目标：卡片更宽（260px）、更矮（2 行结构）、一屏显示更多。
- */
-.overview-group {
-  margin-bottom: 4px;
+/* 折叠面板上方的工具条：右对齐"全部展开/折叠"按钮 */
+.overview-toolbar {
+  text-align: right;
+  padding: 0 4px 4px 4px;
 }
 
-/* 组标题：车间名 + 卡片数量，小字号加粗，作为视觉分隔锚点 */
+/* ===== 总览 Tab：el-collapse 折叠面板紧凑样式覆盖 ===== */
+.overview-collapse {
+  border-top: none;
+  border-bottom: none;
+}
+
+/* 面板头部：压缩高度、浅灰背景、圆角，形成分组卡片感 */
+.overview-collapse :deep(.el-collapse-item__header) {
+  height: auto;
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  background: #fafafa;
+  border-bottom: none;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+/* 面板内容包裹层：去掉默认 border，留上下 padding */
+.overview-collapse :deep(.el-collapse-item__wrap) {
+  border-bottom: none;
+  padding: 6px 0 2px 0;
+}
+
+/* 面板内容区：去默认底部 padding */
+.overview-collapse :deep(.el-collapse-item__content) {
+  padding-bottom: 0;
+}
+
+/* 面板之间的间距 */
+.overview-collapse :deep(.el-collapse-item) {
+  margin-bottom: 8px;
+}
+
+/* 展开箭头右对齐 */
+.overview-collapse :deep(.el-collapse-item__arrow) {
+  margin-left: auto;
+}
+
+/* ===== 组标题内容 ===== */
 .overview-group-header {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 4px 6px 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.overview-group-title {
   font-size: 13px;
   font-weight: 600;
   color: #303133;
+  flex-shrink: 0;
 }
 
 .overview-group-count {
   font-size: 12px;
   color: #909399;
   font-weight: normal;
+  flex-shrink: 0;
 }
 
-/* 组内卡片列表：横向排列，超宽换行 */
+/* 工作单元名称：浅灰小字，右对齐，过长时省略 */
+.overview-group-unit {
+  font-size: 12px;
+  color: #909399;
+  font-weight: normal;
+  margin-left: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ===== 组内卡片网格 ===== */
 .overview-card-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  padding: 0 4px;
 }
 
-/* 组间分割线：压缩上下间距，视觉更紧凑 */
-.overview-group-divider {
-  margin: 8px 0 !important;
-}
-
-/* 紧凑卡片：宽度 260px，两行结构，总高约 55px */
+/* 紧凑卡片：宽度 188px，两行结构，一行可放 3 个 */
 .overview-card {
-  width: 260px;
+  width: 188px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
 }
 
 .overview-card:hover {
@@ -788,8 +882,8 @@ defineExpose({ open })
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 4px;
+  margin-bottom: 2px;
 }
 
 .overview-card-title {
@@ -803,11 +897,15 @@ defineExpose({ open })
   min-width: 0;
 }
 
-/* 第二行：工作单元 · 最后编辑信息 */
+/* 缩小 tag 内边距，避免在 188px 内抢占过多空间 */
+.overview-card-row :deep(.el-tag--small) {
+  padding: 0 4px;
+  height: 18px;
+  line-height: 16px;
+}
+
+/* 第二行：最后编辑信息（操作人 + 时间），过长时省略 */
 .overview-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   font-size: 12px;
   color: #909399;
   overflow: hidden;
@@ -815,17 +913,13 @@ defineExpose({ open })
   white-space: nowrap;
 }
 
-.overview-card-unit {
-  flex-shrink: 0;
+/* 无编辑记录时的弱化文本 */
+.overview-card-empty {
+  color: #c0c4cc;
+  font-size: 12px;
 }
 
-.overview-card-edit {
-  color: #a8abb2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* ===== 卡片区域 ===== */
+/* ===== 卡片区域（非总览 Tab 使用，本次未改动） ===== */
 .card-scroll-wrapper {
   height: 100%;
   overflow-y: auto;

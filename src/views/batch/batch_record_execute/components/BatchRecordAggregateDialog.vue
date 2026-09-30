@@ -11,10 +11,13 @@
     <template #header>
       <div style="display: flex; align-items: center; width: 100%;">
         <span style="flex: 1; font-size: 18px; font-weight: bold;">{{ title }}</span>
+        <!-- 全屏按钮：与其他对话框一致，使用 svg-icon 风格；hover 无缩放、无变色 -->
         <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
-          <el-icon style="cursor: pointer; font-size: 18px;" @click="isFullscreen = !isFullscreen">
-            <FullScreen v-if="!isFullscreen" /><Aim v-else />
-          </el-icon>
+          <svg-icon
+            :icon-class="isFullscreen ? 'exit-fullscreen' : 'fullscreen'"
+            class="aggregate-fullscreen-icon"
+            @click="isFullscreen = !isFullscreen"
+          />
         </el-tooltip>
       </div>
     </template>
@@ -245,7 +248,8 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { FullScreen, Aim } from '@element-plus/icons-vue'
+// 全屏图标改用 svg-icon（fullscreen / exit-fullscreen），
+// 本组件其他位置未使用 @element-plus/icons-vue 的图标，故整行 import 移除
 import { listBatchRecordMenuTree } from '@/api/batch/batch_record_menu'
 import { listBatchRecordLogByRecordId } from '@/api/batch/batch_record_log'
 import { getMyWorkUnits } from '@/api/basic/work_unit'
@@ -642,7 +646,7 @@ defineExpose({ open })
 
 <style scoped>
 .aggregate-container {
-  height: 80vh;
+  height: 80vh;      /* 从 70vh 改为 80vh，让全览 Tab 有更多可视空间 */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -934,5 +938,18 @@ defineExpose({ open })
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ============================================================
+ * 全屏图标样式：与 ReleaseViewDialog / BatchRecordView /
+ * DesignConfigDialog / BatchRecordGenerate 保持一致的尺寸与视觉，
+ * 但按要求去掉 hover 时的缩放和变色特效，仅保留鼠标指针变化。
+ * ============================================================ */
+.aggregate-fullscreen-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  /* 注意：故意不添加 :hover 样式，避免缩放和变色，图标保持恒定外观 */
 }
 </style>

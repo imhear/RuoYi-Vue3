@@ -12,10 +12,13 @@
     <template #header>
       <div style="display: flex; align-items: center; width: 300mm;">
         <span style="flex: 1; font-size: 18px; font-weight: bold;">{{ currentTitle }}</span>
+        <!-- 全屏按钮：与其他对话框一致，使用 svg-icon 风格；hover 无缩放、无变色 -->
         <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
-          <el-icon style="cursor: pointer; font-size: 18px;" @click="isFullscreen = !isFullscreen">
-            <FullScreen v-if="!isFullscreen" /><Aim v-else />
-          </el-icon>
+          <svg-icon
+            :icon-class="isFullscreen ? 'exit-fullscreen' : 'fullscreen'"
+            class="dynamic-component-fullscreen-icon"
+            @click="isFullscreen = !isFullscreen"
+          />
         </el-tooltip>
       </div>
     </template>
@@ -50,7 +53,8 @@
 <script setup>
 import { ref, shallowRef } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { FullScreen, Aim } from '@element-plus/icons-vue'
+// 全屏图标改用 svg-icon（fullscreen / exit-fullscreen），
+// 本组件未使用 @element-plus/icons-vue 的其他图标，故整行 import 移除
 
 defineOptions({ name: 'DynamicComponentDialog' })
 
@@ -162,5 +166,19 @@ defineExpose({ open })
 .dynamic-component-container {
   min-height: 400px;
   position: relative;
+}
+
+/* ============================================================
+ * 全屏图标样式：与 ReleaseViewDialog / BatchRecordView /
+ * DesignConfigDialog / BatchRecordGenerate / BatchRecordAggregateDialog
+ * 保持一致的尺寸与视觉，但按要求去掉 hover 时的缩放和变色特效，
+ * 仅保留鼠标指针变化。
+ * ============================================================ */
+.dynamic-component-fullscreen-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  /* 注意：故意不添加 :hover 样式，避免缩放和变色，图标保持恒定外观 */
 }
 </style>

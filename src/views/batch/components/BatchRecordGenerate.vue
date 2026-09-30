@@ -455,9 +455,4 @@ defineExpose({ open })
   flex-shrink: 0;
   transition: transform 0.2s;
 }
-
-.batch-record-generate-fullscreen-icon:hover {
-  fill: #409eff;
-  transform: scale(1.1);
-}
 </style>

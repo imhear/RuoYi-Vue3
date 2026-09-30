@@ -490,11 +490,6 @@ defineExpose({ open, close })
   transition: transform 0.2s;
 }
 
-.release-view-fullscreen-icon:hover {
-  fill: #409eff;
-  transform: scale(1.1);
-}
-
 /* ============================================================
  * 内部 el-row / el-col 撑满 body 高度
  * 使用自定义 class `release-view-body-row` 精确匹配，避免误伤其他 el-row。

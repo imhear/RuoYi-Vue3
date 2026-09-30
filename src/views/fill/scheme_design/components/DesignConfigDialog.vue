@@ -1226,11 +1226,6 @@ defineExpose({ open, close })
   transition: transform 0.2s;
 }
 
-.design-config-fullscreen-icon:hover {
-  fill: #409eff;
-  transform: scale(1.1);
-}
-
 /* ============================================================
  * 内部 el-row / el-col 撑满 body 高度
  * 让左侧树面板与右侧详情面板等高，由 flex 列布局分配内部空间。

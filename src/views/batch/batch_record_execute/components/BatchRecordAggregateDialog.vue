@@ -6,6 +6,7 @@
     top="3vh"
     append-to-body
     :fullscreen="isFullscreen"
+    class="batch-record-aggregate-dialog"
     @closed="handleClosed"
   >
     <template #header>
@@ -249,7 +250,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 // 全屏图标改用 svg-icon（fullscreen / exit-fullscreen），
-// 本组件其他位置未使用 @element-plus/icons-vue 的图标，故整行 import 移除
+// 本组件其他位置未使用 @element-plus/icons-vue 的图标，故不再引入该依赖
 import { listBatchRecordMenuTree } from '@/api/batch/batch_record_menu'
 import { listBatchRecordLogByRecordId } from '@/api/batch/batch_record_log'
 import { getMyWorkUnits } from '@/api/basic/work_unit'
@@ -951,5 +952,19 @@ defineExpose({ open })
   cursor: pointer;
   flex-shrink: 0;
   /* 注意：故意不添加 :hover 样式，避免缩放和变色，图标保持恒定外观 */
+}
+</style>
+
+<!--
+  非 scoped 样式块：仅用于覆盖 append-to-body 到 body 的 dialog 全局样式。
+  因为 el-dialog 使用了 append-to-body，实际 DOM 不在组件树内，
+  scoped 样式无法命中；同时使用本组件独有的 class（batch-record-aggregate-dialog）
+  做前置限定，保证只影响本组件的对话框，不污染其他文件的 .el-dialog。
+-->
+<style>
+/* 覆盖全局 .el-dialog:not(.is-fullscreen) 的 margin-top: 6vh，
+   本组件对话框统一改为 2vh，使对话框更靠近页面顶部。 */
+.batch-record-aggregate-dialog.el-dialog:not(.is-fullscreen) {
+  margin-top: 2vh !important;
 }
 </style>

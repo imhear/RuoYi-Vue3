@@ -9,7 +9,11 @@
     <div
       v-if="actionType !== 'PREVIEW' || !loading"
       class="view-container"
-      :class="actionType === 'PREVIEW' ? 'preview-mode' : ''"
+      :class="[
+        actionType === 'PREVIEW' ? 'preview-mode' : '',
+        isScrolling ? 'is-scrolling' : ''
+      ]"
+      @scroll="handlePreviewScroll"
     >
       
       <!-- 公司名称 + 编号 -->
@@ -244,6 +248,52 @@ const fNodes = ref([])            // 当前 C 节点下所有 F 节点
 const isEditMode = computed(() => props.actionType === 'EDIT')
 const isPreviewMode = computed(() => props.actionType === 'PREVIEW')
 const isApproveMode = computed(() => !isEditMode.value && !isPreviewMode.value)
+
+// ==================== 滚动条显隐控制 ====================
+
+/**
+ * 是否正在滚动
+ *
+ * 用于控制 .view-container（预览/编辑/审批三模式通用）下滚动条的显示/隐藏：
+ * - true：显示滚动条
+ * - false：隐藏滚动条（滑块透明）
+ *
+ * 触发逻辑由 handlePreviewScroll 方法维护。
+ */
+const isScrolling = ref(false)
+
+/**
+ * 滚动隐藏定时器句柄
+ *
+ * 每次触发滚动时清除上一个定时器并重新设置，
+ * 保证停止滚动 800ms 后才真正隐藏滚动条（防抖）。
+ * 不使用 ref 包装，因为它不参与模板渲染。
+ */
+let scrollHideTimer = null
+
+/**
+ * 处理 .view-container 的滚动事件（预览/编辑/审批模式通用）
+ *
+ * 需求：滚动时显示滚动条，停止滚动后隐藏。
+ * 实现：
+ * 1. 置 isScrolling = true，模板动态 class 立即应用，滚动条显示
+ * 2. 清除上一个定时器，避免多次触发叠加导致提前隐藏
+ * 3. 设置新的 800ms 定时器，到时后置 isScrolling = false，滚动条隐藏
+ *
+ * 说明：该事件在 .view-container 上监听，三种模式（预览/编辑/审批）统一生效；
+ * 滚动条样式通过 CSS 中的 .is-scrolling class 控制透明度。
+ */
+function handlePreviewScroll() {
+  isScrolling.value = true
+  if (scrollHideTimer) {
+    clearTimeout(scrollHideTimer)
+  }
+  scrollHideTimer = setTimeout(() => {
+    isScrolling.value = false
+  }, 800)
+}
+
+// ==================== 签名行计算属性 ====================
 
 /**
  * 提交操作按钮节点（actionType=SUBMIT 且 operatorTime 非空）
@@ -576,10 +626,17 @@ async function handleApproveSubmit() {
   box-sizing: border-box;
   color: #000;
 }
-/* 预览模式固定高度，用于生成批记录时展示 A4 样式 */
+/* 预览模式固定高度，用于生成批记录时展示 A4 样式
+ * - 保持 height: 201mm（A4 比例视觉）
+ * - 使用 overflow-y: auto 允许内容超出 201mm 时滚动查看
+ *   原因：物料明细固定 14 行时内容高度可能超过 201mm，
+ *   overflow: hidden 会把底部签名栏等元素裁掉，导致用户无法查看；
+ *   auto 让预览模式也能滚动到底部查看完整内容（如签名行）
+ */
 .preview-mode {
   height: 201mm;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .view-container :deep(.el-table) { color: #000; }
 .view-container :deep(.el-table th) { color: #000; font-weight: normal; }
@@ -605,5 +662,53 @@ async function handleApproveSubmit() {
 /* 清除 el-checkbox 默认的 margin-right，避免与 gap 叠加 */
 .checkbox-pair :deep(.el-checkbox) {
   margin-right: 0;
+}
+
+/* ============================================================
+ * 滚动条样式：滚动时显示，停止滚动后隐藏
+ *
+ * 生效范围：.view-container，即预览模式 + 编辑模式 + 审批模式统一生效。
+ * - 默认状态下滚动条滑块完全透明（视觉上"隐藏"）
+ * - 当 .view-container 带有 is-scrolling class 时（正在滚动中）显示滑块
+ * - is-scrolling class 由 @scroll 事件驱动的 handlePreviewScroll 方法切换
+ * - 使用半透明灰色，与 Element Plus 默认滚动条风格接近
+ * - Firefox 通过 scrollbar-width / scrollbar-color 单独处理，行为近似
+ * ============================================================ */
+
+/* 滚动条本体：宽度 6px，高度不占用（横向不滚动） */
+.view-container::-webkit-scrollbar {
+  width: 6px;
+  height: 0;
+}
+
+/* 轨道：透明，不占用视觉空间 */
+.view-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 滑块：默认透明（视觉隐藏），带过渡动画 */
+.view-container::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.25s ease;
+}
+
+/* 滚动中：显示滑块（半透明灰） */
+.view-container.is-scrolling::-webkit-scrollbar-thumb {
+  background: rgba(144, 147, 153, 0.5);
+}
+
+/* 鼠标悬停在滑块上：略微加深，便于拖动 */
+.view-container.is-scrolling::-webkit-scrollbar-thumb:hover {
+  background: rgba(144, 147, 153, 0.8);
+}
+
+/* Firefox 兼容：细滚动条 + 滚动时着色（无法做到停止时隐藏，行为近似） */
+.view-container {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.view-container.is-scrolling {
+  scrollbar-color: rgba(144, 147, 153, 0.5) transparent;
 }
 </style>

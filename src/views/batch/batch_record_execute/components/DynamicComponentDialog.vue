@@ -10,7 +10,7 @@
     @closed="handleClosed"
   >
     <template #header>
-      <div style="display: flex; align-items: center; width: 300mm;">
+      <div style="display: flex; align-items: center; width: 100%;">
         <span style="flex: 1; font-size: 18px; font-weight: bold;">{{ currentTitle }}</span>
         <!-- 全屏按钮：与其他对话框一致，使用 svg-icon 风格；hover 无缩放、无变色 -->
         <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">

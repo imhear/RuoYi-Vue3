@@ -53,17 +53,16 @@
                     :header-cell-style="{ 'text-align': 'center', 'font-size': '12px' }"
                     :cell-style="{ 'text-align': 'center', 'font-size': '12px', 'white-space': 'nowrap' }"
                   >
-                    <el-table-column label="操作时间" align="center" min-width="130" show-overflow-tooltip>
+                    <el-table-column label="操作时间" align="center" min-width="160" show-overflow-tooltip>
                       <template #default="scope">
-                        {{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}') }}
+                        {{ parseTime(scope.row.createTime, '{y}-{m}-{d} {h}:{i}') }} {{ scope.row.operator }}
                       </template>
                     </el-table-column>
-                    <el-table-column label="操作人" prop="operator" align="center" min-width="70" show-overflow-tooltip />
                     <!--
                       操作类型列：仅显示操作类型标签，语义单一
                       备注信息由下一列"备注"独立承载，避免同一列塞入两类语义
                     -->
-                    <el-table-column label="操作类型" align="center" min-width="80">
+                    <el-table-column label="操作类型" align="center" min-width="83">
                       <template #default="scope">
                         <el-tag size="small" :type="getActionTypeTag(scope.row.actionType)">
                           {{ getActionTypeText(scope.row.actionType) }}
@@ -79,7 +78,7 @@
                       label="备注"
                       prop="remark"
                       align="center"
-                      min-width="120"
+                      min-width="110"
                       :show-overflow-tooltip="true"
                     />
                   </el-table>

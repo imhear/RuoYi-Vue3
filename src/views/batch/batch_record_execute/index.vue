@@ -95,7 +95,8 @@ const data = reactive({
     productName: undefined,
     batchNumber: undefined,
     schemeName: undefined,
-    status: '1',   // 已审核，进入填报阶段
+    status: '1,2', // 默认排除已取消
+    // status: '1',   // 已审核，进入填报阶段
     delFlag: '0',
     orderByColumn: 'create_time',
     isAsc: 'desc'

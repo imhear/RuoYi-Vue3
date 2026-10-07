@@ -96,3 +96,11 @@ export function cancelBatchRecord(recordId, remark) {
     params: { remark }
   })
 }
+
+// 完成归档
+export function archiveBatchRecord(recordId) {
+  return request({
+    url: '/batch/batch_record/archive/' + recordId,
+    method: 'post'
+  })
+}

@@ -39,6 +39,9 @@
           <el-button v-if="scope.row.status === '0'" link type="danger" @click="handleDelete(scope.row)" v-hasPermi="['batch:batch_record:remove']">删除</el-button>
           <!-- 取消按钮 -->
           <el-button v-if="scope.row.status === '1'" link type="danger" @click="handleUnAudit(scope.row)" v-hasPermi="['batch:batch_record:unaudit']">取消</el-button>
+           <!-- 完成归档按钮：已审核状态下显示，点击后将批记录状态置为已归档（2） -->
+           <el-button v-if="scope.row.status === '1'" link type="success" @click="handleArchive(scope.row)" v-hasPermi="['batch:batch_record:archive']">完成归档</el-button>
+           <el-button link type="primary" @click="handleViewData(scope.row)" v-hasPermi="['batch:batch_record:query']">详情</el-button>
         </template>
       </el-table-column>
       <!--
@@ -93,8 +96,8 @@
       <el-table-column label="产品编码" align="center" prop="productCode" min-width="100" />
       <el-table-column label="产品名称" align="center" prop="productName" min-width="120" show-overflow-tooltip />
       <el-table-column label="生产批号" align="center" prop="batchNumber" min-width="100" />
-      <el-table-column label="方案名称" align="center" prop="schemeName" min-width="120" show-overflow-tooltip />
-      <el-table-column label="发布版本" align="center" prop="releaseCode" min-width="80" />
+      <!-- <el-table-column label="方案名称" align="center" prop="schemeName" min-width="120" show-overflow-tooltip /> -->
+      <!-- <el-table-column label="发布版本" align="center" prop="releaseCode" min-width="80" /> -->
       <el-table-column label="计划开始" align="center" prop="planStart" width="100">
         <template #default="scope">{{ parseTime(scope.row.planStart, '{y}-{m}-{d}') }}</template>
       </el-table-column>
@@ -115,6 +118,8 @@
       @pagination="getList"
     />
 
+    <!-- 批记录详情抽屉 -->
+    <batch-record-view-drawer ref="batchRecordViewRef" />
     <!-- 生成批记录对话框 -->
     <BatchRecordGenerate ref="generateRef" @success="getList" />
     <!-- 查看生产任务单组件 -->
@@ -128,12 +133,14 @@
 import { ref, reactive, toRefs } from 'vue'
 // WarningFilled 用于状态列"已取消"时显示的提示图标
 import { WarningFilled } from '@element-plus/icons-vue'
-import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord, deleteBatchRecordCascade, cancelBatchRecord } from "@/api/batch/batch_record"
+import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord, deleteBatchRecordCascade, cancelBatchRecord, archiveBatchRecord } from "@/api/batch/batch_record"
 import { getToken } from '@/utils/auth'
 import { useBizDict } from '@/utils/bizDict'
 import BatchRecordGenerate from '@/views/batch/components/BatchRecordGenerate.vue'
 import BatchOrderView from '@/views/batch/components/BatchOrderView.vue'
 import BatchRecordView from '@/views/batch/components/BatchRecordView.vue'
+// 批记录详情抽屉（同目录下的 view.vue），用于展示批记录完整字段信息
+import BatchRecordViewDrawer from './view'
 
 const { proxy } = getCurrentInstance()
 const { biz_record_status } = useBizDict('biz_record_status')
@@ -147,6 +154,8 @@ const total = ref(0)
 const generateRef = ref(null)
 const orderViewRef = ref(null)
 const recordViewRef = ref(null)
+// 批记录详情抽屉的 ref，用于在 handleViewData 中调用其 open 方法
+// const batchRecordViewRef = ref(null)
 
 const data = reactive({
   queryParams: {
@@ -165,6 +174,10 @@ const data = reactive({
 })
 
 const { queryParams } = toRefs(data)
+
+function handleViewData(row) {
+  proxy.$refs["batchRecordViewRef"].open(row.recordId)
+}
 
 /**
  * 导入相关配置
@@ -301,6 +314,26 @@ function handleUnAudit(row) {
     return cancelBatchRecord(row.recordId, remark)
   }).then(() => {
     proxy.$modal.msgSuccess('取消成功')
+    getList()
+  }).catch(() => {})
+}
+
+/**
+ * 完成归档按钮操作
+ *
+ * 将指定批记录的状态由"已审核（1）"变更为"已归档（2）"。
+ * 参照审核/取消功能的交互模式：弹出确认框，用户确认后调用后端接口，成功后刷新列表。
+ *
+ * 前端显示条件（模板已控制）：scope.row.status === '1'（已审核）
+ * 权限字符：batch:batch_record:archive
+ *
+ * @param {Object} row 当前行的批记录数据
+ */
+function handleArchive(row) {
+  proxy.$modal.confirm('确认完成归档该批记录？归档后不可再取消。').then(() => {
+    return archiveBatchRecord(row.recordId)
+  }).then(() => {
+    proxy.$modal.msgSuccess('归档成功')
     getList()
   }).catch(() => {})
 }

@@ -177,7 +177,13 @@
           <div class="info-item">
             <label class="info-label">状态：</label>
             <span class="info-value plaintext">
-              {{ info.status }}
+              <!--
+                状态字段：从业务字典 biz_record_status 显示中文标签
+                - 业务字典结构：[{ label: '已审核', value: '1' }, ...]
+                - dict-tag 组件根据 value 匹配 label 并显示带颜色的标签
+                - 若未匹配到（如 value 为空），dict-tag 会展示原始 value，避免空白
+              -->
+              <dict-tag :options="biz_record_status" :value="info.status" />
             </span>
           </div>
         </el-col>
@@ -206,7 +212,11 @@
 
 <script setup name="Batch_recordViewDrawer">
 import { getBatch_record } from '@/api/batch/batch_record'
+// 引入业务字典 Hook（项目自定义 hook，需显式 import，不依赖 auto-import）
+import { useBizDict } from '@/utils/bizDict'
 
+// 批记录状态字典（0=待审核 1=已审核 2=已归档 9=已取消），用于状态字段的中文展示
+const { biz_record_status } = useBizDict('biz_record_status')
 
 const visible = ref(false)
 const loading = ref(false)

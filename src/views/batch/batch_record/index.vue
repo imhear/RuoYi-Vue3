@@ -286,7 +286,7 @@ function handleDelete(row) {
  * 以求减少代码复杂度。
  */
 function handleUnAudit(row) {
-  proxy.$prompt('确认取消该批记录？此操作将同时标记关联数据，且不可恢复！', '提示', {
+  proxy.$prompt('确认取消该批记录？此操作将同时标记关联数据，且不可恢复！', '系统提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     inputPlaceholder: '请输入取消理由（不少于4个字符）',

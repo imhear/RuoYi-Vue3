@@ -220,10 +220,10 @@ const dialogTitle = computed(() => {
   const code = r.schemeCode || ''
   const version = r.releaseCode || ''
   let base = ''
-  if (name && code) base += `${name}|${code}`
+  if (name && code) base += `${name} | ${code}`
   else if (name) base += ` [${name}]`
   else if (code) base += ` [${code}]`
-  if (version) base += ` 版本:${version}`
+  if (version) base += ` | ${version}`
   return base
 })
 

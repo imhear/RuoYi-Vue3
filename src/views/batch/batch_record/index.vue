@@ -121,39 +121,11 @@
     <BatchOrderView ref="orderViewRef" />
     <!-- 查看批记录结构组件 -->
     <BatchRecordView ref="recordViewRef" />
-
-    <!--
-      取消批记录对话框
-      - 相比原 ElMessageBox.prompt，改用自定义 el-dialog + el-form，
-        目的是能够对输入框的值进行 trim 回填（所见即所得），并支持 element-plus 的表单校验
-      - input 失焦时自动 trim 回填，用户点击"确定"时也能感知到输入被整理
-      - 提交前再做一次 trim（防止用户按回车直接提交时未触发 blur）
-    -->
-    <el-dialog v-model="cancelDialogVisible" :title="cancelTitle" width="500px" append-to-body>
-      <el-form ref="cancelFormRef" :model="cancelForm" :rules="cancelRules" label-width="80px">
-        <el-form-item label="取消理由" prop="remark">
-          <el-input
-            v-model="cancelForm.remark"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入取消理由（不少于4个字符）"
-            maxlength="200"
-            show-word-limit
-            @blur="handleCancelRemarkBlur"
-            @keyup.enter="submitCancel"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="cancelDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="submitCancel">确 定</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup name="BatchRecord">
-import { ref, reactive, toRefs, nextTick } from 'vue'
+import { ref, reactive, toRefs } from 'vue'
 // WarningFilled 用于状态列"已取消"时显示的提示图标
 import { WarningFilled } from '@element-plus/icons-vue'
 import { listBatch_record, createBatchRecord, delBatch_record, auditBatchRecord, deleteBatchRecordCascade, cancelBatchRecord } from "@/api/batch/batch_record"
@@ -175,45 +147,6 @@ const total = ref(0)
 const generateRef = ref(null)
 const orderViewRef = ref(null)
 const recordViewRef = ref(null)
-
-// ==================== 取消批记录对话框状态 ====================
-/**
- * 取消批记录对话框是否可见
- */
-const cancelDialogVisible = ref(false)
-
-/**
- * 取消批记录对话框标题
- */
-const cancelTitle = ref('取消批记录')
-
-/**
- * 取消批记录表单引用（用于调用 validate 方法）
- */
-const cancelFormRef = ref(null)
-
-/**
- * 取消批记录表单数据
- * - recordId：待取消的批记录ID
- * - remark：取消理由（提交前会做 trim 处理）
- */
-const cancelForm = reactive({
-  recordId: null,
-  remark: ''
-})
-
-/**
- * 取消批记录表单校验规则
- * - remark 必填
- * - remark 长度 4~200 字符（与前端输入框 show-word-limit 的 maxlength 一致）
- * - 校验基于 trim 后的值（提交前会先 trim）
- */
-const cancelRules = {
-  remark: [
-    { required: true, message: '取消理由不能为空', trigger: 'blur' },
-    { min: 4, max: 200, message: '取消理由不少于4个字符', trigger: 'blur' }
-  ]
-}
 
 const data = reactive({
   queryParams: {
@@ -341,70 +274,35 @@ function handleDelete(row) {
 }
 
 /**
- * 取消按钮操作：打开取消批记录对话框
+ * 取消按钮操作
  *
- * 相比原来的 $prompt 方式，改为自定义 el-dialog 打开：
- * - 支持对输入框值进行 trim 回填（所见即所得）
- * - 支持 element-plus 的表单校验（必填 + 长度）
- * - 传入当前行的 recordId，用于提交时定位目标记录
+ * 使用 ElMessageBox.prompt 弹窗采集取消理由，通过 inputValidator 做两重校验：
+ * 1. 去除首尾空格后不能为空
+ * 2. 去除首尾空格后长度不少于 4 个字符
+ * 校验通过后对返回值再次 trim 再调用接口（双保险，防止回车提交时输入框未触发失焦）。
+ * 取消理由会持久化到 batch_record.remark。
  *
- * @param {Object} row 当前行的批记录数据
+ * 说明：本次改回 prompt 模式（撤销之前自定义对话框的 trim 回填优化），
+ * 以求减少代码复杂度。
  */
 function handleUnAudit(row) {
-  cancelForm.recordId = row.recordId
-  cancelForm.remark = ''
-  cancelDialogVisible.value = true
-  // 等待对话框渲染后再清除校验状态，避免残留上一次的红色错误提示
-  nextTick(() => cancelFormRef.value?.clearValidate())
-}
-
-/**
- * 取消理由输入框失焦时自动 trim 回填
- *
- * 用户输入完成后点击"确定"，先触发 input 的 blur 事件：
- * 1. 将输入值去除首尾空格
- * 2. 回填到输入框（所见即所得，用户能感知输入被整理）
- * 然后再执行提交逻辑（submitCancel）
- *
- * 该处理避免了用户带着多余空格提交，也避免 form 校验失败时用户困惑
- */
-function handleCancelRemarkBlur() {
-  if (cancelForm.remark) {
-    cancelForm.remark = cancelForm.remark.trim()
-  }
-}
-
-/**
- * 提交取消批记录
- *
- * 执行步骤：
- * 1. 先 trim 输入框的值并回填（双保险，防止用户通过回车提交时未触发 blur）
- * 2. 执行表单校验（必填 + 长度 4~200）
- * 3. 校验通过后调用接口，将取消理由持久化到 batch_record.remark
- * 4. 成功后关闭对话框、提示、刷新列表
- *
- * 接口异常由 request 拦截器统一提示，本方法内不重复提示
- */
-async function submitCancel() {
-  // 第一步：trim 回填（双保险）
-  cancelForm.remark = (cancelForm.remark || '').trim()
-
-  // 第二步：表单校验
-  try {
-    await cancelFormRef.value.validate()
-  } catch (e) {
-    return
-  }
-
-  // 第三步：提交
-  try {
-    await cancelBatchRecord(cancelForm.recordId, cancelForm.remark)
+  proxy.$prompt('确认取消该批记录？此操作将同时标记关联数据，且不可恢复！', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPlaceholder: '请输入取消理由（不少于4个字符）',
+    inputValidator: (value) => {
+      const trimmed = (value || '').trim()
+      if (!trimmed) return '取消理由不能为空'
+      if (trimmed.length < 4) return '取消理由不少于4个字符'
+      return true
+    }
+  }).then(({ value }) => {
+    const remark = value.trim()
+    return cancelBatchRecord(row.recordId, remark)
+  }).then(() => {
     proxy.$modal.msgSuccess('取消成功')
-    cancelDialogVisible.value = false
     getList()
-  } catch (e) {
-    // 接口异常由 request 拦截器统一提示
-  }
+  }).catch(() => {})
 }
 
 /** 多选框选中数据 */
@@ -430,6 +328,6 @@ getList()
 .status-remark-icon {
   font-size: 14px;
   color: #e6a23c;       /* 橙色，与"已取消"的警示语义相符 */
-  cursor: help;         /* 鼠标变为问号样式，暗示可查看提示 */
+  /* cursor: help;         鼠标变为问号样式，暗示可查看提示 */
 }
 </style>

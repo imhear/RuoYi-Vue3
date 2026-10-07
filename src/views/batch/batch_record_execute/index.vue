@@ -41,7 +41,7 @@
         </template>
       </el-table-column>
       <el-table-column label="产品编码" align="center" prop="productCode" min-width="100" />
-      <el-table-column label="产品名称" align="center" prop="productName" min-width="120" show-overflow-tooltip />
+      <el-table-column label="产品名称" align="center" prop="productName" min-width="150" show-overflow-tooltip />
       <el-table-column label="生产批号" align="center" prop="batchNumber" min-width="100" />
       <el-table-column label="方案名称" align="center" prop="schemeName" min-width="120" show-overflow-tooltip />
       <el-table-column label="发布版本" align="center" prop="releaseCode" min-width="80" />
@@ -95,8 +95,8 @@ const data = reactive({
     productName: undefined,
     batchNumber: undefined,
     schemeName: undefined,
-    status: '1,2', // 默认排除已取消
-    // status: '1',   // 已审核，进入填报阶段
+    // status: '1,2', // 默认排除已取消
+    status: '1',   // 已审核，进入填报阶段
     delFlag: '0',
     orderByColumn: 'create_time',
     isAsc: 'desc'

@@ -27,7 +27,7 @@
       <el-col :span="5">
         <div class="tree-panel">
           <div class="panel-header">
-            <span>批记录目录</span>
+            <span>目录</span>
             <span class="panel-actions">
               <!-- 折叠/展开按钮：点击切换整棵树的展开状态 -->
               <el-button
@@ -219,8 +219,8 @@ const dialogTitle = computed(() => {
   const name = r.schemeName || ''
   const code = r.schemeCode || ''
   const version = r.releaseCode || ''
-  let base = '批记录结构'
-  if (name && code) base += ` [${name}|${code}]`
+  let base = ''
+  if (name && code) base += `${name}|${code}`
   else if (name) base += ` [${name}]`
   else if (code) base += ` [${code}]`
   if (version) base += ` 版本:${version}`

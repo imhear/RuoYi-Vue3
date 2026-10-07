@@ -82,7 +82,7 @@
         <el-col :span="5">
           <div class="tree-panel">
             <div class="panel-header">
-              <span>方案目录树</span>
+              <span>目录</span>
               <!-- 折叠/展开按钮：点击切换整棵树的展开状态 -->
               <el-button
                 link

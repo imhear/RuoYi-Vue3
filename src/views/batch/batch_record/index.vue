@@ -13,9 +13,9 @@
       <el-form-item label="生产批号" prop="batchNumber">
         <el-input v-model="queryParams.batchNumber" placeholder="请输入生产批号" clearable @keyup.enter="handleQuery" />
       </el-form-item>
-      <el-form-item label="方案名称" prop="schemeName">
+      <!-- <el-form-item label="方案名称" prop="schemeName">
         <el-input v-model="queryParams.schemeName" placeholder="请输入方案名称" clearable @keyup.enter="handleQuery" />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -31,7 +31,7 @@
 
     <el-table v-loading="loading" :data="recordList" @selection-change="handleSelectionChange" stripe>
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" min-width="180">
+      <el-table-column label="操作" align="center" class-name="small-padding fixed-width" min-width="160">
         <template #default="scope">
           <!-- 审核按钮：待审核状态显示 -->
           <el-button v-if="scope.row.status === '0' && scope.row.releaseId" link type="warning" @click="handleAudit(scope.row)" v-hasPermi="['batch:batch_record:audit']">审核</el-button>
@@ -40,7 +40,7 @@
           <!-- 取消按钮 -->
           <el-button v-if="scope.row.status === '1'" link type="danger" @click="handleUnAudit(scope.row)" v-hasPermi="['batch:batch_record:unaudit']">取消</el-button>
            <!-- 完成归档按钮：已审核状态下显示，点击后将批记录状态置为已归档（2） -->
-           <el-button v-if="scope.row.status === '1'" link type="success" @click="handleArchive(scope.row)" v-hasPermi="['batch:batch_record:archive']">完成归档</el-button>
+           <el-button v-if="scope.row.status === '1'" link type="success" @click="handleArchive(scope.row)" v-hasPermi="['batch:batch_record:archive']">完成</el-button>
            <el-button link type="primary" @click="handleViewData(scope.row)" v-hasPermi="['batch:batch_record:query']">详情</el-button>
         </template>
       </el-table-column>
@@ -51,7 +51,7 @@
           鼠标悬停在图标上显示该行数据对应的 remark（取消理由），提高数据可读性
         - 图标使用 WarningFilled（橙色），与"已取消"的语义相符，视觉上不抢占状态标签
       -->
-      <el-table-column label="状态" align="center" prop="status" width="120">
+      <el-table-column label="状态" align="center" prop="status" width="100">
         <template #default="scope">
           <div class="status-cell">
             <dict-tag :options="biz_record_status" :value="scope.row.status" />
@@ -66,7 +66,7 @@
         </template>
       </el-table-column>
       <!-- 工单号：无值显示导入按钮，有值显示超链接 -->
-      <el-table-column label="工单号" align="center" min-width="120">
+      <el-table-column label="工单号" align="center" min-width="125">
         <template #default="scope">
           <!-- 未导入工单：显示上传按钮 -->
           <el-upload
@@ -85,7 +85,7 @@
           <el-button v-else link type="primary" @click="handleViewOrder(scope.row)">{{ scope.row.orderNum }}</el-button>
         </template>
       </el-table-column>
-      <el-table-column label="批记录" align="center" min-width="120">
+      <el-table-column label="批记录" align="center" min-width="100">
         <template #default="scope">
           <!-- 生成按钮：已导入工单且未生成方案时显示 -->
           <el-button v-if="scope.row.orderNum && !scope.row.releaseId && scope.row.status === '0'" link type="success" @click="handleGenerate(scope.row)" v-hasPermi="['batch:batch_record:generate']">生成</el-button>
@@ -94,7 +94,7 @@
         </template>
       </el-table-column>
       <el-table-column label="产品编码" align="center" prop="productCode" min-width="100" />
-      <el-table-column label="产品名称" align="center" prop="productName" min-width="120" show-overflow-tooltip />
+      <el-table-column label="产品名称" align="center" prop="productName" min-width="180" show-overflow-tooltip />
       <el-table-column label="生产批号" align="center" prop="batchNumber" min-width="100" />
       <!-- <el-table-column label="方案名称" align="center" prop="schemeName" min-width="120" show-overflow-tooltip /> -->
       <!-- <el-table-column label="发布版本" align="center" prop="releaseCode" min-width="80" /> -->

@@ -88,10 +88,11 @@ export function deleteBatchRecordCascade(recordId) {
   })
 }
 
-// 取消批记录
-export function cancelBatchRecord(recordId) {
+// 取消批记录（提交取消理由）
+export function cancelBatchRecord(recordId, remark) {
   return request({
     url: '/batch/batch_record/cancel/' + recordId,
-    method: 'put'
+    method: 'post',
+    params: { remark }
   })
 }

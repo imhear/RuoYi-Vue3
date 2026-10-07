@@ -360,7 +360,7 @@ const workshopCardGroups = computed(() => {
  */
 async function open(id, orderNum) {
   recordId.value = id
-  title.value = orderNum ? `批记录 - ${orderNum}` : '批记录'
+  title.value = orderNum ? `${orderNum}` : '批记录'
   visible.value = true
   activeWorkshop.value = 'all'
   activeForm.value = 'all'

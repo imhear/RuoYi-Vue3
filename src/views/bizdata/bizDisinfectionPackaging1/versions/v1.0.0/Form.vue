@@ -199,8 +199,8 @@
                 <span style="margin-left: 30px;">
                   消毒时间
                   <template v-if="isEditMode">
-                    <el-time-picker v-model="record.s2OzoneDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                    至 <el-time-picker v-model="record.s2OzoneDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
+                    <el-time-picker v-model="record.s2OzoneDesinfectionStartTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
+                    至 <el-time-picker v-model="record.s2OzoneDesinfectionEndTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
                   </template>
                   <template v-else>
                     {{ formatHm(record.s2OzoneDesinfectionStartTime) }} 至 {{ formatHm(record.s2OzoneDesinfectionEndTime) }}
@@ -215,8 +215,8 @@
                 <span style="margin-left: 30px;">
                   消毒时间
                   <template v-if="isEditMode">
-                    <el-time-picker v-model="record.s2DryingDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                    至 <el-time-picker v-model="record.s2DryingDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
+                    <el-time-picker v-model="record.s2DryingDesinfectionStartTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
+                    至 <el-time-picker v-model="record.s2DryingDesinfectionEndTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
                   </template>
                   <template v-else>
                     {{ formatHm(record.s2DryingDesinfectionStartTime) }} 至 {{ formatHm(record.s2DryingDesinfectionEndTime) }}
@@ -231,8 +231,8 @@
                 <span style="margin-left: 30px;">
                   消毒时间
                   <template v-if="isEditMode">
-                    <el-time-picker v-model="record.s2HighDryingDesinfectionStartTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
-                    至 <el-time-picker v-model="record.s2HighDryingDesinfectionEndTime" value-format="HH:mm:ss" placeholder="" size="small" style="width: 100px;" />
+                    <el-time-picker v-model="record.s2HighDryingDesinfectionStartTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
+                    至 <el-time-picker v-model="record.s2HighDryingDesinfectionEndTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
                   </template>
                   <template v-else>
                     {{ formatHm(record.s2HighDryingDesinfectionStartTime) }} 至 {{ formatHm(record.s2HighDryingDesinfectionEndTime) }}
@@ -286,9 +286,9 @@
               <tr style="height: 28px;">
                 <td colspan="2" style="text-align: center;">
                   <template v-if="isEditMode">
-                    <el-date-picker v-model="record.s3StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="开始时间" size="small" style="width: 180px;" />
+                    <el-date-picker v-model="record.s3StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:00" placeholder="开始时间" size="small" style="width: 180px;" />
                     <span style="margin: 0 8px;">至</span>
-                    <el-date-picker v-model="record.s3EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="结束时间" size="small" style="width: 180px;" />
+                    <el-date-picker v-model="record.s3EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:00" placeholder="结束时间" size="small" style="width: 180px;" />
                   </template>
                   <template v-else>
                     {{ record.s3StartTime ? parseTime(record.s3StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s3EndTime ? parseTime(record.s3EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
@@ -337,8 +337,8 @@
                 <span style="margin-left: 30px;">
                   消毒时间
                   <template v-if="isEditMode">
-                    <el-time-picker v-model="record.s3OzoneDesinfectionStartTime" value-format="HH:mm:ss" size="small" style="width: 100px;" />
-                    至 <el-time-picker v-model="record.s3OzoneDesinfectionEndTime" value-format="HH:mm:ss" size="small" style="width: 100px;" />
+                    <el-time-picker v-model="record.s3OzoneDesinfectionStartTime" value-format="HH:mm:00" size="small" style="width: 100px;" />
+                    至 <el-time-picker v-model="record.s3OzoneDesinfectionEndTime" value-format="HH:mm:00" size="small" style="width: 100px;" />
                   </template>
                   <template v-else>
                     {{ formatHm(record.s3OzoneDesinfectionStartTime) }} 至 {{ formatHm(record.s3OzoneDesinfectionEndTime) }}
@@ -458,7 +458,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBizDisinfectionPackaging1Detail } from '@/api/bizdata/bizDisinfectionPackaging1'
 import { getBatch_record } from '@/api/batch/batch_record'
@@ -605,6 +605,78 @@ function formatHm(timeStr) {
   const s = String(timeStr)
   return s.length >= 5 ? s.substring(0, 5) : s
 }
+
+/**
+ * 将 HH:mm:ss 格式的时间字符串转换为"当天累计分钟数"
+ *
+ * @param {String} timeStr 时间字符串，如 "08:30:00"
+ * @returns {Number} 分钟数（如 510）；非法或空返回 0
+ */
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0
+  const parts = String(timeStr).split(':').map(Number)
+  const h = parts[0]
+  const m = parts[1]
+  if (isNaN(h) || isNaN(m)) return 0
+  return h * 60 + m
+}
+
+/**
+ * 计算两个 HH:mm:ss 之间的分钟差
+ *
+ * - 任一为空返回 ''
+ * - 跨天时自动 +24h（如 23:00 → 01:00 返回 120）
+ * - 否则返回正数分钟差
+ *
+ * @param {String} startTime 起始时间 HH:mm:ss
+ * @param {String} endTime   结束时间 HH:mm:ss
+ * @returns {Number|String} 分钟数或空字符串
+ */
+function diffMinutes(startTime, endTime) {
+  if (!startTime || !endTime) return ''
+  const start = timeToMinutes(startTime)
+  const end = timeToMinutes(endTime)
+  if (isNaN(start) || isNaN(end)) return ''
+  let diff = end - start
+  if (diff < 0) diff += 24 * 60
+  return diff
+}
+
+// ==================== 消毒时长自动计算 ====================
+/**
+ * 照搬老表单（BottlingDisPack1Handle.vue）实践：
+ * - 使用 watch 监听时间对
+ * - 配置 { immediate: true }，组件初始化时立即执行一次，建立依赖并同步初始态
+ * - 不做 isEditMode 判断，保证每次时间变化都能触发重算
+ *
+ * 三个消毒时长字段（单位：分钟）：
+ * - s2OzoneDesinfectionCost = s2OzoneDesinfectionEndTime - s2OzoneDesinfectionStartTime
+ * - s2DryingDesinfectionCost = s2DryingDesinfectionEndTime - s2DryingDesinfectionStartTime
+ * - s3OzoneDesinfectionCost  = s3OzoneDesinfectionEndTime  - s3OzoneDesinfectionStartTime
+ */
+watch(
+  () => [record.s2OzoneDesinfectionStartTime, record.s2OzoneDesinfectionEndTime],
+  ([start, end]) => {
+    record.s2OzoneDesinfectionCost = diffMinutes(start, end)
+  },
+  { immediate: true }
+)
+
+watch(
+  () => [record.s2DryingDesinfectionStartTime, record.s2DryingDesinfectionEndTime],
+  ([start, end]) => {
+    record.s2DryingDesinfectionCost = diffMinutes(start, end)
+  },
+  { immediate: true }
+)
+
+watch(
+  () => [record.s3OzoneDesinfectionStartTime, record.s3OzoneDesinfectionEndTime],
+  ([start, end]) => {
+    record.s3OzoneDesinfectionCost = diffMinutes(start, end)
+  },
+  { immediate: true }
+)
 
 // ==================== 数据加载 ====================
 /**

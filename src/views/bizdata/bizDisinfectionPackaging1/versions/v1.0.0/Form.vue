@@ -372,11 +372,11 @@
         </colgroup>
         <tr style="height: 156px;">
           <td class="td-step-label">
-            4.
-            <template v-if="isEditMode">
+            4.物料使用统计
+            <!-- <template v-if="isEditMode">
               <el-input v-model="record.s4StepName" size="small" style="width: 75px;" />
             </template>
-            <template v-else>{{ record.s4StepName || '物料使用统计' }}</template>
+            <template v-else>{{ record.s4StepName || '物料使用统计' }}</template> -->
           </td>
           <td class="td-no-padding" colspan="2">
              <table class="inner-fill-table step4-inner" style="border-collapse: collapse; font-size: 12px; width: 100%; height: 100%;">

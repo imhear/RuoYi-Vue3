@@ -108,7 +108,7 @@ async function open(params) {
     cMenuId: params.cMenuId || null   // 新增：C 节点 ID
   }
 
-  currentTitle.value = `操作 - ${params.buttonLabel || params.operationCode}`
+  currentTitle.value = `${params.buttonLabel || params.operationCode}`
   componentLoading.value = true
   visible.value = true
 

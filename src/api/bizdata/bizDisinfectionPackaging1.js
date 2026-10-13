@@ -68,3 +68,22 @@ export function editBizDisinfectionPackaging1(recordId, menuId, data) {
     data: data
   })
 }
+
+/**
+ * 从领料单同步物料到 Step4 子表
+ *
+ * 关联链路：主表.instance_id = biz_receiving.instance_id
+ *          AND biz_receiving.workshop = {workshop}
+ * 多个 biz_receiving 取 create_time 升序第 1 条。
+ * 领料单明细按 seq_no 升序取前 4 条；step4 按 seq_no 匹配更新。
+ *
+ * @param {Number} recordId 主表主键
+ * @param {String} workshop 车间过滤条件（D=消毒 F=灌装 P=包装）
+ */
+export function syncMaterialFromReceiving(recordId, workshop) {
+  return request({
+    url: '/bizdata/bizDisinfectionPackaging1/syncMaterialFromReceiving/' + recordId,
+    method: 'post',
+    params: { workshop: workshop }
+  })
+}

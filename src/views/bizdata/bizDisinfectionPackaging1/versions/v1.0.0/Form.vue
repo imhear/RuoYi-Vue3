@@ -1,7 +1,8 @@
 <template>
   <div class="dis-pack1-form-container">
     <!-- 顶部操作按钮 -->
-    <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px; margin-bottom: 1px; width: 220px;">
+    <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px; margin-bottom: 1px; width: 300px;">
+      <el-button v-if="isEditMode" type="primary" @click="handleSyncMaterialFromReceiving">从领料单同步物料</el-button>
       <el-button v-if="isEditMode" type="primary" @click="handleEditSubmit">保 存</el-button>
       <el-button v-if="isApproveMode" type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
     </div>
@@ -460,7 +461,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getBizDisinfectionPackaging1Detail } from '@/api/bizdata/bizDisinfectionPackaging1'
+import { getBizDisinfectionPackaging1Detail, syncMaterialFromReceiving } from '@/api/bizdata/bizDisinfectionPackaging1'
 import { getBatch_record } from '@/api/batch/batch_record'
 import { listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
 import BaseCategorySelect from '@/components/BaseCategorySelect/index.vue'
@@ -471,6 +472,15 @@ defineOptions({ name: 'DisinfectionPackaging1Form' })
 
 /** Step4 物料/规格/单位选择的分类码（本表单为包装材料相关，暂固定） */
 const STEP4_CATEGORY_CODE = 'PACKAGING_MATERIAL'
+
+/**
+ * 本表单为消毒车间专属表单，从消毒车间（D）的领料单同步物料。
+ *
+ * 未来迁移其他车间表单时，对应改为：
+ * - 灌装车间：'F'
+ * - 包装车间：'P'
+ */
+const SYNC_WORKSHOP = 'D'
 
 /**
  * 组件 Props 定义
@@ -895,6 +905,55 @@ async function handleEditSubmit() {
   }
 }
 
+// ==================== 从领料单同步物料 ====================
+/**
+ * 从领料单同步物料到 Step4 子表
+ *
+ * 交互流程：
+ * 1. 二次确认（提示当前 step4 内容将被覆盖）
+ * 2. 调后端接口，后端按业务规则同步并返回最新 step4List
+ * 3. 前端替换 record.step4List
+ * 4. 不关闭对话框，用户可继续编辑（如补录 use_qty / loss_qty / remain_qty）
+ *   或再次点击重新同步
+ *
+ * 允许重复点击：每次调用均以后端最新领料单数据覆盖 step4。
+ */
+async function handleSyncMaterialFromReceiving() {
+  try {
+    await ElMessageBox.confirm(
+      '确认从领料单同步物料？当前 Step4 的物料明细将被覆盖。',
+      '提示',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+    )
+  } catch (error) {
+    return
+  }
+
+  try {
+    const res = await syncMaterialFromReceiving(props.businessRecordId, SYNC_WORKSHOP)
+    let step4List = res.data || []
+    if (!Array.isArray(step4List)) {
+      step4List = []
+    }
+    // 补齐到 4 行
+    while (step4List.length < 4) step4List.push(createEmptyStep4Row())
+    // 按 seq_no 升序
+    step4List.sort((a, b) => (a.seqNo || 0) - (b.seqNo || 0))
+    record.step4List = step4List
+
+    // 若返回为空（未找到领料单），提示用户
+    const hasAnyItem = step4List.some(it =>
+      it.materialCode || it.materialName || it.spec || it.unit || it.receiveQty
+    )
+    if (!hasAnyItem) {
+      ElMessage.warning('未找到关联的领料单，Step4 已清空')
+    } else {
+      ElMessage.success('同步成功')
+    }
+  } catch (error) {
+    ElMessage.error('同步失败')
+  }
+}
 // ==================== 审批提交 ====================
 /**
  * 审批模式：执行审批/反审操作

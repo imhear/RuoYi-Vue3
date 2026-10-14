@@ -34,10 +34,10 @@
         height="460px"
       >
         <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="物理表名" align="center" prop="tableName" :show-overflow-tooltip="true" />
-        <el-table-column label="物理表注释" align="center" prop="tableComment" :show-overflow-tooltip="true" />
-        <el-table-column label="所属模块" align="center" prop="module" />
-        <el-table-column label="所在分组" align="center" prop="groupName" />
+        <el-table-column label="物理表名" align="center" min-width="100" prop="tableName" :show-overflow-tooltip="true" />
+        <el-table-column label="物理表注释" align="center" min-width="100" prop="tableComment" :show-overflow-tooltip="true" />
+        <el-table-column label="所属模块" align="center" min-width="50" prop="module" />
+        <el-table-column label="所在分组" align="center" min-width="50" prop="groupName" />
       </el-table>
       <pagination
         v-show="total>0"

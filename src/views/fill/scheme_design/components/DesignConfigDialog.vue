@@ -148,7 +148,7 @@
       width="680px"
       append-to-body
     >
-      <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="100px">
+      <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="125px">
         <el-row>
           <!-- 上级节点 -->
           <el-col :span="24">
@@ -190,10 +190,44 @@
             </el-form-item>
           </el-col>
 
+          <!-- C 菜单专用：选择系统菜单（el-tree-select） -->
+          <el-col :span="12" v-if="editForm.menuType === 'C'">
+            <el-form-item label="系统菜单">
+              <el-tree-select
+                v-model="selectedSysMenuId"
+                :data="sysMenuTreeData"
+                :props="sysMenuTreeProps"
+                node-key="menuId"
+                check-strictly
+                placeholder="请选择系统菜单"
+                style="width: 100%"
+                @change="handleSysMenuSelect"
+              />
+            </el-form-item>
+          </el-col>
+
           <!-- 菜单名称 -->
           <el-col :span="12">
             <el-form-item label="菜单名称" prop="menuName">
               <el-input v-model="editForm.menuName" placeholder="请输入菜单名称" />
+            </el-form-item>
+          </el-col>
+
+          <!-- C 菜单专用：物理表名 -->
+          <el-col :span="24" v-if="editForm.menuType === 'C'">
+            <el-form-item label="物理表名" prop="tableName">
+              <el-input v-model="editForm.tableName" placeholder="请选择物理表" readonly>
+                <template #append>
+                  <el-button icon="Search" @click="openSelectTable" />
+                </template>
+              </el-input>
+            </el-form-item>
+          </el-col>
+
+          <!-- C 菜单专用：自定义参数 -->
+          <el-col :span="24" v-if="editForm.menuType === 'C'">
+            <el-form-item label="自定义参数">
+              <el-input v-model="editForm.customParams" placeholder='如 {"MaterialType":"PACKAGING_MATERIAL"}' />
             </el-form-item>
           </el-col>
 
@@ -245,7 +279,7 @@
           </el-col>
 
           <!-- 前端组件路径（C） -->
-          <el-col :span="12" v-if="editForm.menuType === 'C'">
+          <el-col :span="24" v-if="editForm.menuType === 'C'">
             <el-form-item>
               <template #label>
                 <span>
@@ -346,7 +380,7 @@
           <!-- ========== 设计态专用字段 ========== -->
 
           <!-- C 菜单专用：选择系统菜单（el-tree-select） -->
-          <el-col :span="24" v-if="editForm.menuType === 'C'">
+          <!-- <el-col :span="12" v-if="editForm.menuType === 'C'">
             <el-form-item label="系统菜单">
               <el-tree-select
                 v-model="selectedSysMenuId"
@@ -359,10 +393,10 @@
                 @change="handleSysMenuSelect"
               />
             </el-form-item>
-          </el-col>
+          </el-col> -->
 
           <!-- C 菜单专用：物理表名 -->
-          <el-col :span="24" v-if="editForm.menuType === 'C'">
+          <!-- <el-col :span="24" v-if="editForm.menuType === 'C'">
             <el-form-item label="物理表名" prop="tableName">
               <el-input v-model="editForm.tableName" placeholder="请选择物理表" readonly>
                 <template #append>
@@ -370,14 +404,14 @@
                 </template>
               </el-input>
             </el-form-item>
-          </el-col>
+          </el-col> -->
 
           <!-- C 菜单专用：自定义参数 -->
-          <el-col :span="24" v-if="editForm.menuType === 'C'">
+          <!-- <el-col :span="24" v-if="editForm.menuType === 'C'">
             <el-form-item label="自定义参数">
               <el-input v-model="editForm.customParams" placeholder='如 {"MaterialType":"PACKAGING_MATERIAL"}' />
             </el-form-item>
-          </el-col>
+          </el-col> -->
 
           <!-- C 菜单专用：前置菜单ID -->
           <el-col :span="24" v-if="editForm.menuType === 'C'">

@@ -44,7 +44,7 @@ export function delBizDisinfectionPackaging2(recordId) {
 }
 
 /**
- * 查询灌装包材处理记录2详情（含 step5List + step6List）
+ * 查询灌装包材处理记录2详情（含 step4List + step5List + step6List）
  * @param {Number} recordId 业务主表主键
  */
 export function getBizDisinfectionPackaging2Detail(recordId) {
@@ -55,10 +55,10 @@ export function getBizDisinfectionPackaging2Detail(recordId) {
 }
 
 /**
- * 保存灌装包材处理记录2编辑（更新主表 + step5/step6 逐条 update/insert）
+ * 保存灌装包材处理记录2编辑（更新主表 + step4/step5/step6 逐条 update/insert）
  * @param {Number} recordId 业务主表主键
  * @param {Number} menuId 按钮节点ID（用于日志写入）
- * @param {Object} data 记录数据（含 step5List + step6List）
+ * @param {Object} data 记录数据（含 step4List + step5List + step6List）
  */
 export function editBizDisinfectionPackaging2(recordId, menuId, data) {
   return request({
@@ -70,15 +70,15 @@ export function editBizDisinfectionPackaging2(recordId, menuId, data) {
 }
 
 /**
- * 从领料单同步物料到 step5 / step6 子表
+ * 从领料单同步物料到 step4 / step5 / step6 子表
  *
  * 关联链路：主表.instance_id = biz_receiving.instance_id
  *          AND biz_receiving.workshop = {workshop}
  * 多个 biz_receiving 取 create_time 升序第 1 条。
- * 领料单明细按 seq_no 升序取前 4 条；step5/step6 按 seq_no 匹配更新。
+ * 领料单明细按 seq_no 升序取前 4 条；step4/step5/step6 按 seq_no 匹配更新。
  *
- * 注：后端同步后同时更新了 step5 与 step6，仅返回 step5List；
- *     step6List 需前端二次调用 detail 接口获取。
+ * 注：后端返回**完整主表对象**（含 step4List + step5List + step6List），
+ *     前端一次请求即可刷新三表，无需二次拉 detail。
  *
  * @param {Number} recordId 主表主键
  * @param {String} workshop 车间过滤条件（D=消毒 F=灌装 P=包装）

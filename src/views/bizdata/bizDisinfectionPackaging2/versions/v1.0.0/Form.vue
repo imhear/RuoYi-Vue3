@@ -58,81 +58,120 @@
         </tr>
       </table>
 
-      <!-- ===== Step5 物料储存/周转 ===== -->
+      <!-- ===== Step4 物料使用统计（自 packaging_1 迁移而来） ===== -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;"><col style="width: 400px;"><col><col style="width: 130px;">
+          <col style="width: 80px;">   <!-- 操作项目 -->
+          <col style="width: 30px;">   <!-- 序号 -->
+          <col style="width: 140px;">  <!-- 物料名称 -->
+          <col style="width: 90px;">   <!-- 物料批号 -->
+          <col style="width: 110px;">  <!-- 规格 -->
+          <col style="width: 70px;">   <!-- 单位 -->
+          <col style="width: 80px;">   <!-- 领入量 -->
+          <col style="width: 80px;">   <!-- 使用量 -->
+          <col style="width: 80px;">   <!-- 损耗量 -->
+          <col>                         <!-- 剩余量 -->
+          <col style="width: 130px;">  <!-- 签名列 -->
         </colgroup>
-        <tr style="height: 156px;">
-          <td class="td-step-label">5.物料<br>储存/周转</td>
-          <td class="td-no-padding" colspan="2">
-            <table class="inner-fill-table step5-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
-              <colgroup>
-                <col style="width: 30px;">
-                <col style="width: 140px;">
-                <col style="width: 110px;">
-                <col style="width: 70px;">
-                <col style="width: 90px;">
-                <col>
-              </colgroup>
-              <tr style="height: 28px; background: #ffffff; font-weight: normal;">
-                <td></td>
-                <td>物料名称</td>
-                <td>规格</td>
-                <td>单位</td>
-                <td>数量</td>
-                <td>备注</td>
-              </tr>
-              <tr v-for="(item, idx) in paddedStep5List" :key="idx" style="height: 32px;">
-                <td>{{ idx + 1 }}）</td>
-                <td>
-                  <template v-if="isEditMode">
-                    <BaseCategorySelect
-                      v-model="item.materialCode"
-                      api-url="/basic/material/listByCategory"
-                      :category-code="MATERIAL_CATEGORY_CODE"
-                      placeholder=""
-                      @change="(code, name) => handleSelectChange(item, 'material', code, name)"
-                    />
-                  </template>
-                  <template v-else>{{ item.materialName || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode">
-                    <BaseCategorySelect
-                      v-model="item.spec"
-                      api-url="/basic/spec/listByCategory"
-                      :category-code="MATERIAL_CATEGORY_CODE"
-                      placeholder=""
-                      @change="(code, name) => handleSelectChange(item, 'spec', code, name)"
-                    />
-                  </template>
-                  <template v-else>{{ item.spec || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode">
-                    <BaseCategorySelect
-                      v-model="item.unit"
-                      api-url="/basic/unit/listByCategory"
-                      :category-code="MATERIAL_CATEGORY_CODE"
-                      placeholder=""
-                      @change="(code, name) => handleSelectChange(item, 'unit', code, name)"
-                    />
-                  </template>
-                  <template v-else>{{ item.unit || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode"><input v-model="item.storeQty" class="edit-input-short" style="width: 60px;" /></template>
-                  <template v-else>{{ item.storeQty || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode"><input v-model="item.remark" class="edit-input-short" style="width: 99%; text-align: left;" /></template>
-                  <template v-else>{{ item.remark || '' }}</template>
-                </td>
-              </tr>
-            </table>
+        <tr>
+          <td class="td-step-label" :rowspan="1 + paddedStep4List.length">4.物料使用统计</td>
+          <td></td>
+          <td class="header-value">物料名称</td>
+          <td class="header-value">物料批号</td>
+          <td class="header-value">规格</td>
+          <td class="header-value">单位</td>
+          <td class="header-value">领入量</td>
+          <td class="header-value">使用量</td>
+          <td class="header-value">损耗量</td>
+          <td class="header-value">剩余量</td>
+          <!-- Step4 为最上方 step 表格：签名列底部无线，顶部随表头保留 -->
+          <td class="td-sign" :rowspan="1 + paddedStep4List.length" style="border-bottom: none;"></td>
+        </tr>
+        <tr v-for="(item, idx) in paddedStep4List" :key="idx" style="height: 32px;">
+          <td style="vertical-align: middle;">{{ idx + 1 }}）</td>
+          <td class="td-record-cell">
+            <template v-if="isEditMode">
+              <BaseCategorySelect
+                v-model="item.materialCode"
+                api-url="/basic/material/listByCategory"
+                :category-code="MATERIAL_CATEGORY_CODE"
+                placeholder=""
+                @change="(code, name) => handleSelectChange(item, 'material', code, name)"
+              />
+            </template>
+            <template v-else>{{ item.materialName || '' }}</template>
           </td>
-          <td class="td-sign" style="border-bottom: none;">
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode"><input v-model="item.batchNumber" class="edit-input-short" style="width: 80px;" /></template>
+            <template v-else>{{ item.batchNumber || '' }}</template>
+          </td>
+          <td class="td-record-cell">
+            <template v-if="isEditMode">
+              <BaseCategorySelect
+                v-model="item.spec"
+                api-url="/basic/spec/listByCategory"
+                :category-code="MATERIAL_CATEGORY_CODE"
+                placeholder=""
+                @change="(code, name) => handleSelectChange(item, 'spec', code, name)"
+              />
+            </template>
+            <template v-else>{{ item.spec || '' }}</template>
+          </td>
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode">
+              <BaseCategorySelect
+                v-model="item.unit"
+                api-url="/basic/unit/listByCategory"
+                :category-code="MATERIAL_CATEGORY_CODE"
+                placeholder=""
+                @change="(code, name) => handleSelectChange(item, 'unit', code, name)"
+              />
+            </template>
+            <template v-else>{{ item.unit || '' }}</template>
+          </td>
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode"><input v-model="item.receiveQty" class="edit-input-short" style="width: 60px;" /></template>
+            <template v-else>{{ item.receiveQty || '' }}</template>
+          </td>
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode"><input v-model="item.useQty" class="edit-input-short" style="width: 60px;" /></template>
+            <template v-else>{{ item.useQty || '' }}</template>
+          </td>
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode"><input v-model="item.lossQty" class="edit-input-short" style="width: 60px;" /></template>
+            <template v-else>{{ item.lossQty || '' }}</template>
+          </td>
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode"><input v-model="item.remainQty" class="edit-input-short" style="width: 60px;" /></template>
+            <template v-else>{{ item.remainQty || '' }}</template>
+          </td>
+        </tr>
+      </table>
+
+      <!-- ===== Step5 物料储存/周转（v-for 重构，与 Step4/Step6 统一） ===== -->
+      <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
+        <colgroup>
+          <col style="width: 80px;">   <!-- 操作项目 -->
+          <col style="width: 30px;">   <!-- 序号 -->
+          <col style="width: 140px;">  <!-- 物料名称 -->
+          <col style="width: 90px;">   <!-- 物料批号 -->
+          <col style="width: 110px;">  <!-- 规格 -->
+          <col style="width: 70px;">   <!-- 单位 -->
+          <col style="width: 80px;">   <!-- 数量 -->
+          <col>                         <!-- 备注 -->
+          <col style="width: 130px;">  <!-- 签名列（承载签名内容） -->
+        </colgroup>
+        <tr>
+          <td class="td-step-label" :rowspan="1 + paddedStep5List.length">5.物料储存/周转</td>
+          <td></td>
+          <td class="header-value">物料名称</td>
+          <td class="header-value">物料批号</td>
+          <td class="header-value">规格</td>
+          <td class="header-value">单位</td>
+          <td class="header-value">数量</td>
+          <td class="header-value">备注</td>
+          <!-- 签名内容承载此处：三表合并后，签名显示在 Step5 右侧 -->
+          <td class="td-sign" :rowspan="1 + paddedStep5List.length" style="border-top: none; border-bottom: none;">
             <div>操作人：{{ submitSignatureName }}</div>
             <div>{{ submitSignatureTime }}</div>
             <div style="height: 8px;"></div>
@@ -143,30 +182,84 @@
             <div>{{ inspectSignatureTime }}</div>
           </td>
         </tr>
+        <tr v-for="(item, idx) in paddedStep5List" :key="idx" style="height: 32px;">
+          <td style="vertical-align: middle;">{{ idx + 1 }}）</td>
+          <td class="td-record-cell">
+            <template v-if="isEditMode">
+              <BaseCategorySelect
+                v-model="item.materialCode"
+                api-url="/basic/material/listByCategory"
+                :category-code="MATERIAL_CATEGORY_CODE"
+                placeholder=""
+                @change="(code, name) => handleSelectChange(item, 'material', code, name)"
+              />
+            </template>
+            <template v-else>{{ item.materialName || '' }}</template>
+          </td>
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode"><input v-model="item.batchNumber" class="edit-input-short" style="width: 80px;" /></template>
+            <template v-else>{{ item.batchNumber || '' }}</template>
+          </td>
+          <td class="td-record-cell">
+            <template v-if="isEditMode">
+              <BaseCategorySelect
+                v-model="item.spec"
+                api-url="/basic/spec/listByCategory"
+                :category-code="MATERIAL_CATEGORY_CODE"
+                placeholder=""
+                @change="(code, name) => handleSelectChange(item, 'spec', code, name)"
+              />
+            </template>
+            <template v-else>{{ item.spec || '' }}</template>
+          </td>
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode">
+              <BaseCategorySelect
+                v-model="item.unit"
+                api-url="/basic/unit/listByCategory"
+                :category-code="MATERIAL_CATEGORY_CODE"
+                placeholder=""
+                @change="(code, name) => handleSelectChange(item, 'unit', code, name)"
+              />
+            </template>
+            <template v-else>{{ item.unit || '' }}</template>
+          </td>
+          <td class="td-record-cell td-record-center">
+            <template v-if="isEditMode"><input v-model="item.storeQty" class="edit-input-short" style="width: 60px;" /></template>
+            <template v-else>{{ item.storeQty || '' }}</template>
+          </td>
+          <td class="td-record-cell">
+            <template v-if="isEditMode"><input v-model="item.remark" class="edit-input-short" style="width: 99%; text-align: left;" /></template>
+            <template v-else>{{ item.remark || '' }}</template>
+          </td>
+        </tr>
       </table>
 
       <!-- ===== Step6 生产过程不合格物料处理 ===== -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;">
-          <col style="width: 30px;">
-          <col style="width: 140px;">
-          <col style="width: 110px;">
-          <col style="width: 70px;">
-          <col style="width: 90px;">
-          <col>
-          <col style="width: 100px;">
-          <col style="width: 130px;">
+          <col style="width: 80px;">   <!-- 操作项目 -->
+          <col style="width: 30px;">   <!-- 序号 -->
+          <col style="width: 140px;">  <!-- 不合格物料名称 -->
+          <col style="width: 90px;">   <!-- 物料批号 -->
+          <col style="width: 110px;">  <!-- 规格 -->
+          <col style="width: 70px;">   <!-- 单位 -->
+          <col style="width: 90px;">   <!-- 总数量 -->
+          <col>                         <!-- 不合格原因及对应数量 -->
+          <col style="width: 100px;">  <!-- 处理方式 -->
+          <col style="width: 130px;">  <!-- 签名列 -->
         </colgroup>
         <tr style="height: 28px;">
           <td class="td-step-label" :rowspan="1 + paddedStep6List.length * 3">6.生产过程不合格物料处理</td>
           <td></td>
           <td class="header-value">不合格物料名称</td>
+          <td class="header-value">物料批号</td>
           <td class="header-value">规格</td>
           <td class="header-value">单位</td>
           <td class="header-value">总数量</td>
           <td class="header-value">不合格原因及对应数量</td>
           <td class="header-value">处理方式</td>
+          <!-- Step6 为最下方 step 表格：签名列顶部无线，底部随表保留 -->
           <td class="td-sign" :rowspan="1 + paddedStep6List.length * 3" style="border-top: none;"></td>
         </tr>
         <template v-for="(item, idx) in paddedStep6List" :key="idx">
@@ -184,6 +277,10 @@
                 />
               </template>
               <template v-else>{{ item.materialName || '' }}</template>
+            </td>
+            <td :rowspan="3" class="td-record-cell td-record-center">
+              <template v-if="isEditMode"><input v-model="item.batchNumber" class="edit-input-short" style="width: 80px;" /></template>
+              <template v-else>{{ item.batchNumber || '' }}</template>
             </td>
             <td :rowspan="3" class="td-record-cell">
               <template v-if="isEditMode">
@@ -233,8 +330,7 @@
           <!-- 其他行 -->
           <tr style="height: 28px;">
             <td class="td-record-cell">
-              <el-checkbox v-model="item.otherFlag" true-value="Y" false-value="" :disabled="!isEditMode">其他</el-checkbox>
-              <input v-if="isEditMode" v-model="item.otherReason" class="edit-input-short" style="width: 70px;" /><span v-else>{{ item.otherReason || '' }}</span>&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.otherQty" class="edit-input-short" style="width: 40px;" /><span v-else>{{ item.otherQty || '' }}</span> 个
+              <el-checkbox v-model="item.otherFlag" true-value="Y" false-value="" :disabled="!isEditMode">其他</el-checkbox>，<input v-if="isEditMode" v-model="item.otherReason" class="edit-input-short" style="width: 70px;" /><span v-else>{{ item.otherReason || '' }}</span>&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.otherQty" class="edit-input-short" style="width: 40px;" /><span v-else>{{ item.otherQty || '' }}</span> 个
             </td>
           </tr>
         </template>
@@ -259,7 +355,7 @@ import { parseTime } from '@/utils/ruoyi'
 
 defineOptions({ name: 'DisinfectionPackaging2Form' })
 
-/** Step5/Step6 物料/规格/单位选择的分类码（本表单为包装材料相关，固定） */
+/** Step4/Step5/Step6 物料/规格/单位选择的分类码（本表单为包装材料相关，固定） */
 const MATERIAL_CATEGORY_CODE = 'PACKAGING_MATERIAL'
 
 /**
@@ -299,6 +395,7 @@ const record = reactive({
   startTime: null, endTime: null, processDate: null,
   s5StepName: '', s6StepName: '',
   remark: '',
+  step4List: [],
   step5List: [],
   step6List: []
 })
@@ -342,6 +439,15 @@ const inspectSignatureTime = computed(() =>
 )
 
 // ==================== 子表显示行 ====================
+/** 确保 Step4 至少 4 行 */
+const paddedStep4List = computed(() => {
+  const list = record.step4List || []
+  if (list.length >= 4) return list
+  const result = [...list]
+  while (result.length < 4) result.push(createEmptyStep4Row())
+  return result
+})
+
 /** 确保 Step5 至少 4 行 */
 const paddedStep5List = computed(() => {
   const list = record.step5List || []
@@ -361,18 +467,28 @@ const paddedStep6List = computed(() => {
 })
 
 // ==================== 空行创建 ====================
+function createEmptyStep4Row() {
+  return {
+    stepId: null, recordId: null, seqNo: null,
+    materialCode: '', materialName: '', batchNumber: '',
+    spec: '', unit: '',
+    receiveQty: '', useQty: '', lossQty: '', remainQty: ''
+  }
+}
+
 function createEmptyStep5Row() {
   return {
     stepId: null, recordId: null, seqNo: null,
-    materialCode: '', materialName: '',
-    spec: '', unit: '', storeQty: ''
+    materialCode: '', materialName: '', batchNumber: '',
+    spec: '', unit: '', storeQty: '',
+    remark: ''
   }
 }
 
 function createEmptyStep6Row() {
   return {
     stepId: null, recordId: null, seqNo: null,
-    materialCode: '', materialName: '',
+    materialCode: '', materialName: '', batchNumber: '',
     spec: '', unit: '',
     nonConformingQty: '',
     damageFlag: '', damageQty: '',
@@ -404,6 +520,7 @@ async function loadFNodes() {
 }
 
 function initEmptyTemplate() {
+  record.step4List = [createEmptyStep4Row(), createEmptyStep4Row(), createEmptyStep4Row(), createEmptyStep4Row()]
   record.step5List = [createEmptyStep5Row(), createEmptyStep5Row(), createEmptyStep5Row(), createEmptyStep5Row()]
   record.step6List = [createEmptyStep6Row(), createEmptyStep6Row(), createEmptyStep6Row(), createEmptyStep6Row()]
 }
@@ -420,6 +537,11 @@ async function loadData() {
     batchRecord.value = recordRes.data || null
     const data = detailRes.data || {}
     Object.assign(record, data)
+
+    // 补齐 Step4 至 4 行
+    const step4 = Array.isArray(record.step4List) ? record.step4List : []
+    while (step4.length < 4) step4.push(createEmptyStep4Row())
+    record.step4List = step4
 
     // 补齐 Step5 至 4 行
     const step5 = Array.isArray(record.step5List) ? record.step5List : []
@@ -461,8 +583,6 @@ async function dynamicRequest(routeTemplate, pathParams, data = {}, method = 'po
 
 // ==================== 校验 ====================
 function beforeSubmitCheck() {
-  // if (!record.s1StartTime) { ElMessage.error('请选择开始时间'); return false }
-  // if (!record.s1EndTime) { ElMessage.error('请选择结束时间'); return false }
   return true
 }
 
@@ -476,15 +596,17 @@ async function handleEditSubmit() {
   } catch (error) { return }
 
   const payload = { ...record }
-  // 过滤全空的 Step5 行（但保留 stepId 便于后端 update）
+  // 过滤全空的 Step4 行
+  payload.step4List = record.step4List.filter(item =>
+    item.stepId || item.materialCode || item.materialName
+  )
+  // 过滤全空的 Step5 行
   payload.step5List = record.step5List.filter(item =>
-    item.stepId || item.materialCode || item.materialName ||
-    item.spec || item.unit || item.storeQty
+    item.stepId || item.materialCode || item.materialName
   )
   // 过滤全空的 Step6 行
   payload.step6List = record.step6List.filter(item =>
-    item.stepId || item.materialCode || item.materialName ||
-    item.spec || item.unit || item.nonConformingQty
+    item.stepId || item.materialCode || item.materialName
   )
 
   try {
@@ -508,20 +630,20 @@ async function handleEditSubmit() {
 
 // ==================== 从领料单同步物料 ====================
 /**
- * 从领料单同步物料到 Step5 / Step6 子表
+ * 从领料单同步物料到 Step4 / Step5 / Step6 子表
  *
  * 交互流程：
- * 1. 二次确认（提示当前 Step5/Step6 内容将被覆盖）
- * 2. 调后端同步接口，后端同时更新 step5/step6
- * 3. 前端重新拉详情，刷新 record（含 step5List + step6List）
+ * 1. 二次确认（提示当前三表内容将被覆盖）
+ * 2. 调后端同步接口，后端同时更新 step4/step5/step6
+ * 3. 后端返回完整对象（含三个子表 List），前端一次刷新 record
  * 4. 不关闭对话框，用户可继续编辑
  *
- * 允许重复点击：每次调用均以后端最新领料单数据覆盖 step5/step6。
+ * 允许重复点击：每次调用均以后端最新领料单数据覆盖三表。
  */
 async function handleSyncMaterialFromReceiving() {
   try {
     await ElMessageBox.confirm(
-      '确认从领料单同步物料？当前 Step5 与 Step6 的物料明细将被覆盖。',
+      '确认从领料单同步物料？当前 Step4 / Step5 / Step6 的物料明细将被覆盖。',
       '提示',
       { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
     )
@@ -530,11 +652,15 @@ async function handleSyncMaterialFromReceiving() {
   }
 
   try {
-    await syncMaterialFromReceiving(props.businessRecordId, SYNC_WORKSHOP)
-    // 后端只返回 step5List，此处重新拉详情以同步刷新 step6List
-    const detailRes = await getBizDisinfectionPackaging2Detail(props.businessRecordId)
-    const data = detailRes.data || {}
+    const res = await syncMaterialFromReceiving(props.businessRecordId, SYNC_WORKSHOP)
+    // 后端返回完整对象（含三个子表 List）
+    const data = res.data || {}
     Object.assign(record, data)
+
+    // 补齐 Step4
+    const step4 = Array.isArray(record.step4List) ? record.step4List : []
+    while (step4.length < 4) step4.push(createEmptyStep4Row())
+    record.step4List = step4
 
     // 补齐 Step5
     const step5 = Array.isArray(record.step5List) ? record.step5List : []
@@ -546,12 +672,14 @@ async function handleSyncMaterialFromReceiving() {
     while (step6.length < 4) step6.push(createEmptyStep6Row())
     record.step6List = step6
 
-    // 判断是否有数据
-    const hasAnyItem = record.step5List.some(it =>
-      it.materialCode || it.materialName || it.spec || it.unit || it.storeQty
+    // 判断是否有数据（以 step4 或 step5 任一有物料判断）
+    const hasAnyItem = record.step4List.some(it =>
+      it.materialCode || it.materialName
+    ) || record.step5List.some(it =>
+      it.materialCode || it.materialName
     )
     if (!hasAnyItem) {
-      ElMessage.warning('未找到关联的领料单，Step5 与 Step6 已清空')
+      ElMessage.warning('未找到关联的领料单，Step4 / Step5 / Step6 已清空')
     } else {
       ElMessage.success('同步成功')
     }
@@ -630,7 +758,7 @@ async function handleApproveSubmit() {
   margin-bottom: -1px;
 }
 
-/* 关闭 Step5~Step6 表格上下边框，用于签名列跨表合并 */
+/* 关闭 Step4~Step6 表格上下边框，用于签名列跨表合并 */
 .step-table-native {
   border-top: none;
   border-bottom: none;
@@ -659,35 +787,13 @@ async function handleApproveSubmit() {
   text-align: center;
 }
 
-/* Step5~Step6 外层单元格通用样式 */
+/* Step4~Step6 外层单元格通用样式 */
 .step-table-native td {
   border: 1px solid #dcdfe6;
   padding: 1px 1px;
   vertical-align: top;
   box-sizing: border-box;
 }
-.td-no-padding {
-  padding: 0 !important;
-}
-.inner-fill-table {
-  width: 100%;
-  height: 100%;
-  border-collapse: collapse;
-}
-.inner-fill-table td, .inner-fill-table th {
-  border: none;
-}
-
-/* Step5 内部表格分隔线 */
-.step5-inner td {
-  border-right: 1px solid #dcdfe6;
-  border-bottom: 1px solid #dcdfe6;
-  padding: 4px 4px;
-  text-align: center;
-  vertical-align: middle;
-}
-.step5-inner td:last-child { border-right: none; }
-.step5-inner tr:last-child td { border-bottom: none; }
 
 /* 操作项目列、签名列 */
 .td-step-label {
@@ -704,7 +810,7 @@ async function handleApproveSubmit() {
   padding: 4px 6px !important;
 }
 
-/* Step6 操作记录列 */
+/* Step4~Step6 数据行单元格 */
 .td-record-cell {
   vertical-align: middle !important;
   text-align: left;

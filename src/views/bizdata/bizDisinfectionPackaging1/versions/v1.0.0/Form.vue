@@ -2,7 +2,6 @@
   <div class="dis-pack1-form-container">
     <!-- 顶部操作按钮 -->
     <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px; margin-bottom: 1px; width: 300px;">
-      <el-button v-if="isEditMode" type="primary" @click="handleSyncMaterialFromReceiving">从领料单同步物料</el-button>
       <el-button v-if="isEditMode" type="primary" @click="handleEditSubmit">保 存</el-button>
       <el-button v-if="isApproveMode" type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
     </div>
@@ -362,97 +361,12 @@
               </div>
             </div>
           </td>
-          <td class="td-sign" style="border-top: none; border-bottom: none;"></td>
-        </tr>
-      </table>
-
-      <!-- ===== Step4 物料使用统计 ===== -->
-      <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
-        <colgroup>
-          <col style="width: 80px;"><col style="width: 400px;"><col><col style="width: 130px;">
-        </colgroup>
-        <tr style="height: 156px;">
-          <td class="td-step-label">
-            4.物料使用统计
-            <!-- <template v-if="isEditMode">
-              <el-input v-model="record.s4StepName" size="small" style="width: 75px;" />
-            </template>
-            <template v-else>{{ record.s4StepName || '物料使用统计' }}</template> -->
-          </td>
-          <td class="td-no-padding" colspan="2">
-             <table class="inner-fill-table step4-inner" style="border-collapse: collapse; font-size: 12px; width: 100%; height: 100%;">
-              <colgroup>
-                <col style="width: 140px;"><col style="width: 130px;"><col style="width: 130px;">
-                <col><col><col><col>
-              </colgroup>
-              <tr style="height: 28px; background: #ffffff; font-weight: normal;">
-                <td>物料名称</td>
-                <td>规格</td>
-                <td>单位</td>
-                <td>领入量</td>
-                <td>使用量</td>
-                <td>损耗量</td>
-                <td>剩余量</td>
-              </tr>
-              <tr v-for="(item, idx) in paddedStep4List" :key="idx" style="height: 32px;">
-                <td>
-                  <template v-if="isEditMode">
-                    <BaseCategorySelect
-                      v-model="item.materialCode"
-                      api-url="/basic/material/listByCategory"
-                      :category-code="STEP4_CATEGORY_CODE"
-                      placeholder=""
-                      @change="(code, name) => handleSelectChange(item, 'material', code, name)"
-                    />
-                  </template>
-                  <template v-else>{{ item.materialName || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode">
-                    <BaseCategorySelect
-                      v-model="item.spec"
-                      api-url="/basic/spec/listByCategory"
-                      :category-code="STEP4_CATEGORY_CODE"
-                      placeholder=""
-                      @change="(code, name) => handleSelectChange(item, 'spec', code, name)"
-                    />
-                  </template>
-                  <template v-else>{{ item.spec || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode">
-                    <BaseCategorySelect
-                      v-model="item.unit"
-                      api-url="/basic/unit/listByCategory"
-                      :category-code="STEP4_CATEGORY_CODE"
-                      placeholder=""
-                      @change="(code, name) => handleSelectChange(item, 'unit', code, name)"
-                    />
-                  </template>
-                  <template v-else>{{ item.unit || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode"><input v-model="item.receiveQty" class="edit-input-short" style="width: 60px;" /></template>
-                  <template v-else>{{ item.receiveQty || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode"><input v-model="item.useQty" class="edit-input-short" style="width: 60px;" /></template>
-                  <template v-else>{{ item.useQty || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode"><input v-model="item.lossQty" class="edit-input-short" style="width: 60px;" /></template>
-                  <template v-else>{{ item.lossQty || '' }}</template>
-                </td>
-                <td>
-                  <template v-if="isEditMode"><input v-model="item.remainQty" class="edit-input-short" style="width: 60px;" /></template>
-                  <template v-else>{{ item.remainQty || '' }}</template>
-                </td>
-              </tr>
-            </table>
-          </td>
+          <!-- Step3 为 Step1~3 组的最底部表格，保留 border-bottom -->
           <td class="td-sign" style="border-top: none;"></td>
         </tr>
       </table>
+
+      <!-- Step4 整块已删除，迁移至 packaging_2 -->
 
     </div>
   </div>
@@ -461,26 +375,13 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getBizDisinfectionPackaging1Detail, syncMaterialFromReceiving } from '@/api/bizdata/bizDisinfectionPackaging1'
+import { getBizDisinfectionPackaging1Detail } from '@/api/bizdata/bizDisinfectionPackaging1'
 import { getBatch_record } from '@/api/batch/batch_record'
 import { listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
-import BaseCategorySelect from '@/components/BaseCategorySelect/index.vue'
 import request from '@/utils/request'
 import { parseTime } from '@/utils/ruoyi'
 
 defineOptions({ name: 'DisinfectionPackaging1Form' })
-
-/** Step4 物料/规格/单位选择的分类码（本表单为包装材料相关，暂固定） */
-const STEP4_CATEGORY_CODE = 'PACKAGING_MATERIAL'
-
-/**
- * 本表单为消毒车间专属表单，从消毒车间（D）的领料单同步物料。
- *
- * 未来迁移其他车间表单时，对应改为：
- * - 灌装车间：'F'
- * - 包装车间：'P'
- */
-const SYNC_WORKSHOP = 'D'
 
 /**
  * 组件 Props 定义
@@ -545,10 +446,7 @@ const record = reactive({
   s3OzoneConcentration: '',
   s3OzoneDesinfectionStartTime: null, s3OzoneDesinfectionEndTime: null, s3OzoneDesinfectionCost: '',
   s3AlcoholDesinfectionFlag: '', s3UvDesinfectionFlag: '',
-  s3AirShowerInnerPackagingFlag: '', s3WaiguanFlag: '', s3CleanBagFlag: '',
-  // Step4
-  s4StepName: '',
-  step4List: []
+  s3AirShowerInnerPackagingFlag: '', s3WaiguanFlag: '', s3CleanBagFlag: ''
 })
 
 const isEditMode = computed(() => props.actionType === 'EDIT')
@@ -556,10 +454,6 @@ const isPreviewMode = computed(() => props.actionType === 'PREVIEW')
 const isApproveMode = computed(() => !isEditMode.value && !isPreviewMode.value)
 
 // ==================== 滚动条显隐控制 ====================
-/**
- * 是否正在滚动。用于控制 .view-container（预览/编辑/审批三模式通用）下滚动条的显示/隐藏。
- * 由 handlePreviewScroll 维护；停止滚动 800ms 后自动隐藏。
- */
 const isScrolling = ref(false)
 let scrollHideTimer = null
 
@@ -570,11 +464,6 @@ function handlePreviewScroll() {
 }
 
 // ==================== 签名行计算属性 ====================
-/**
- * 从 fNodes 中筛选出已完成的 SUBMIT / REVIEW / INSPECT 节点。
- * 筛选条件：actionType 匹配且 operatorTime 非空。
- * 未完成时对应 node 为 undefined，签名区显示空字符串。
- */
 const submitNode = computed(() =>
   fNodes.value.find(btn => btn.actionType?.toUpperCase() === 'SUBMIT' && btn.operatorTime)
 )
@@ -598,16 +487,6 @@ const inspectSignatureTime = computed(() =>
   inspectNode.value?.operatorTime ? parseTime(inspectNode.value.operatorTime, '{y}-{m}-{d} {h}:{i}') : ''
 )
 
-// ==================== Step4 显示行 ====================
-/** 确保 Step4 至少有 4 行（前端展示层保证） */
-const paddedStep4List = computed(() => {
-  const list = record.step4List || []
-  if (list.length >= 4) return list
-  const result = [...list]
-  while (result.length < 4) result.push(createEmptyStep4Row())
-  return result
-})
-
 // ==================== 时间格式化辅助 ====================
 /** 将 HH:mm:ss 截断为 HH:mm 用于只读展示 */
 function formatHm(timeStr) {
@@ -618,9 +497,6 @@ function formatHm(timeStr) {
 
 /**
  * 将 HH:mm:ss 格式的时间字符串转换为"当天累计分钟数"
- *
- * @param {String} timeStr 时间字符串，如 "08:30:00"
- * @returns {Number} 分钟数（如 510）；非法或空返回 0
  */
 function timeToMinutes(timeStr) {
   if (!timeStr) return 0
@@ -633,14 +509,6 @@ function timeToMinutes(timeStr) {
 
 /**
  * 计算两个 HH:mm:ss 之间的分钟差
- *
- * - 任一为空返回 ''
- * - 跨天时自动 +24h（如 23:00 → 01:00 返回 120）
- * - 否则返回正数分钟差
- *
- * @param {String} startTime 起始时间 HH:mm:ss
- * @param {String} endTime   结束时间 HH:mm:ss
- * @returns {Number|String} 分钟数或空字符串
  */
 function diffMinutes(startTime, endTime) {
   if (!startTime || !endTime) return ''
@@ -653,17 +521,6 @@ function diffMinutes(startTime, endTime) {
 }
 
 // ==================== 消毒时长自动计算 ====================
-/**
- * 照搬老表单（BottlingDisPack1Handle.vue）实践：
- * - 使用 watch 监听时间对
- * - 配置 { immediate: true }，组件初始化时立即执行一次，建立依赖并同步初始态
- * - 不做 isEditMode 判断，保证每次时间变化都能触发重算
- *
- * 三个消毒时长字段（单位：分钟）：
- * - s2OzoneDesinfectionCost = s2OzoneDesinfectionEndTime - s2OzoneDesinfectionStartTime
- * - s2DryingDesinfectionCost = s2DryingDesinfectionEndTime - s2DryingDesinfectionStartTime
- * - s3OzoneDesinfectionCost  = s3OzoneDesinfectionEndTime  - s3OzoneDesinfectionStartTime
- */
 watch(
   () => [record.s2OzoneDesinfectionStartTime, record.s2OzoneDesinfectionEndTime],
   ([start, end]) => {
@@ -689,13 +546,6 @@ watch(
 )
 
 // ==================== 数据加载 ====================
-/**
- * 组件初始化：
- * - 加载 C 节点下 F 节点用于签名回显（无 cMenuId 时内部防御）
- * - 预览态且无 businessRecordId：不调用任何后端接口，纯本地初始化空模板
- *   （对齐领料单 Form.vue：设计态预览 / 生成批记录时预览空模板均走此分支）
- * - 其余场景（编辑/审批/预览真实数据）：加载批记录信息 + 业务详情
- */
 onMounted(async () => {
   await loadFNodes()
   if (isPreviewMode.value && !props.businessRecordId) {
@@ -706,11 +556,6 @@ onMounted(async () => {
   }
 })
 
-/**
- * 加载当前 C 节点下的所有 F 节点（用于签名行数据回显）
- *
- * 关键防御：预览空模板态下 cMenuId 为 undefined，直接返回，避免触发接口请求。
- */
 async function loadFNodes() {
   if (!props.cMenuId) return
   try {
@@ -723,42 +568,14 @@ async function loadFNodes() {
 }
 
 /**
- * 预览空模板初始化（预览态且无 businessRecordId）
- *
- * 关键约束：预览态下 recordId / businessRecordId / cMenuId 均为 undefined，
- * 不允许调用任何后端接口。此处仅本地初始化：
- * - step4List 补齐为 4 行空对象
- * - batchRecord 保持 null，模板通过 batchRecord?.xxx 显示为空
- * - record 已通过 reactive 初始化为全空字段，无需额外处理
+ * 预览空模板初始化：本表单无子表，仅需保持 record 为空即可
  */
 function initEmptyTemplate() {
-  record.step4List = [
-    createEmptyStep4Row(),
-    createEmptyStep4Row(),
-    createEmptyStep4Row(),
-    createEmptyStep4Row()
-  ]
+  // 无子表，无需本地初始化
 }
 
 /**
- * 创建 Step4 空白行
- */
-function createEmptyStep4Row() {
-  return {
-    stepId: null,
-    recordId: null,
-    seqNo: null,
-    materialCode: '', materialName: '',
-    spec: '', unit: '',
-    receiveQty: '', useQty: '', lossQty: '', remainQty: ''
-  }
-}
-
-/**
- * 加载批记录信息 + 业务详情（含 step4List）
- *
- * 防御：recordId 未传时不请求批记录接口（避免 /batch/batch_record/undefined 报错）。
- * 正常编辑/审批场景 recordId 必有值，此防御仅兜底。
+ * 加载批记录信息 + 业务详情（无子表）
  */
 async function loadData() {
   loading.value = true
@@ -772,11 +589,6 @@ async function loadData() {
     batchRecord.value = recordRes.data || null
     const data = detailRes.data || {}
     Object.assign(record, data)
-
-    // 保证 step4List 至少 4 行（后端按固定 4 行返回，此处兜底）
-    const step4 = Array.isArray(record.step4List) ? record.step4List : []
-    while (step4.length < 4) step4.push(createEmptyStep4Row())
-    record.step4List = step4
   } catch (error) {
     ElMessage.error('加载灌装包材处理记录1数据失败')
   } finally {
@@ -784,37 +596,7 @@ async function loadData() {
   }
 }
 
-// ==================== 选择器回填 ====================
-/**
- * 处理 BaseCategorySelect 的选中变化
- *
- * code 已由 v-model 双向绑定，此处只需回填 name 快照字段。
- *
- * @param {Object} row 当前行数据对象
- * @param {String} type 字段类型（material / spec / unit）
- * @param {String} code 选中的 code（可忽略，因 v-model 已绑定）
- * @param {String} name 选中的 name 快照
- */
-function handleSelectChange(row, type, code, name) {
-  if (type === 'material') row.materialName = name || ''
-  else if (type === 'spec') row.spec = name || ''
-  else if (type === 'unit') row.unit = name || ''
-}
-
 // ==================== 通用动态请求 ====================
-/**
- * 动态调用后端接口
- *
- * 将路径模板中的占位符替换为实际参数值，然后发起请求。
- * 占位符格式：{参数名}，例如 /batch/batch_record_menu/approve/{menuId}?remark={remark}
- * 空值占位符会连同其前面的 ? 或 & 一起剔除。
- *
- * @param {String} routeTemplate 路径模板
- * @param {Object} pathParams 占位符参数映射
- * @param {Object} data 请求体（POST/PUT 等需要时使用）
- * @param {String} method 请求方法，默认 post
- * @returns {Promise}
- */
 async function dynamicRequest(routeTemplate, pathParams, data = {}, method = 'post') {
   let url = routeTemplate
   Object.keys(pathParams).forEach(key => {
@@ -830,13 +612,6 @@ async function dynamicRequest(routeTemplate, pathParams, data = {}, method = 'po
 }
 
 // ==================== 校验 ====================
-/**
- * 编辑提交前的校验（仅校验业务字段，不含签名）
- *
- * 校验项：
- * - Step1/2/3 的开始/结束时间均必填
- * - Step4 已填写行的领入量/使用量若填写必须为数字
- */
 function beforeSubmitCheck() {
   if (!record.s1StartTime) { ElMessage.error('请选择 Step1 开始时间'); return false }
   if (!record.s1EndTime) { ElMessage.error('请选择 Step1 结束时间'); return false }
@@ -847,30 +622,10 @@ function beforeSubmitCheck() {
   if (!record.s3StartTime) { ElMessage.error('请选择 Step3 开始时间'); return false }
   if (!record.s3EndTime) { ElMessage.error('请选择 Step3 结束时间'); return false }
 
-  const numberPattern = /^\d+(\.\d+)?$/
-  for (let i = 0; i < record.step4List.length; i++) {
-    const item = record.step4List[i]
-    const hasAny = item.materialCode || item.spec || item.unit ||
-                   item.receiveQty || item.useQty || item.lossQty || item.remainQty
-    if (!hasAny) continue
-    const rowNum = i + 1
-    if (item.receiveQty && !numberPattern.test(String(item.receiveQty).trim())) {
-      ElMessage.error(`Step4 第${rowNum}行领入量格式错误`); return false
-    }
-    if (item.useQty && !numberPattern.test(String(item.useQty).trim())) {
-      ElMessage.error(`Step4 第${rowNum}行使用量格式错误`); return false
-    }
-  }
   return true
 }
 
 // ==================== 编辑保存 ====================
-/**
- * 编辑模式：保存修改（带二次确认）
- *
- * 通过 props.backendRoute 动态拼接后端接口，不再硬编码具体 API。
- * step4List 提交前过滤掉全空行，后端按 stepId 存在与否做 update/insert。
- */
 async function handleEditSubmit() {
   if (!beforeSubmitCheck()) return
   try {
@@ -880,10 +635,6 @@ async function handleEditSubmit() {
   } catch (error) { return }
 
   const payload = { ...record }
-  payload.step4List = record.step4List.filter(item =>
-    item.materialCode || item.spec || item.unit ||
-    item.receiveQty || item.useQty || item.lossQty || item.remainQty
-  )
 
   try {
     const routeTemplate = props.backendRoute ||
@@ -892,7 +643,6 @@ async function handleEditSubmit() {
       businessRecordId: props.businessRecordId,
       menuId: props.menuId
     }
-    // 兼容某些操作码模板用 {recordId} 的情况
     if (routeTemplate.includes('{recordId}')) {
       urlParams.recordId = props.businessRecordId
     }
@@ -905,62 +655,7 @@ async function handleEditSubmit() {
   }
 }
 
-// ==================== 从领料单同步物料 ====================
-/**
- * 从领料单同步物料到 Step4 子表
- *
- * 交互流程：
- * 1. 二次确认（提示当前 step4 内容将被覆盖）
- * 2. 调后端接口，后端按业务规则同步并返回最新 step4List
- * 3. 前端替换 record.step4List
- * 4. 不关闭对话框，用户可继续编辑（如补录 use_qty / loss_qty / remain_qty）
- *   或再次点击重新同步
- *
- * 允许重复点击：每次调用均以后端最新领料单数据覆盖 step4。
- */
-async function handleSyncMaterialFromReceiving() {
-  try {
-    await ElMessageBox.confirm(
-      '确认从领料单同步物料？当前 Step4 的物料明细将被覆盖。',
-      '提示',
-      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
-    )
-  } catch (error) {
-    return
-  }
-
-  try {
-    const res = await syncMaterialFromReceiving(props.businessRecordId, SYNC_WORKSHOP)
-    let step4List = res.data || []
-    if (!Array.isArray(step4List)) {
-      step4List = []
-    }
-    // 补齐到 4 行
-    while (step4List.length < 4) step4List.push(createEmptyStep4Row())
-    // 按 seq_no 升序
-    step4List.sort((a, b) => (a.seqNo || 0) - (b.seqNo || 0))
-    record.step4List = step4List
-
-    // 若返回为空（未找到领料单），提示用户
-    const hasAnyItem = step4List.some(it =>
-      it.materialCode || it.materialName || it.spec || it.unit || it.receiveQty
-    )
-    if (!hasAnyItem) {
-      ElMessage.warning('未找到关联的领料单，Step4 已清空')
-    } else {
-      ElMessage.success('同步成功')
-    }
-  } catch (error) {
-    ElMessage.error('同步失败')
-  }
-}
 // ==================== 审批提交 ====================
-/**
- * 审批模式：执行审批/反审操作
- *
- * 反审操作必须输入原因；正向操作可输入审批意见（可选）。
- * 通过 props.backendRoute 动态拼接后端接口，默认走通用审批路径。
- */
 async function handleApproveSubmit() {
   let remark = ''
 
@@ -1031,23 +726,7 @@ async function handleApproveSubmit() {
   margin-bottom: -1px;
 }
 
-/* ============================================================
- * 关闭 Step1~Step4 表格的上下边框
- *
- * 原因：在 border-collapse: collapse 模式下，table 的 border 与
- * 边缘 td 的 border 竞争显示。即使签名 td 用行内样式把自身
- * border-top / border-bottom 设为 none，table 的上下边框仍会在
- * 签名列位置留下水平分隔线（用户观察到的"table 边框线"）。
- *
- * 处理：
- * - 关闭 step table 的上下边框，让上下水平线改由相邻 td 的
- *   border 合并提供（左侧三列 td 边框不受影响，视觉保持 1px）。
- * - 签名 td 的上下边框已在模板行内样式中设为 none，因此签名列
- *   在 Step1~Step4 之间完全无线，视觉上呈现为跨 4 行的合并单元格。
- *
- * 注意：产品信息表（info-table）与表头（header-table）不在此列，
- * 它们的上下边框保留，用于和相邻表格形成正常的水平分隔线。
- * ============================================================ */
+/* 关闭 Step1~Step3 表格的上下边框，用于签名列跨表合并 */
 .step-table-native {
   border-top: none;
   border-bottom: none;
@@ -1076,7 +755,7 @@ async function handleApproveSubmit() {
   text-align: center;
 }
 
-/* Step1~Step4 外层单元格通用样式 */
+/* Step1~Step3 外层单元格通用样式 */
 .step-table-native td {
   border: 1px solid #dcdfe6;
   padding: 1px 1px;
@@ -1133,17 +812,6 @@ async function handleApproveSubmit() {
 .step3-inner .split-right { text-align: center; }
 .step2-inner .split-text,
 .step3-inner .split-text { text-align: left; vertical-align: middle; }
-
-/* Step4 内部表格分隔线 */
-.step4-inner td, .step4-inner th {
-  border-right: 1px solid #dcdfe6;
-  border-bottom: 1px solid #dcdfe6;
-  padding: 0 4px;
-  text-align: center;
-  vertical-align: middle;
-}
-.step4-inner td:last-child, .step4-inner th:last-child { border-right: none; }
-.step4-inner tr:last-child td { border-bottom: none; }
 
 /* 共用单元格样式 */
 .td-step-label {
@@ -1235,5 +903,4 @@ async function handleApproveSubmit() {
 .view-container.is-scrolling {
   scrollbar-color: rgba(144, 147, 153, 0.5) transparent;
 }
-
 </style>

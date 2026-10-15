@@ -72,8 +72,8 @@
                 <col style="width: 140px;">
                 <col style="width: 110px;">
                 <col style="width: 70px;">
-                <col>
                 <col style="width: 90px;">
+                <col>
               </colgroup>
               <tr style="height: 28px; background: #ffffff; font-weight: normal;">
                 <td></td>
@@ -81,7 +81,7 @@
                 <td>规格</td>
                 <td>单位</td>
                 <td>数量</td>
-                <td></td>
+                <td>备注</td>
               </tr>
               <tr v-for="(item, idx) in paddedStep5List" :key="idx" style="height: 32px;">
                 <td>{{ idx + 1 }}）</td>
@@ -125,7 +125,10 @@
                   <template v-if="isEditMode"><input v-model="item.storeQty" class="edit-input-short" style="width: 60px;" /></template>
                   <template v-else>{{ item.storeQty || '' }}</template>
                 </td>
-                <td></td>
+                <td>
+                  <template v-if="isEditMode"><input v-model="item.remark" class="edit-input-short" style="width: 99%; text-align: left;" /></template>
+                  <template v-else>{{ item.remark || '' }}</template>
+                </td>
               </tr>
             </table>
           </td>
@@ -146,16 +149,18 @@
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">
+          <col style="width: 30px;">
+          <col style="width: 140px;">
           <col style="width: 110px;">
-          <col style="width: 80px;">
-          <col style="width: 60px;">
-          <col style="width: 80px;">
+          <col style="width: 70px;">
+          <col style="width: 90px;">
           <col>
           <col style="width: 100px;">
           <col style="width: 130px;">
         </colgroup>
         <tr style="height: 28px;">
           <td class="td-step-label" :rowspan="1 + paddedStep6List.length * 3">6.生产过程不合格物料处理</td>
+          <td></td>
           <td class="header-value">不合格物料名称</td>
           <td class="header-value">规格</td>
           <td class="header-value">单位</td>
@@ -167,6 +172,7 @@
         <template v-for="(item, idx) in paddedStep6List" :key="idx">
           <!-- 破损行 -->
           <tr style="height: 28px;">
+            <td :rowspan="3" style="vertical-align: middle;">{{ idx + 1 }}）</td>
             <td :rowspan="3" class="td-record-cell">
               <template v-if="isEditMode">
                 <BaseCategorySelect
@@ -209,7 +215,7 @@
             </td>
             <td class="td-record-cell">
               <el-checkbox v-model="item.damageFlag" true-value="Y" false-value="" :disabled="!isEditMode">破损</el-checkbox>
-              ，&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.damageQty" class="edit-input-short" style="width: 50px;" /><span v-else>{{ item.damageQty || '' }}</span> 个
+              ，&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.damageQty" class="edit-input-short" style="width: 40px;" /><span v-else>{{ item.damageQty || '' }}</span> 个
             </td>
             <td :rowspan="3" class="td-record-cell">
               <el-checkbox v-model="item.destroyFlag" true-value="Y" false-value="" :disabled="!isEditMode">销毁</el-checkbox>
@@ -221,14 +227,14 @@
           <tr style="height: 28px;">
             <td class="td-record-cell">
               <el-checkbox v-model="item.colorDifferenceFlag" true-value="Y" false-value="" :disabled="!isEditMode">色差</el-checkbox>
-              ，&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.colorDifferenceQty" class="edit-input-short" style="width: 50px;" /><span v-else>{{ item.colorDifferenceQty || '' }}</span> 个
+              ，&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.colorDifferenceQty" class="edit-input-short" style="width: 40px;" /><span v-else>{{ item.colorDifferenceQty || '' }}</span> 个
             </td>
           </tr>
           <!-- 其他行 -->
           <tr style="height: 28px;">
             <td class="td-record-cell">
               <el-checkbox v-model="item.otherFlag" true-value="Y" false-value="" :disabled="!isEditMode">其他</el-checkbox>
-              ，<input v-if="isEditMode" v-model="item.otherReason" class="edit-input-short" style="width: 70px;" /><span v-else>{{ item.otherReason || '' }}</span>&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.otherQty" class="edit-input-short" style="width: 50px;" /><span v-else>{{ item.otherQty || '' }}</span> 个
+              <input v-if="isEditMode" v-model="item.otherReason" class="edit-input-short" style="width: 70px;" /><span v-else>{{ item.otherReason || '' }}</span>&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.otherQty" class="edit-input-short" style="width: 40px;" /><span v-else>{{ item.otherQty || '' }}</span> 个
             </td>
           </tr>
         </template>

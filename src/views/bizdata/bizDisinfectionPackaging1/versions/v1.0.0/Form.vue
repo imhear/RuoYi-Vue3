@@ -375,7 +375,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getBizDisinfectionPackaging1Detail } from '@/api/bizdata/bizDisinfectionPackaging1'
+import { getBizDisinfectionPackaging1 } from '@/api/bizdata/bizDisinfectionPackaging1'
 import { getBatch_record } from '@/api/batch/batch_record'
 import { listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
 import request from '@/utils/request'
@@ -580,7 +580,7 @@ function initEmptyTemplate() {
 async function loadData() {
   loading.value = true
   try {
-    const detailPromise = getBizDisinfectionPackaging1Detail(props.businessRecordId)
+    const detailPromise = getBizDisinfectionPackaging1(props.businessRecordId)
     const recordPromise = props.recordId
       ? getBatch_record(props.recordId)
       : Promise.resolve({ data: null })

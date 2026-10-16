@@ -44,20 +44,6 @@ export function delBizDisinfectionPackaging1(recordId) {
 }
 
 /**
- * 查询灌装包材处理记录1详情
- *
- * 注：本表单的 step4 已迁移至 packaging_2，详情不再含子表 List。
- *
- * @param {Number} recordId 业务主表主键
- */
-export function getBizDisinfectionPackaging1Detail(recordId) {
-  return request({
-    url: '/bizdata/bizDisinfectionPackaging1/detail/' + recordId,
-    method: 'get'
-  })
-}
-
-/**
  * 保存灌装包材处理记录1编辑（仅主表）
  * @param {Number} recordId 业务主表主键
  * @param {Number} menuId 按钮节点ID（用于日志写入）

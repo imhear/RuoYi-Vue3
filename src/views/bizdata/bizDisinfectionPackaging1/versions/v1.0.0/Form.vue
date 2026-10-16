@@ -1,7 +1,8 @@
 <template>
   <div class="dis-pack1-form-container">
     <!-- 顶部操作按钮 -->
-    <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px; margin-bottom: 1px; width: 300px;">
+    <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px; margin-bottom: 1px; width: 380px;">
+      <el-button v-if="isEditMode" type="primary" @click="handleSyncMaterialFromReceiving">从领料单同步物料</el-button>
       <el-button v-if="isEditMode" type="primary" @click="handleEditSubmit">保 存</el-button>
       <el-button v-if="isApproveMode" type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
     </div>
@@ -44,10 +45,10 @@
         </tr>
       </table>
 
-      <!-- ===== 表头 ===== -->
+      <!-- ===== 表头（4 列） ===== -->
       <table class="row-table header-table" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;"><col style="width: 400px;"><col><col style="width: 130px;">
+          <col style="width: 80px;"><col style="width: 350px;"><col><col style="width: 130px;">
         </colgroup>
         <tr>
           <td class="header-value">操作项目</td>
@@ -57,30 +58,32 @@
         </tr>
       </table>
 
-      <!-- ===== Step1 开工前检查 ===== -->
+      <!-- ===== Step1 开工前检查（主表区域，独立签名列） ===== -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;"><col style="width: 400px;"><col><col style="width: 130px;">
+          <col style="width: 80px;">
+          <col style="width: 350px;">
+          <col>
+          <col style="width: 130px;">
         </colgroup>
         <tr style="height: 120px;">
           <td class="td-step-label">1.开工前检查</td>
-          <!-- td-no-padding 跨 col2+col3，承载内部左右分栏的 step1-inner -->
           <td class="td-no-padding" colspan="2">
             <table class="inner-fill-table step1-inner" style="border-collapse: collapse; font-size: 14px; width: 100%; height: 100%;">
-              <tr style="height: 28px;">
-                <td colspan="2" style="text-align: center;">
-                  <template v-if="isEditMode">
-                    <el-date-picker v-model="record.s1StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="开始时间" size="small" style="width: 180px;" />
-                    <span style="margin: 0 8px;">至</span>
-                    <el-date-picker v-model="record.s1EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="结束时间" size="small" style="width: 180px;" />
-                  </template>
-                  <template v-else>
-                    {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
-                  </template>
-                </td>
-              </tr>
-              <tr style="height: 92px;">
+              <tr style="height: 120px;">
                 <td class="s1-split-left">
+                  <!-- 时间字段放在固定工艺文本上方 -->
+                  <div class="s1-time-row">
+                    <template v-if="isEditMode">
+                      <el-date-picker v-model="record.s1StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:00" placeholder="开始时间" size="small" style="width: 155px;" />
+                      <span style="margin: 0 6px;">至</span>
+                      <el-date-picker v-model="record.s1EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:00" placeholder="结束时间" size="small" style="width: 155px;" />
+                    </template>
+                    <template v-else>
+                      {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
+                    </template>
+                  </div>
+                  <!-- 固定工艺文本 -->
                   1）一般区操作间温度0～35℃，相对湿度20%～85%；<br/>
                   2）洁净区温度18～26℃，相对湿度 45%～65%；<br/>
                   3）该批次生产记录齐全；<br/>
@@ -117,144 +120,229 @@
               </tr>
             </table>
           </td>
-          <td class="td-sign" style="border-bottom: none;"></td>
+          <!-- Step1 独立签名列（留空） -->
+          <td class="td-sign"></td>
         </tr>
       </table>
 
-      <!-- ===== Step2 处理 ===== -->
+      <!-- ===== Step2 消毒处理（子表区域，4 行 v-for，无表头） ===== -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;"><col style="width: 400px;"><col><col style="width: 130px;">
+          <col style="width: 80px;">   <!-- 操作项目（"2.消毒处理"，跨4行） -->
+          <col style="width: 350px;">  <!-- 工艺要求（顶部含物料名称） -->
+          <col>                         <!-- 操作记录 -->
+          <col style="width: 130px;">  <!-- 签名（承载 3 组，跨4行） -->
         </colgroup>
-        <tr style="height: 188px;">
-          <td class="td-step-label">
-            2.
-            <template v-if="isEditMode">
-              <el-input v-model="record.s2StepName" size="small" style="width: 75px;" />
-            </template>
-            <template v-else>{{ record.s2StepName || '' }}</template>
-            <br>处理
+        <tr v-for="(item, idx) in paddedStep2List" :key="idx" style="height: 210px;">
+          <!-- 操作项目：仅第一行渲染，跨 4 行 -->
+          <td v-if="idx === 0" class="td-step-label td-step-label-center" :rowspan="paddedStep2List.length">
+            2.<br/>消毒<br/>处理
           </td>
-          <td class="td-no-padding">
-            <table class="inner-fill-table step2-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
-              <tr style="height: 28px;">
-                <td colspan="2" style="text-align: center;">
-                  <template v-if="isEditMode">
-                    <el-date-picker v-model="record.s2StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="开始时间" size="small" style="width: 180px;" />
-                    <span style="margin: 0 8px;">至</span>
-                    <el-date-picker v-model="record.s2EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="结束时间" size="small" style="width: 180px;" />
-                  </template>
-                  <template v-else>
-                    {{ record.s2StartTime ? parseTime(record.s2StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s2EndTime ? parseTime(record.s2EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
-                  </template>
-                </td>
-              </tr>
-              <tr style="height: 28px;">
-                <td class="split-left">
-                  <el-checkbox v-model="record.s2OzoneDesinfectionFlag" true-value="Y" false-value="N" :disabled="!isEditMode">臭氧</el-checkbox>
-                </td>
-                <td class="split-right">
-                  <el-checkbox v-model="record.s2HighDesinfectionTemperatureFlag" true-value="Y" false-value="N" :disabled="!isEditMode">高温</el-checkbox>
-                </td>
-              </tr>
-              <tr style="height: 174px;">
-                <td class="split-left split-text">
-                  1）脱包；<br/>
-                  2）挑选，确认外观无变色；<br/>
-                  3）用吹瓶机或气枪吹瓶；<br/>
-                  4）用臭氧灭菌柜消毒；<br/>
-                  5）消毒臭氧浓度20ppm，30分钟。
-                </td>
-                <td class="split-right split-text">
-                  1）脱包；<br/>
-                  2）挑拣，确认外观无变色；<br/>
-                  3）用洗瓶机洗瓶、烘干消毒；<br/>
-                  4）洗瓶用水为纯化水；<br/>
-                  5）按照瓶型设定烘干消毒温度。
-                </td>
-              </tr>
-            </table>
+
+          <!-- 工艺要求列（顶部：物料名称；下方：时间 + 工艺复选 + 工艺文本） -->
+          <td class="td-process-cell">
+            <!-- 物料名称（顶部） -->
+            <div class="process-material-row">
+              <template v-if="isEditMode">
+                <BaseCategorySelect
+                  v-model="item.materialCode"
+                  api-url="/basic/material/listByCategory"
+                  :category-code="MATERIAL_CATEGORY_CODE"
+                  placeholder=""
+                  @change="(code, name) => handleSelectChange(item, 'material', code, name)"
+                />
+              </template>
+              <template v-else>
+                <span>{{ item.materialName || '' }}</span>
+              </template>
+            </div>
+
+            <!-- 时间字段并排（placeholder 提示） -->
+            <div class="process-time-row">
+              <template v-if="isEditMode">
+                <el-date-picker
+                  v-model="item.stepStartTime"
+                  type="datetime"
+                  value-format="YYYY-MM-DD HH:mm:00"
+                  placeholder="开始时间"
+                  size="small"
+                  style="width: 155px;" />
+                <span style="margin: 0 6px;">至</span>
+                <el-date-picker
+                  v-model="item.stepEndTime"
+                  type="datetime"
+                  value-format="YYYY-MM-DD HH:mm:00"
+                  placeholder="结束时间"
+                  size="small"
+                  style="width: 155px;" />
+              </template>
+              <template v-else>
+                {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
+              </template>
+            </div>
+
+            <!-- 工艺单选（4 个复选框视觉，行为互斥） -->
+            <div class="process-checkbox-row">
+              <el-checkbox
+                :model-value="item.disinfectionProcess === 'process_OZONE1'"
+                :disabled="!isEditMode"
+                @change="(val) => toggleProcess(item, 'process_OZONE1', val)">臭氧1</el-checkbox>
+              <el-checkbox
+                :model-value="item.disinfectionProcess === 'process_HIGH_TEMP'"
+                :disabled="!isEditMode"
+                @change="(val) => toggleProcess(item, 'process_HIGH_TEMP', val)">高温</el-checkbox>
+              <el-checkbox
+                :model-value="item.disinfectionProcess === 'process_OZONE2'"
+                :disabled="!isEditMode"
+                @change="(val) => toggleProcess(item, 'process_OZONE2', val)">臭氧2</el-checkbox>
+              <el-checkbox
+                :model-value="item.disinfectionProcess === 'process_AIR_SHOWER'"
+                :disabled="!isEditMode"
+                @change="(val) => toggleProcess(item, 'process_AIR_SHOWER', val)">风淋</el-checkbox>
+            </div>
+
+            <!-- 工艺固定文本（未选时提示，选中时展示对应文本） -->
+            <div class="process-fixed-text">
+              <template v-if="!item.disinfectionProcess">
+                <span style="color: #909399;">请选择工艺</span>
+              </template>
+              <template v-else-if="item.disinfectionProcess === 'process_OZONE1'">
+                1）脱包；<br/>
+                2）挑选，确认外观无变色；<br/>
+                3）用吹瓶机或气枪吹瓶；<br/>
+                4）用臭氧灭菌柜消毒；<br/>
+                5）消毒臭氧浓度20ppm，30分钟。
+              </template>
+              <template v-else-if="item.disinfectionProcess === 'process_HIGH_TEMP'">
+                1）脱包；<br/>
+                2）挑拣，确认外观无变色；<br/>
+                3）用洗瓶机洗瓶、烘干消毒；<br/>
+                4）洗瓶用水为纯化水；<br/>
+                5）按照瓶型设定烘干消毒温度。
+              </template>
+              <template v-else-if="item.disinfectionProcess === 'process_OZONE2'">
+                1）脱包；<br/>
+                2）挑选；<br/>
+                3）用臭氧灭菌柜消毒；<br/>
+                4）消毒臭氧浓度20ppm，30分钟。
+              </template>
+              <template v-else-if="item.disinfectionProcess === 'process_AIR_SHOWER'">
+                1）脱包；<br/>
+                2）75%酒精消毒或者紫外消毒；<br/>
+                3）放入风淋室，风淋吹扫静置。
+              </template>
+            </div>
           </td>
-          <td>
-            <div style="padding: 0px 8px;">
-              <div class="step-text">
+
+          <!-- 操作记录列（6 子块） -->
+          <td class="td-record-cell td-record-block">
+            <div class="step-text">
+              <!-- 1）设备/编码（全部显示） -->
+              <div>
                 1）设备/编码：
-                <el-checkbox v-model="record.s2OzoneGeneratorFlag" true-value="Y" false-value="N" :disabled="!isEditMode">臭氧机</el-checkbox>
-                （<input v-if="isEditMode" v-model="record.s2OzoneGeneratorNumber" class="edit-input-short" /><span v-else>{{ record.s2OzoneGeneratorNumber || '' }}</span>）
-                <el-checkbox v-model="record.s2BottleWashingMachineFlag" true-value="Y" false-value="N" :disabled="!isEditMode">洗瓶机</el-checkbox>
-                （<input v-if="isEditMode" v-model="record.s2BottleWashingMachineNumber" class="edit-input-short" /><span v-else>{{ record.s2BottleWashingMachineNumber || '' }}</span>）
-                <el-checkbox v-model="record.s2BottleBlowingMachineFlag" true-value="Y" false-value="N" :disabled="!isEditMode">吹瓶机</el-checkbox>
-                （<input v-if="isEditMode" v-model="record.s2BottleBlowingMachineNumber" class="edit-input-short" /><span v-else>{{ record.s2BottleBlowingMachineNumber || '' }}</span>）
-                <br>
-                <el-checkbox v-model="record.s2AirGunFlag" true-value="Y" false-value="N" :disabled="!isEditMode" style="margin-left: 92px;">气枪</el-checkbox>
-                <el-checkbox v-model="record.s2ManualWashingFlag" true-value="Y" false-value="N" :disabled="!isEditMode" style="margin-left: 16px;">手动洗</el-checkbox>
-                <el-checkbox v-model="record.s2WasherDryerComboFlag" true-value="Y" false-value="N" :disabled="!isEditMode" style="margin-left: 16px;">洗烘一体机</el-checkbox>
-                （<input v-if="isEditMode" v-model="record.s2WasherDryerComboNumber" class="edit-input-short" /><span v-else>{{ record.s2WasherDryerComboNumber || '' }}</span>）
-                <br>
-                2）
-                <el-checkbox v-model="record.s2OzoneDesinfectionFlag" true-value="Y" false-value="N" :disabled="!isEditMode">臭氧</el-checkbox>
-                ：消毒臭氧浓度
-                <input v-if="isEditMode" v-model="record.s2OzoneConcentration" class="edit-input-short" /><span v-else>{{ record.s2OzoneConcentration || '' }}</span> ppm，
+                <el-checkbox v-model="item.ozoneGeneratorFlag" true-value="Y" false-value="N" :disabled="!isEditMode">臭氧机</el-checkbox>
+                （<input v-if="isEditMode" v-model="item.ozoneGeneratorNumber" class="edit-input-short" /><span v-else>{{ item.ozoneGeneratorNumber || '' }}</span>）
+                <el-checkbox v-model="item.bottleWashingMachineFlag" true-value="Y" false-value="N" :disabled="!isEditMode">洗瓶机</el-checkbox>
+                （<input v-if="isEditMode" v-model="item.bottleWashingMachineNumber" class="edit-input-short" /><span v-else>{{ item.bottleWashingMachineNumber || '' }}</span>）
+                <el-checkbox v-model="item.bottleBlowingMachineFlag" true-value="Y" false-value="N" :disabled="!isEditMode">吹瓶机</el-checkbox>
+                （<input v-if="isEditMode" v-model="item.bottleBlowingMachineNumber" class="edit-input-short" /><span v-else>{{ item.bottleBlowingMachineNumber || '' }}</span>）
                 <br/>
-                <span style="margin-left: 30px;">
-                  消毒时间
-                  <template v-if="isEditMode">
-                    <el-time-picker v-model="record.s2OzoneDesinfectionStartTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
-                    至 <el-time-picker v-model="record.s2OzoneDesinfectionEndTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
-                  </template>
-                  <template v-else>
-                    {{ formatHm(record.s2OzoneDesinfectionStartTime) }} 至 {{ formatHm(record.s2OzoneDesinfectionEndTime) }}
-                  </template>
-                  ，共<input v-model="record.s2OzoneDesinfectionCost" disabled class="edit-input-short" /> 分钟
-                </span>
-                <br/>
-                <el-checkbox v-model="record.s2HighDesinfectionTemperatureFlag" true-value="Y" false-value="N" :disabled="!isEditMode" style="margin-left: 16px;">高温</el-checkbox>
-                ：烘干消毒温度
-                <input v-if="isEditMode" v-model="record.s2DryingDesinfectionTemperature" class="edit-input-short" /><span v-else>{{ record.s2DryingDesinfectionTemperature || '' }}</span> ℃，
-                <br/>
-                <span style="margin-left: 30px;">
-                  消毒时间
-                  <template v-if="isEditMode">
-                    <el-time-picker v-model="record.s2DryingDesinfectionStartTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
-                    至 <el-time-picker v-model="record.s2DryingDesinfectionEndTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
-                  </template>
-                  <template v-else>
-                    {{ formatHm(record.s2DryingDesinfectionStartTime) }} 至 {{ formatHm(record.s2DryingDesinfectionEndTime) }}
-                  </template>
-                  ，共<input v-model="record.s2DryingDesinfectionCost" disabled class="edit-input-short" /> 分钟
-                </span>
-                <br/>
-                <el-checkbox v-model="record.s2WasherDryerComboFlag" true-value="Y" false-value="N" :disabled="!isEditMode" style="margin-left: 16px;">洗烘一体机</el-checkbox>
-                ：高温烘干消毒温度
-                <input v-if="isEditMode" v-model="record.s2HighDryingDesinfectionTemperature" class="edit-input-short" /><span v-else>{{ record.s2HighDryingDesinfectionTemperature || '' }}</span> ℃，
-                <br/>
-                <span style="margin-left: 30px;">
-                  消毒时间
-                  <template v-if="isEditMode">
-                    <el-time-picker v-model="record.s2HighDryingDesinfectionStartTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
-                    至 <el-time-picker v-model="record.s2HighDryingDesinfectionEndTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
-                  </template>
-                  <template v-else>
-                    {{ formatHm(record.s2HighDryingDesinfectionStartTime) }} 至 {{ formatHm(record.s2HighDryingDesinfectionEndTime) }}
-                  </template>
-                </span>
-                <br/>
+                <el-checkbox v-model="item.airGunFlag" true-value="Y" false-value="N" :disabled="!isEditMode" style="margin-left: 70px;">气枪</el-checkbox>
+                <el-checkbox v-model="item.manualWashingFlag" true-value="Y" false-value="N" :disabled="!isEditMode">手动洗</el-checkbox>
+                <el-checkbox v-model="item.washerDryerComboFlag" true-value="Y" false-value="N" :disabled="!isEditMode">洗烘一体机</el-checkbox>
+                （<input v-if="isEditMode" v-model="item.washerDryerComboNumber" class="edit-input-short" /><span v-else>{{ item.washerDryerComboNumber || '' }}</span>）
+                <el-checkbox v-model="item.airShowerMachineFlag" true-value="Y" false-value="N" :disabled="!isEditMode">风淋室</el-checkbox>
+                （<input v-if="isEditMode" v-model="item.airShowerMachineNumber" class="edit-input-short" /><span v-else>{{ item.airShowerMachineNumber || '' }}</span>）
+              </div>
+
+              <!-- 2）消毒 -->
+              <div style="margin-top: 4px;">
+                <span>2）消毒：</span>
+                <template v-if="item.disinfectionProcess === 'process_OZONE1' || item.disinfectionProcess === 'process_OZONE2'">
+                  <span style="font-weight: bold;">臭氧</span>
+                </template>
+                <template v-else-if="item.disinfectionProcess">
+                  <el-select
+                    v-model="item.disinfectionMethod"
+                    size="small"
+                    :disabled="!isEditMode"
+                    placeholder="请选择消毒方式"
+                    style="width: 130px;">
+                    <el-option
+                      v-for="opt in getMethodOptions(item.disinfectionProcess)"
+                      :key="opt.value"
+                      :label="opt.label"
+                      :value="opt.value" />
+                  </el-select>
+                </template>
+                <template v-else>
+                  <span style="color: #909399;">请先选择工艺</span>
+                </template>
+
+                <template v-if="isParamVisible(item.disinfectionMethod)">
+                  ，{{ getParamLabel(item.disinfectionMethod) }}
+                  <input v-if="isEditMode" v-model="item.disinfectionParam" class="edit-input-short" style="width: 50px;" />
+                  <span v-else>{{ item.disinfectionParam || '' }}</span>
+                  {{ getParamUnit(item.disinfectionMethod) }}
+                </template>
+
+                <template v-if="item.disinfectionProcess">
+                  <span style="margin-left: 30px;">
+                    消毒时间
+                    <template v-if="isEditMode">
+                      <el-time-picker v-model="item.disinfectionStartTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
+                      至 <el-time-picker v-model="item.disinfectionEndTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
+                    </template>
+                    <template v-else>
+                      {{ formatHm(item.disinfectionStartTime) }} 至 {{ formatHm(item.disinfectionEndTime) }}
+                    </template>
+                    ，共 <input v-model="item.disinfectionCost" disabled class="edit-input-short" /> 分钟
+                  </span>
+                </template>
+              </div>
+
+              <!-- 3）是否干净，干燥、完好、外观无变色 -->
+              <div style="margin-top: 4px;">
                 <span>3）是否干净，干燥、完好、外观无变色：</span>
-                <el-checkbox v-model="record.s2WaiguanFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
-                <el-checkbox v-model="record.s2WaiguanFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
-                <br/>
+                <el-checkbox :model-value="item.waiguanFlag === 'Y'" :disabled="!isEditMode"
+                  @change="(val) => { item.waiguanFlag = val ? 'Y' : '' }">是</el-checkbox>
+                <el-checkbox :model-value="item.waiguanFlag === 'N'" :disabled="!isEditMode"
+                  @change="(val) => { item.waiguanFlag = val ? 'N' : '' }">否</el-checkbox>
+              </div>
+
+              <!-- 4）洗瓶用水是否纯化水 -->
+              <div style="margin-top: 4px;">
                 <span>4）洗瓶用水是否纯化水：</span>
-                <el-checkbox v-model="record.s2PurifiedWaterFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
-                <el-checkbox v-model="record.s2PurifiedWaterFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
-                <el-checkbox v-model="record.s2NoPurifiedWaterFlag" true-value="Y" false-value="N" :disabled="!isEditMode" style="margin-left: 8px;">无此项</el-checkbox>
-                <br/>
+                <el-checkbox :model-value="item.purifiedWaterFlag === 'Y'" :disabled="!isEditMode"
+                  @change="(val) => { item.purifiedWaterFlag = val ? 'Y' : '' }">是</el-checkbox>
+                <el-checkbox :model-value="item.purifiedWaterFlag === 'N'" :disabled="!isEditMode"
+                  @change="(val) => { item.purifiedWaterFlag = val ? 'N' : '' }">否</el-checkbox>
+                <el-checkbox v-model="item.noPurifiedWaterFlag" true-value="Y" false-value="" :disabled="!isEditMode" style="margin-left: 8px;">无此项</el-checkbox>
+              </div>
+
+              <!-- 5）是否装入洁净袋 -->
+              <div style="margin-top: 4px;">
                 <span>5）是否装入洁净袋：</span>
-                <el-checkbox v-model="record.s2CleanBagFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
-                <el-checkbox v-model="record.s2CleanBagFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+                <el-checkbox :model-value="item.cleanBagFlag === 'Y'" :disabled="!isEditMode"
+                  @change="(val) => { item.cleanBagFlag = val ? 'Y' : '' }">是</el-checkbox>
+                <el-checkbox :model-value="item.cleanBagFlag === 'N'" :disabled="!isEditMode"
+                  @change="(val) => { item.cleanBagFlag = val ? 'N' : '' }">否</el-checkbox>
+              </div>
+
+              <!-- 6）内包装是否完整（附加项） -->
+              <div style="margin-top: 4px;">
+                <span>6）内包装是否完整：</span>
+                <el-checkbox :model-value="item.innerPackagingIntactFlag === 'Y'" :disabled="!isEditMode"
+                  @change="(val) => { item.innerPackagingIntactFlag = val ? 'Y' : '' }">是</el-checkbox>
+                <el-checkbox :model-value="item.innerPackagingIntactFlag === 'N'" :disabled="!isEditMode"
+                  @change="(val) => { item.innerPackagingIntactFlag = val ? 'N' : '' }">否</el-checkbox>
+                <el-checkbox v-model="item.noInnerPackagingIntactFlag" true-value="Y" false-value="" :disabled="!isEditMode" style="margin-left: 8px;">无此项</el-checkbox>
               </div>
             </div>
           </td>
-          <td class="td-sign" style="border-top: none; border-bottom: none;">
+
+          <!-- 签名列：仅第一行渲染，跨 4 行，承载 3 组签名 -->
+          <td v-if="idx === 0" class="td-sign" :rowspan="paddedStep2List.length">
             <div>操作人：{{ submitSignatureName }}</div>
             <div>{{ submitSignatureTime }}</div>
             <div style="height: 8px;"></div>
@@ -267,107 +355,6 @@
         </tr>
       </table>
 
-      <!-- ===== Step3 处理 ===== -->
-      <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
-        <colgroup>
-          <col style="width: 80px;"><col style="width: 400px;"><col><col style="width: 130px;">
-        </colgroup>
-        <tr style="height: 153px;">
-          <td class="td-step-label">
-            3.
-            <template v-if="isEditMode">
-              <el-input v-model="record.s3StepName" size="small" style="width: 75px;" />
-            </template>
-            <template v-else>{{ record.s3StepName || '' }}</template>
-            <br>处理
-          </td>
-          <td class="td-no-padding">
-            <table class="inner-fill-table step3-inner" style="border-collapse: collapse; font-size: 13px; width: 100%; height: 100%;">
-              <tr style="height: 28px;">
-                <td colspan="2" style="text-align: center;">
-                  <template v-if="isEditMode">
-                    <el-date-picker v-model="record.s3StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:00" placeholder="开始时间" size="small" style="width: 180px;" />
-                    <span style="margin: 0 8px;">至</span>
-                    <el-date-picker v-model="record.s3EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:00" placeholder="结束时间" size="small" style="width: 180px;" />
-                  </template>
-                  <template v-else>
-                    {{ record.s3StartTime ? parseTime(record.s3StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s3EndTime ? parseTime(record.s3EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
-                  </template>
-                </td>
-              </tr>
-              <tr style="height: 28px;">
-                <td class="split-left">
-                  <el-checkbox v-model="record.s3OzoneDesinfectionFlag" true-value="Y" false-value="N" :disabled="!isEditMode">臭氧</el-checkbox>
-                </td>
-                <td class="split-right">
-                  <el-checkbox v-model="record.s3AirShowerFlag" true-value="Y" false-value="N" :disabled="!isEditMode">风淋</el-checkbox>
-                </td>
-              </tr>
-              <tr style="height: 113px;">
-                <td class="split-left split-text">
-                  1）脱包；<br/>2）挑选；<br/>3）用臭氧灭菌柜消毒；<br/>4）消毒臭氧浓度20ppm，30分钟。
-                </td>
-                <td class="split-right split-text">
-                  1）脱包；<br/>2）75%酒精消毒或者紫外消毒；<br/>3）放入风淋室，风淋吹扫静置。
-                </td>
-              </tr>
-            </table>
-          </td>
-          <td>
-            <div style="padding: 0px 8px;">
-              <div class="step-text">
-                1）设备/编码：
-                <el-checkbox v-model="record.s3OzoneGeneratorFlag" true-value="Y" false-value="N" :disabled="!isEditMode">臭氧机</el-checkbox>
-                （<input v-if="isEditMode" v-model="record.s3OzoneGeneratorNumber" class="edit-input-short" /><span v-else>{{ record.s3OzoneGeneratorNumber || '' }}</span>）
-                <el-checkbox v-model="record.s3BottleWashingMachineFlag" true-value="Y" false-value="N" :disabled="!isEditMode">洗瓶机</el-checkbox>
-                （<input v-if="isEditMode" v-model="record.s3BottleWashingMachineNumber" class="edit-input-short" /><span v-else>{{ record.s3BottleWashingMachineNumber || '' }}</span>）
-                <el-checkbox v-model="record.s3BottleBlowingMachineFlag" true-value="Y" false-value="N" :disabled="!isEditMode">吹瓶机</el-checkbox>
-                （<input v-if="isEditMode" v-model="record.s3BottleBlowingMachineNumber" class="edit-input-short" /><span v-else>{{ record.s3BottleBlowingMachineNumber || '' }}</span>）
-                <br>
-                <el-checkbox v-model="record.s3AirShowerMachineFlag" true-value="Y" false-value="N" :disabled="!isEditMode" style="margin-left: 92px;">风淋室</el-checkbox>
-                （<input v-if="isEditMode" v-model="record.s3AirShowerMachineNumber" class="edit-input-short" /><span v-else>{{ record.s3AirShowerMachineNumber || '' }}</span>）
-                <br>
-                <span>2）消毒</span><br>
-                <el-checkbox v-model="record.s3OzoneDesinfectionFlag" true-value="Y" false-value="N" :disabled="!isEditMode">臭氧</el-checkbox>
-                ：臭氧浓度
-                <input v-if="isEditMode" v-model="record.s3OzoneConcentration" class="edit-input-short" /><span v-else>{{ record.s3OzoneConcentration || '' }}</span> ppm，
-                <el-checkbox v-model="record.s3AlcoholDesinfectionFlag" true-value="Y" false-value="N" :disabled="!isEditMode">75%酒精消毒</el-checkbox>
-                <el-checkbox v-model="record.s3UvDesinfectionFlag" true-value="Y" false-value="N" :disabled="!isEditMode">紫外线消毒</el-checkbox>
-                <br/>
-                <span style="margin-left: 30px;">
-                  消毒时间
-                  <template v-if="isEditMode">
-                    <el-time-picker v-model="record.s3OzoneDesinfectionStartTime" value-format="HH:mm:00" size="small" style="width: 100px;" />
-                    至 <el-time-picker v-model="record.s3OzoneDesinfectionEndTime" value-format="HH:mm:00" size="small" style="width: 100px;" />
-                  </template>
-                  <template v-else>
-                    {{ formatHm(record.s3OzoneDesinfectionStartTime) }} 至 {{ formatHm(record.s3OzoneDesinfectionEndTime) }}
-                  </template>
-                  ，共<input v-model="record.s3OzoneDesinfectionCost" disabled class="edit-input-short" /> 分钟
-                </span>
-                <br/>
-                <el-checkbox v-model="record.s3AirShowerFlag" true-value="Y" false-value="N" :disabled="!isEditMode">风淋</el-checkbox>
-                <span>，内包装是否完整：</span>
-                <el-checkbox v-model="record.s3AirShowerInnerPackagingFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
-                <el-checkbox v-model="record.s3AirShowerInnerPackagingFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
-                <br/>
-                <span>3）是否干净，干燥、完好、外观无变色：</span>
-                <el-checkbox v-model="record.s3WaiguanFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
-                <el-checkbox v-model="record.s3WaiguanFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
-                <br/>
-                <span>4）是否装入洁净袋：</span>
-                <el-checkbox v-model="record.s3CleanBagFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
-                <el-checkbox v-model="record.s3CleanBagFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
-              </div>
-            </div>
-          </td>
-          <!-- Step3 为 Step1~3 组的最底部表格，保留 border-bottom -->
-          <td class="td-sign" style="border-top: none;"></td>
-        </tr>
-      </table>
-
-      <!-- Step4 整块已删除，迁移至 packaging_2 -->
-
     </div>
   </div>
 </template>
@@ -375,22 +362,26 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getBizDisinfectionPackaging1 } from '@/api/bizdata/bizDisinfectionPackaging1'
+import {
+  getBizDisinfectionPackaging1Detail,
+  syncMaterialFromReceiving
+} from '@/api/bizdata/bizDisinfectionPackaging1'
 import { getBatch_record } from '@/api/batch/batch_record'
 import { listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
+import BaseCategorySelect from '@/components/BaseCategorySelect/index.vue'
 import request from '@/utils/request'
 import { parseTime } from '@/utils/ruoyi'
 
 defineOptions({ name: 'DisinfectionPackaging1Form' })
 
+/** 物料选择的分类码（本表单为包装材料相关） */
+const MATERIAL_CATEGORY_CODE = 'PACKAGING_MATERIAL'
+
+/** 本表单为消毒车间专属表单，从消毒车间（D）的领料单同步物料 */
+const SYNC_WORKSHOP = 'D'
+
 /**
  * 组件 Props 定义
- * actionType: 操作类型（大写：PREVIEW/EDIT/SUBMIT 等）
- * recordId: 批记录ID（预览空模板时可不传，其他场景必填）
- * menuId: 按钮节点ID（编辑/审批时必填）
- * businessRecordId: 业务记录ID（编辑/审批/查看真实数据时必填；预览空模板时可不传）
- * cMenuId: 当前表单对应的 C 节点 ID（用于获取签名行数据；预览空模板时可不传）
- * backendRoute: 后端接口路径模板（来自操作码配置，需包含占位符）
  */
 const props = defineProps({
   actionType: { type: String, default: 'PREVIEW' },
@@ -411,7 +402,7 @@ const loading = ref(false)
 const batchRecord = ref(null)
 const fNodes = ref([])
 
-/** 主表业务字段（初始化为空，避免模板访问 undefined） */
+/** 主表业务字段 + Step2 子表 List */
 const record = reactive({
   recordId: null,
   orderId: null, orderNum: '', workshop: '',
@@ -421,32 +412,9 @@ const record = reactive({
   s1NormalAreaTemperature: '', s1NormalAreaHumidity: '',
   s1CleanAreaTemperature: '', s1CleanAreaHumidity: '',
   s1QualifiedFlag: '', s1Remark: '',
-  // Step2
-  s2StepName: '', s2StartTime: null, s2EndTime: null,
-  s2OzoneDesinfectionFlag: '', s2HighDesinfectionTemperatureFlag: '',
-  s2OzoneGeneratorFlag: '', s2OzoneGeneratorNumber: '',
-  s2BottleWashingMachineFlag: '', s2BottleWashingMachineNumber: '',
-  s2BottleBlowingMachineFlag: '', s2BottleBlowingMachineNumber: '',
-  s2AirGunFlag: '', s2ManualWashingFlag: '',
-  s2WasherDryerComboFlag: '', s2WasherDryerComboNumber: '',
-  s2OzoneConcentration: '',
-  s2OzoneDesinfectionStartTime: null, s2OzoneDesinfectionEndTime: null, s2OzoneDesinfectionCost: '',
-  s2DryingDesinfectionTemperature: '',
-  s2DryingDesinfectionStartTime: null, s2DryingDesinfectionEndTime: null, s2DryingDesinfectionCost: '',
-  s2HighDryingDesinfectionTemperature: '',
-  s2HighDryingDesinfectionStartTime: null, s2HighDryingDesinfectionEndTime: null, s2HighDryingDesinfectionCost: '',
-  s2WaiguanFlag: '', s2PurifiedWaterFlag: '', s2NoPurifiedWaterFlag: '', s2CleanBagFlag: '',
-  // Step3
-  s3StepName: '', s3StartTime: null, s3EndTime: null,
-  s3OzoneDesinfectionFlag: '', s3AirShowerFlag: '',
-  s3OzoneGeneratorFlag: '', s3OzoneGeneratorNumber: '',
-  s3BottleWashingMachineFlag: '', s3BottleWashingMachineNumber: '',
-  s3BottleBlowingMachineFlag: '', s3BottleBlowingMachineNumber: '',
-  s3AirShowerMachineFlag: '', s3AirShowerMachineNumber: '',
-  s3OzoneConcentration: '',
-  s3OzoneDesinfectionStartTime: null, s3OzoneDesinfectionEndTime: null, s3OzoneDesinfectionCost: '',
-  s3AlcoholDesinfectionFlag: '', s3UvDesinfectionFlag: '',
-  s3AirShowerInnerPackagingFlag: '', s3WaiguanFlag: '', s3CleanBagFlag: ''
+  // 公共
+  remark: '',
+  step2List: []
 })
 
 const isEditMode = computed(() => props.actionType === 'EDIT')
@@ -487,17 +455,44 @@ const inspectSignatureTime = computed(() =>
   inspectNode.value?.operatorTime ? parseTime(inspectNode.value.operatorTime, '{y}-{m}-{d} {h}:{i}') : ''
 )
 
+// ==================== Step2 子表补齐 4 行 ====================
+const paddedStep2List = computed(() => {
+  const list = record.step2List || []
+  if (list.length >= 4) return list
+  const result = [...list]
+  while (result.length < 4) result.push(createEmptyStep2Row())
+  return result
+})
+
+function createEmptyStep2Row() {
+  return {
+    stepId: null, recordId: null, seqNo: null,
+    materialCode: '', materialName: '', batchNumber: '',
+    spec: '', unit: '',
+    stepStartTime: null, stepEndTime: null,
+    disinfectionProcess: '', disinfectionMethod: '', disinfectionParam: '',
+    disinfectionStartTime: null, disinfectionEndTime: null, disinfectionCost: '',
+    ozoneGeneratorFlag: '', ozoneGeneratorNumber: '',
+    bottleWashingMachineFlag: '', bottleWashingMachineNumber: '',
+    bottleBlowingMachineFlag: '', bottleBlowingMachineNumber: '',
+    airGunFlag: '', manualWashingFlag: '',
+    washerDryerComboFlag: '', washerDryerComboNumber: '',
+    airShowerMachineFlag: '', airShowerMachineNumber: '',
+    waiguanFlag: '', purifiedWaterFlag: '', noPurifiedWaterFlag: '', cleanBagFlag: '',
+    innerPackagingIntactFlag: '', noInnerPackagingIntactFlag: '',
+    remark: ''
+  }
+}
+
 // ==================== 时间格式化辅助 ====================
-/** 将 HH:mm:ss 截断为 HH:mm 用于只读展示 */
+/** HH:mm:ss → HH:mm */
 function formatHm(timeStr) {
   if (!timeStr) return ''
   const s = String(timeStr)
   return s.length >= 5 ? s.substring(0, 5) : s
 }
 
-/**
- * 将 HH:mm:ss 格式的时间字符串转换为"当天累计分钟数"
- */
+/** HH:mm:ss / HH:mm 转当天累计分钟 */
 function timeToMinutes(timeStr) {
   if (!timeStr) return 0
   const parts = String(timeStr).split(':').map(Number)
@@ -507,9 +502,7 @@ function timeToMinutes(timeStr) {
   return h * 60 + m
 }
 
-/**
- * 计算两个 HH:mm:ss 之间的分钟差
- */
+/** 两时间点分钟差（跨天自动 +1440） */
 function diffMinutes(startTime, endTime) {
   if (!startTime || !endTime) return ''
   const start = timeToMinutes(startTime)
@@ -520,36 +513,107 @@ function diffMinutes(startTime, endTime) {
   return diff
 }
 
-// ==================== 消毒时长自动计算 ====================
+// ==================== 消毒时长自动计算（深度 watch Step2 列表） ====================
 watch(
-  () => [record.s2OzoneDesinfectionStartTime, record.s2OzoneDesinfectionEndTime],
-  ([start, end]) => {
-    record.s2OzoneDesinfectionCost = diffMinutes(start, end)
+  () => record.step2List,
+  (list) => {
+    if (!Array.isArray(list)) return
+    list.forEach(item => {
+      const cost = diffMinutes(item.disinfectionStartTime, item.disinfectionEndTime)
+      if (item.disinfectionCost !== cost) {
+        item.disinfectionCost = cost
+      }
+    })
   },
-  { immediate: true }
+  { deep: true, immediate: true }
 )
 
-watch(
-  () => [record.s2DryingDesinfectionStartTime, record.s2DryingDesinfectionEndTime],
-  ([start, end]) => {
-    record.s2DryingDesinfectionCost = diffMinutes(start, end)
-  },
-  { immediate: true }
-)
+// ==================== 工艺单选（视觉复选框，行为互斥） ====================
+/**
+ * 切换工艺：4 个复选框中只能选中 1 个
+ * - 已选中该工艺 → 取消（清空工艺相关字段）
+ * - 切换其他工艺 → 清空原工艺字段，写入新工艺
+ * - 臭氧1 / 臭氧2 → 自动填充 method_OZONE
+ * - 高温 / 风淋 → 消毒方式留空，等用户下拉选择
+ *
+ * 注意：切换工艺时保留 materialCode / materialName（物料不变）
+ */
+function toggleProcess(item, process, checked) {
+  if (checked) {
+    // 已选中该工艺，防止重复触发
+    if (item.disinfectionProcess === process) return
+    // 切换工艺：清空消毒方式相关字段
+    item.disinfectionProcess = process
+    item.disinfectionMethod = ''
+    item.disinfectionParam = ''
+    item.disinfectionStartTime = null
+    item.disinfectionEndTime = null
+    item.disinfectionCost = ''
+    // 臭氧1 / 臭氧2 自动填充
+    if (process === 'process_OZONE1' || process === 'process_OZONE2') {
+      item.disinfectionMethod = 'method_OZONE'
+    }
+  } else {
+    // 取消勾选
+    if (item.disinfectionProcess === process) {
+      item.disinfectionProcess = ''
+      item.disinfectionMethod = ''
+      item.disinfectionParam = ''
+      item.disinfectionStartTime = null
+      item.disinfectionEndTime = null
+      item.disinfectionCost = ''
+    }
+  }
+}
 
-watch(
-  () => [record.s3OzoneDesinfectionStartTime, record.s3OzoneDesinfectionEndTime],
-  ([start, end]) => {
-    record.s3OzoneDesinfectionCost = diffMinutes(start, end)
-  },
-  { immediate: true }
-)
+// ==================== 消毒方式选项（按工艺联动） ====================
+/**
+ * 按工艺返回可选的消毒方式列表
+ * - 臭氧1 / 臭氧2 → 不显示下拉（自动填充 method_OZONE）
+ * - 高温 → method_HIGH_TEMP / method_WASHER_DRYER
+ * - 风淋 → method_ALCOHOL / method_UV
+ */
+function getMethodOptions(process) {
+  if (process === 'process_HIGH_TEMP') {
+    return [
+      { label: '高温', value: 'method_HIGH_TEMP' },
+      { label: '洗烘一体机', value: 'method_WASHER_DRYER' }
+    ]
+  }
+  if (process === 'process_AIR_SHOWER') {
+    return [
+      { label: '75%酒精消毒', value: 'method_ALCOHOL' },
+      { label: '紫外线消毒', value: 'method_UV' }
+    ]
+  }
+  return []
+}
+
+/** 是否显示设备参数（臭氧浓度 / 消毒温度） */
+function isParamVisible(method) {
+  return method === 'method_OZONE'
+    || method === 'method_HIGH_TEMP'
+    || method === 'method_WASHER_DRYER'
+}
+
+/** 设备参数标签 */
+function getParamLabel(method) {
+  if (method === 'method_OZONE') return '臭氧浓度'
+  if (method === 'method_HIGH_TEMP' || method === 'method_WASHER_DRYER') return '消毒温度'
+  return ''
+}
+
+/** 设备参数单位 */
+function getParamUnit(method) {
+  if (method === 'method_OZONE') return 'ppm'
+  if (method === 'method_HIGH_TEMP' || method === 'method_WASHER_DRYER') return '℃'
+  return ''
+}
 
 // ==================== 数据加载 ====================
 onMounted(async () => {
   await loadFNodes()
   if (isPreviewMode.value && !props.businessRecordId) {
-    // 预览空模板：不调任何后端接口，仅本地初始化
     initEmptyTemplate()
   } else {
     await loadData()
@@ -567,20 +631,20 @@ async function loadFNodes() {
   }
 }
 
-/**
- * 预览空模板初始化：本表单无子表，仅需保持 record 为空即可
- */
+/** 预览空模板：仅本地初始化 4 行 step2，不调任何后端接口 */
 function initEmptyTemplate() {
-  // 无子表，无需本地初始化
+  record.step2List = [
+    createEmptyStep2Row(),
+    createEmptyStep2Row(),
+    createEmptyStep2Row(),
+    createEmptyStep2Row()
+  ]
 }
 
-/**
- * 加载批记录信息 + 业务详情（无子表）
- */
 async function loadData() {
   loading.value = true
   try {
-    const detailPromise = getBizDisinfectionPackaging1(props.businessRecordId)
+    const detailPromise = getBizDisinfectionPackaging1Detail(props.businessRecordId)
     const recordPromise = props.recordId
       ? getBatch_record(props.recordId)
       : Promise.resolve({ data: null })
@@ -589,11 +653,23 @@ async function loadData() {
     batchRecord.value = recordRes.data || null
     const data = detailRes.data || {}
     Object.assign(record, data)
+
+    // 补齐 step2 至 4 行
+    const step2 = Array.isArray(record.step2List) ? record.step2List : []
+    while (step2.length < 4) step2.push(createEmptyStep2Row())
+    record.step2List = step2
   } catch (error) {
     ElMessage.error('加载灌装包材处理记录1数据失败')
   } finally {
     loading.value = false
   }
+}
+
+// ==================== 选择器回填 ====================
+function handleSelectChange(row, type, code, name) {
+  if (type === 'material') row.materialName = name || ''
+  else if (type === 'spec') row.spec = name || ''
+  else if (type === 'unit') row.unit = name || ''
 }
 
 // ==================== 通用动态请求 ====================
@@ -613,15 +689,15 @@ async function dynamicRequest(routeTemplate, pathParams, data = {}, method = 'po
 
 // ==================== 校验 ====================
 function beforeSubmitCheck() {
-  if (!record.s1StartTime) { ElMessage.error('请选择 Step1 开始时间'); return false }
-  if (!record.s1EndTime) { ElMessage.error('请选择 Step1 结束时间'); return false }
-
-  if (!record.s2StartTime) { ElMessage.error('请选择 Step2 开始时间'); return false }
-  if (!record.s2EndTime) { ElMessage.error('请选择 Step2 结束时间'); return false }
-
-  if (!record.s3StartTime) { ElMessage.error('请选择 Step3 开始时间'); return false }
-  if (!record.s3EndTime) { ElMessage.error('请选择 Step3 结束时间'); return false }
-
+  // 宽松校验：允许部分行留空（业务上可能只需 2 个物料）
+  // 若某行选了工艺，则要求填写物料名称（工艺与物料必须对应）
+  for (let i = 0; i < record.step2List.length; i++) {
+    const item = record.step2List[i]
+    if (item.disinfectionProcess && !item.materialName) {
+      ElMessage.error(`第 ${i + 1} 行已选择工艺，请先选择物料`)
+      return false
+    }
+  }
   return true
 }
 
@@ -635,6 +711,10 @@ async function handleEditSubmit() {
   } catch (error) { return }
 
   const payload = { ...record }
+  // 过滤：保留有 stepId（已存在需 clear/update）或有业务字段（需 insert）的行
+  payload.step2List = paddedStep2List.value.filter(item =>
+    item.stepId || item.materialCode || item.materialName || item.disinfectionProcess
+  )
 
   try {
     const routeTemplate = props.backendRoute ||
@@ -652,6 +732,80 @@ async function handleEditSubmit() {
     emit('closed')
   } catch (error) {
     ElMessage.error('保存失败')
+  }
+}
+
+// ==================== 从领料单同步物料 ====================
+/**
+ * 从领料单同步物料到 Step2 子表
+ *
+ * 交互流程：
+ * 1. 二次确认（提示 Step2 物料明细将被覆盖）
+ * 2. 调后端同步接口，前端传 workshop='D'
+ * 3. 后端返回完整对象（含 step2List），前端一次刷新 record
+ * 4. 不关闭对话框，用户可继续编辑
+ * 5. 允许重复点击：每次以后端最新领料单数据覆盖
+ */
+async function handleSyncMaterialFromReceiving() {
+  try {
+    await ElMessageBox.confirm(
+      '确认从领料单同步物料？当前 Step2 的物料明细将被覆盖（工艺、设备、消毒信息保留）。',
+      '提示',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+    )
+  } catch (error) {
+    return
+  }
+
+  try {
+    const res = await syncMaterialFromReceiving(props.businessRecordId, SYNC_WORKSHOP)
+    // 后端返回完整对象（含 step2List）
+    const data = res.data || {}
+
+    // 关键：同步仅覆盖物料五件套，保留当前行的工艺/设备/消毒信息（避免用户输入被覆盖）
+    const remoteStep2 = Array.isArray(data.step2List) ? data.step2List : []
+    const localStep2 = record.step2List || []
+
+    // 按 seq_no 合并：物料字段用远端，其他字段用本地
+    const mergedStep2 = []
+    for (let seq = 1; seq <= 4; seq++) {
+      const remote = remoteStep2.find(it => it.seqNo === seq)
+      const local = localStep2.find(it => it.seqNo === seq) || createEmptyStep2Row()
+      if (remote) {
+        // 物料五件套用远端
+        local.stepId = remote.stepId || local.stepId
+        local.recordId = remote.recordId || local.recordId
+        local.seqNo = remote.seqNo
+        local.materialCode = remote.materialCode || ''
+        local.materialName = remote.materialName || ''
+        local.batchNumber = remote.batchNumber || ''
+        local.spec = remote.spec || ''
+        local.unit = remote.unit || ''
+        // 保留本地的工艺/设备/消毒信息（不变）
+      } else {
+        // 远端无对应行：清空物料信息，保留本地的工艺/设备/消毒信息
+        local.materialCode = ''
+        local.materialName = ''
+        local.batchNumber = ''
+        local.spec = ''
+        local.unit = ''
+      }
+      mergedStep2.push(local)
+    }
+    record.step2List = mergedStep2
+
+    // 补齐至 4 行
+    while (record.step2List.length < 4) record.step2List.push(createEmptyStep2Row())
+
+    // 判断是否有数据
+    const hasAnyItem = record.step2List.some(it => it.materialCode || it.materialName)
+    if (!hasAnyItem) {
+      ElMessage.warning('未找到关联的领料单，物料明细已清空')
+    } else {
+      ElMessage.success('同步成功')
+    }
+  } catch (error) {
+    ElMessage.error('同步失败')
   }
 }
 
@@ -726,7 +880,7 @@ async function handleApproveSubmit() {
   margin-bottom: -1px;
 }
 
-/* 关闭 Step1~Step3 表格的上下边框，用于签名列跨表合并 */
+/* 关闭 Step1/Step2 表格的上下边框，视觉上连成一张表 */
 .step-table-native {
   border-top: none;
   border-bottom: none;
@@ -755,7 +909,7 @@ async function handleApproveSubmit() {
   text-align: center;
 }
 
-/* Step1~Step3 外层单元格通用样式 */
+/* Step1 / Step2 外层单元格通用样式 */
 .step-table-native td {
   border: 1px solid #dcdfe6;
   padding: 1px 1px;
@@ -774,52 +928,84 @@ async function handleApproveSubmit() {
   border: none;
 }
 
-/* Step1~Step3 内部表格分隔线 */
-.step1-inner td,
-.step2-inner td,
-.step3-inner td {
+/* ============================================================
+   Step1 内部样式（保留原有视觉）
+   ============================================================ */
+.step1-inner td {
   border-bottom: 1px solid #dcdfe6;
   padding: 4px 0px;
 }
-.step1-inner td:first-child,
-.step2-inner td:first-child,
-.step3-inner td:first-child {
+.step1-inner td:first-child {
   border-right: 1px solid #dcdfe6;
 }
-.step1-inner tr:last-child td,
-.step2-inner tr:last-child td,
-.step3-inner tr:last-child td {
+.step1-inner tr:last-child td {
   border-bottom: none;
 }
-.step1-inner td[colspan="2"],
-.step2-inner td[colspan="2"],
-.step3-inner td[colspan="2"] {
+.step1-inner td[colspan="2"] {
   text-align: center;
   border-right: none;
 }
+.s1-split-left { width: 350px; }
+.s1-split-right { }
 
-/* 左右分栏 */
-.s1-split-left { width: 400px; }
-.split-left { width: 52%; }
-.split-right { width: 48%; }
-
-/* Step2/Step3 内部样式 */
-.step2-inner td,
-.step3-inner td { vertical-align: middle; }
-.step2-inner .split-left,
-.step2-inner .split-right,
-.step3-inner .split-left,
-.step3-inner .split-right { text-align: center; }
-.step2-inner .split-text,
-.step3-inner .split-text { text-align: left; vertical-align: middle; }
-
-/* 共用单元格样式 */
+/* ============================================================
+   Step1 / Step2 通用列样式
+   ============================================================ */
 .td-step-label {
   font-weight: normal;
   text-align: left;
   vertical-align: middle !important;
   font-size: 14px;
+  padding: 4px 6px !important;
 }
+.td-step-label-center {
+  text-align: center;
+  vertical-align: middle !important;
+  font-weight: bold;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   Step2 单元格样式
+   ============================================================ */
+.td-process-cell {
+  vertical-align: top !important;
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.process-checkbox-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 6px 0;
+}
+.process-fixed-text {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #303133;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.td-record-block {
+  vertical-align: top !important;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.td-record-cell {
+  vertical-align: middle !important;
+  text-align: left;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+.td-record-center {
+  text-align: center;
+}
+
 .td-sign {
   font-size: 12px;
   line-height: 1.5;
@@ -827,17 +1013,13 @@ async function handleApproveSubmit() {
   vertical-align: middle !important;
   padding: 4px 6px !important;
 }
-.step-text {
-  font-size: 13px;
-  line-height: 1.5;
-}
 
 /* ============================================================
-   el-checkbox 微调：统一紧凑样式
+   el-checkbox 紧凑样式
    ============================================================ */
 .view-container :deep(.el-checkbox) {
   height: auto;
-  margin-right: 12px;
+  margin-right: 8px;
   font-size: 13px;
 }
 .view-container :deep(.el-checkbox__label) {
@@ -857,8 +1039,13 @@ async function handleApproveSubmit() {
   border: 1px solid #dcdfe6;
   border-radius: 2px;
   padding: 2px 1px;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
+  vertical-align: middle;
+}
+.edit-input-short:focus {
+  background-color: #e6f7ff;
+  outline: none;
 }
 .edit-textarea {
   width: 100%;
@@ -869,14 +1056,21 @@ async function handleApproveSubmit() {
   resize: vertical;
   box-sizing: border-box;
 }
-.edit-input-short:focus,
 .edit-textarea:focus {
   background-color: #e6f7ff;
   outline: none;
 }
 
 /* ============================================================
-   滚动条：滚动时显示，停止 800ms 后隐藏
+   步骤文字通用
+   ============================================================ */
+.step-text {
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* ============================================================
+   滚动条：滚动显示，停止 800ms 后隐藏
    ============================================================ */
 .view-container::-webkit-scrollbar {
   width: 6px;
@@ -902,5 +1096,57 @@ async function handleApproveSubmit() {
 }
 .view-container.is-scrolling {
   scrollbar-color: rgba(144, 147, 153, 0.5) transparent;
+}
+
+/* Step1 时间行 */
+.s1-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+/* Step2 工艺要求列 */
+.td-process-cell {
+  vertical-align: top !important;
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 物料名称行（无 label，仅组件） */
+.process-material-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+  min-height: 26px;
+}
+
+/* 时间字段行（并排） */
+.process-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+/* 工艺复选框行 */
+.process-checkbox-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 6px 0;
+}
+
+/* 工艺固定文本 */
+.process-fixed-text {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #303133;
+  white-space: normal;
+  word-break: break-word;
 }
 </style>

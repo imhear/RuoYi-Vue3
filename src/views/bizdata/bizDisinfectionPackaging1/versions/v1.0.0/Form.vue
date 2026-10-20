@@ -29,7 +29,7 @@
       <table class="row-table info-table" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">
-          <col style="width: 320px;">
+          <col style="width: 300px;">
           <col style="width: 80px;">
           <col>
           <col style="width: 80px;">
@@ -48,7 +48,7 @@
       <!-- ===== 表头（4 列） ===== -->
       <table class="row-table header-table" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;"><col style="width: 350px;"><col><col style="width: 130px;">
+          <col style="width: 80px;"><col style="width: 300px;"><col><col style="width: 130px;">
         </colgroup>
         <tr>
           <td class="header-value">操作项目</td>
@@ -62,119 +62,124 @@
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">
-          <col style="width: 350px;">
+          <col style="width: 300px;">
           <col>
           <col style="width: 130px;">
         </colgroup>
-        <tr style="height: 120px;">
-          <td class="td-step-label">1.开工前检查</td>
-          <td class="td-no-padding" colspan="2">
-            <table class="inner-fill-table step1-inner" style="border-collapse: collapse; font-size: 12px; width: 100%; height: 100%;">
-              <tr style="height: 120px;">
-                <td class="s1-split-left">
-                  <!-- 时间字段放在固定工艺文本上方 -->
-                  <div class="s1-time-row">
-                    <template v-if="isEditMode">
-                      <el-date-picker v-model="record.s1StartTime" type="datetime" value-format="YYYY-MM-DD HH:mm:00" placeholder="开始时间" size="small" style="width: 155px;" />
-                      <span style="margin: 0 6px;">至</span>
-                      <el-date-picker v-model="record.s1EndTime" type="datetime" value-format="YYYY-MM-DD HH:mm:00" placeholder="结束时间" size="small" style="width: 155px;" />
-                    </template>
-                    <template v-else>
-                      {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
-                    </template>
-                  </div>
-                  <!-- 固定工艺文本 -->
-                  1）一般区操作间温度0～35℃，相对湿度20%～85%；<br/>
-                  2）洁净区温度18～26℃，相对湿度 45%～65%；<br/>
-                  3）该批次生产记录齐全；<br/>
-                  4）岗位操作规程、设备操作规程齐全；<br/>
-                  5）操作间及设备已清洁。
-                </td>
-                <td class="s1-split-right">
-                  温湿度记录：<br/>
-                  一般区：
-                  <template v-if="isEditMode">
-                    <input v-model="record.s1NormalAreaTemperature" class="edit-input-short" placeholder="℃" /> ℃，
-                    <input v-model="record.s1NormalAreaHumidity" class="edit-input-short" placeholder="%" /> %，
-                    洁净区：
-                    <input v-model="record.s1CleanAreaTemperature" class="edit-input-short" placeholder="℃" /> ℃，
-                    <input v-model="record.s1CleanAreaHumidity" class="edit-input-short" placeholder="%" /> %
-                  </template>
-                  <template v-else>
-                    {{ record.s1NormalAreaTemperature || '' }} ℃，{{ record.s1NormalAreaHumidity || '' }} %，
-                    洁净区：{{ record.s1CleanAreaTemperature || '' }} ℃，{{ record.s1CleanAreaHumidity || '' }} %
-                  </template>
-                  <br/>
-                  <div style="height: 5px;"></div>
-                  <span>检查是否合格：</span>
-                  <el-checkbox v-model="record.s1QualifiedFlag" true-value="Y" false-value="" :disabled="!isEditMode">是</el-checkbox>
-                  <el-checkbox v-model="record.s1QualifiedFlag" true-value="N" false-value="" :disabled="!isEditMode">否</el-checkbox>
-                  ；不合格情况说明及处理方式：<br/>
-                  <template v-if="isEditMode">
-                    <textarea v-model="record.s1Remark" class="edit-textarea" rows="2" placeholder="请输入不合格情况说明"></textarea>
-                  </template>
-                  <template v-else>
-                    {{ record.s1Remark || '' }}
-                  </template>
-                </td>
-              </tr>
-            </table>
+        <tr>
+          <td class="td-step-label td-step-label-row">1.开工前检查</td>
+
+          <!-- 第2列：工艺要求（时间 + 5 条固定文本，参考 Step2） -->
+          <td class="td-process-cell">
+            <div class="process-time-row">
+              <template v-if="isEditMode">
+                <el-date-picker
+                  v-model="s1TimeRange"
+                  type="datetimerange"
+                  value-format="YYYY-MM-DD HH:mm:00"
+                  start-placeholder="开始时间"
+                  end-placeholder="结束时间"
+                  size="small"
+                  style="width: 280px;" />
+              </template>
+              <template v-else>
+                {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
+              </template>
+            </div>
+            <div class="process-fixed-text1">
+              1）一般区操作间温度0～35℃，相对湿度20%～85%；<br/>
+              2）洁净区温度18～26℃，相对湿度 45%～65%；<br/>
+              3）该批次生产记录齐全；<br/>
+              4）岗位操作规程、设备操作规程齐全；<br/>
+              5）操作间及设备已清洁。
+            </div>
           </td>
-          <!-- Step1 独立签名列（留空） -->
+
+          <!-- 第3列：操作记录（温湿度 + 检查 + 不合格说明） -->
+          <td class="td-record-cell td-record-block">
+            <div class="step-text">
+              温湿度记录：<br/>
+              一般区：
+              <template v-if="isEditMode">
+                <input v-model="record.s1NormalAreaTemperature" class="edit-input-short" placeholder="℃" /> ℃，
+                <input v-model="record.s1NormalAreaHumidity" class="edit-input-short" placeholder="%" /> %，
+                洁净区：
+                <input v-model="record.s1CleanAreaTemperature" class="edit-input-short" placeholder="℃" /> ℃，
+                <input v-model="record.s1CleanAreaHumidity" class="edit-input-short" placeholder="%" /> %
+              </template>
+              <template v-else>
+                {{ record.s1NormalAreaTemperature || '' }} ℃，{{ record.s1NormalAreaHumidity || '' }} %，
+                洁净区：{{ record.s1CleanAreaTemperature || '' }} ℃，{{ record.s1CleanAreaHumidity || '' }} %
+              </template>
+              <br/>
+              <div style="height: 5px;"></div>
+              <span>检查是否合格：</span>
+              <el-checkbox v-model="record.s1QualifiedFlag" true-value="Y" false-value="" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.s1QualifiedFlag" true-value="N" false-value="" :disabled="!isEditMode">否</el-checkbox>
+              ；不合格情况说明及处理方式：<br/>
+              <template v-if="isEditMode">
+                <textarea v-model="record.s1Remark" class="edit-textarea" rows="2" placeholder="请输入不合格情况说明"></textarea>
+              </template>
+              <template v-else>
+                {{ record.s1Remark || '' }}
+              </template>
+            </div>
+          </td>
+
+          <!-- 第4列：签名（留空） -->
           <td class="td-sign"></td>
         </tr>
       </table>
 
-      <!-- ===== Step2 消毒处理（子表区域，4 行 v-for，无表头） ===== -->
+       <!-- ===== Step2 消毒处理（子表区域，4 行 v-for，无表头） ===== -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;">   <!-- 操作项目（"2.消毒处理"，跨4行） -->
-          <col style="width: 350px;">  <!-- 工艺要求（顶部含物料名称） -->
+          <col style="width: 80px;">   <!-- 操作项目 -->
+          <col style="width: 300px;">  <!-- 工艺要求 -->
           <col>                         <!-- 操作记录 -->
-          <col style="width: 130px;">  <!-- 签名（承载 3 组，跨4行） -->
+          <col style="width: 130px;">  <!-- 签名（跨4行） -->
         </colgroup>
-        <tr v-for="(item, idx) in paddedStep2List" :key="idx" style="height: 160px;">
-          <!-- 操作项目：仅第一行渲染，跨 4 行 -->
-          <td v-if="idx === 0" class="td-step-label" :rowspan="paddedStep2List.length">
-            2.消毒<br/>处理
+        <tr v-for="(item, idx) in paddedStep2List" :key="idx" style="height: 125px;">
+          <!-- 第1列：每行独立（编辑态：物料下拉 + 回显；非编辑态：2.n 物料名处理） -->
+          <td class="td-step-label td-step-label-row">
+            <template v-if="isEditMode">
+              <div class="step-row-top">
+                <div class="step-material-wrap">
+                  <BaseCategorySelect
+                    v-model="item.materialCode"
+                    api-url="/basic/material/listByCategory"
+                    :category-code="MATERIAL_CATEGORY_CODE"
+                    placeholder=""
+                    @change="(code, name) => handleSelectChange(item, 'material', code, name)"
+                  />
+                </div>
+              </div>
+              <div class="step-row-echo">
+                2.{{ idx + 1 }}{{ item.materialName || '' }}
+                <br/>处理
+              </div>
+            </template>
+            <template v-else>
+              <div class="step-row-view">
+                2.{{ idx + 1 }} {{ item.materialName || '' }}处理
+              </div>
+            </template>
           </td>
 
-          <!-- 工艺要求列（顶部：物料名称；下方：时间 + 工艺复选 + 工艺文本） -->
+          <!-- 第2列：工艺要求（时间 + 工艺复选 + 工艺文本） -->
           <td class="td-process-cell">
-            <!-- 物料名称（顶部） -->
-            <div class="process-material-row">
-              <template v-if="isEditMode">
-                <BaseCategorySelect
-                  v-model="item.materialCode"
-                  api-url="/basic/material/listByCategory"
-                  :category-code="MATERIAL_CATEGORY_CODE"
-                  placeholder=""
-                  @change="(code, name) => handleSelectChange(item, 'material', code, name)"
-                />
-              </template>
-              <template v-else>
-                <span>{{ item.materialName || '' }}</span>
-              </template>
-            </div>
-
-            <!-- 时间字段并排（placeholder 提示） -->
+            <!-- 时间字段：datetimerange 单组件（编辑态） / 纯文本（非编辑态） -->
             <div class="process-time-row">
               <template v-if="isEditMode">
                 <el-date-picker
-                  v-model="item.stepStartTime"
-                  type="datetime"
+                  :model-value="getStepTimeRange(item)"
+                  @update:model-value="(val) => setStepTimeRange(item, val)"
+                  type="datetimerange"
                   value-format="YYYY-MM-DD HH:mm:00"
-                  placeholder="开始时间"
+                  start-placeholder="开始时间"
+                  end-placeholder="结束时间"
                   size="small"
-                  style="width: 155px;" />
-                <span style="margin: 0 6px;">至</span>
-                <el-date-picker
-                  v-model="item.stepEndTime"
-                  type="datetime"
-                  value-format="YYYY-MM-DD HH:mm:00"
-                  placeholder="结束时间"
-                  size="small"
-                  style="width: 155px;" />
+                  style="width: 280px;" />
               </template>
               <template v-else>
                 {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
@@ -202,7 +207,7 @@
             </div>
 
             <!-- 工艺固定文本（未选时提示，选中时展示对应文本） -->
-            <div class="process-fixed-text1" style="border-collapse: collapse; font-size: 12px; width: 100%; height: 100%;">
+            <div class="process-fixed-text1">
               <template v-if="!item.disinfectionProcess">
                 <span style="color: #909399;">请选择工艺</span>
               </template>
@@ -234,51 +239,56 @@
             </div>
           </td>
 
-          <!-- 操作记录列（6 子块） -->
+          <!-- 第3列：操作记录（6 子块） -->
           <td class="td-record-cell td-record-block">
             <div class="step-text">
-                            <!-- 1）设备/编码（v1.3：固定 2 组通用设备，下拉显示名称 + 只读显示编码） -->
+              <!-- 1）设备/编码（固定 2 组通用设备） -->
               <div class="device-row">
                 <span class="device-row-label">1）设备/编码：</span>
-                <!-- 设备 1：下拉显示名称，只读框显示编码 -->
-                <el-select
-                  v-model="item.deviceCode1"
-                  size="small"
-                  :disabled="!isEditMode"
-                  placeholder="请选择设备1"
-                  class="device-select"
-                  @change="(code) => handleDeviceChange(item, 1, code)">
-                  <el-option
-                    v-for="opt in DEVICE_OPTIONS"
-                    :key="opt.code"
-                    :label="opt.name"
-                    :value="opt.code" />
-                </el-select>
-                <input
-                  v-model="item.deviceCode1"
-                  readonly
-                  class="edit-input-device-code"
-                  placeholder="编码" />
-                <!-- 设备 2 -->
-                <el-select
-                  v-model="item.deviceCode2"
-                  size="small"
-                  :disabled="!isEditMode"
-                  placeholder="请选择设备2"
-                  class="device-select"
-                  style="margin-left: 12px;"
-                  @change="(code) => handleDeviceChange(item, 2, code)">
-                  <el-option
-                    v-for="opt in DEVICE_OPTIONS"
-                    :key="opt.code"
-                    :label="opt.name"
-                    :value="opt.code" />
-                </el-select>
-                <input
-                  v-model="item.deviceCode2"
-                  readonly
-                  class="edit-input-device-code"
-                  placeholder="编码" />
+                <template v-if="isEditMode">
+                  <!-- 设备 1：下拉显示名称，只读框显示编码 -->
+                  <el-select
+                    v-model="item.deviceCode1"
+                    size="small"
+                    placeholder="请选择设备1"
+                    class="device-select"
+                    @change="(code) => handleDeviceChange(item, 1, code)">
+                    <el-option
+                      v-for="opt in DEVICE_OPTIONS"
+                      :key="opt.code"
+                      :label="opt.name"
+                      :value="opt.code" />
+                  </el-select>
+                  <input
+                    v-model="item.deviceCode1"
+                    readonly
+                    class="edit-input-device-code"
+                    placeholder="编码" />
+                  <!-- 设备 2 -->
+                  <el-select
+                    v-model="item.deviceCode2"
+                    size="small"
+                    placeholder="请选择设备2"
+                    class="device-select"
+                    style="margin-left: 12px;"
+                    @change="(code) => handleDeviceChange(item, 2, code)">
+                    <el-option
+                      v-for="opt in DEVICE_OPTIONS"
+                      :key="opt.code"
+                      :label="opt.name"
+                      :value="opt.code" />
+                  </el-select>
+                  <input
+                    v-model="item.deviceCode2"
+                    readonly
+                    class="edit-input-device-code"
+                    placeholder="编码" />
+                </template>
+                <template v-else>
+                  <!-- 非编辑态：显示 名称（编码） -->
+                  <span>{{ item.deviceName1 || '' }}<template v-if="item.deviceCode1">（{{ item.deviceCode1 }}）</template></span>
+                  <span v-if="item.deviceCode2" style="margin-left: 12px;">{{ item.deviceName2 || '' }}<template v-if="item.deviceCode2">（{{ item.deviceCode2 }}）</template></span>
+                </template>
               </div>
 
               <!-- 2）消毒 -->
@@ -288,42 +298,60 @@
                   <span style="font-weight: bold;">臭氧</span>
                 </template>
                 <template v-else-if="item.disinfectionProcess">
-                  <el-select
-                    v-model="item.disinfectionMethod"
-                    size="small"
-                    :disabled="!isEditMode"
-                    placeholder="请选择消毒方式"
-                    style="width: 130px;">
-                    <el-option
-                      v-for="opt in getMethodOptions(item.disinfectionProcess)"
-                      :key="opt.value"
-                      :label="opt.label"
-                      :value="opt.value" />
-                  </el-select>
+                  <template v-if="isEditMode">
+                    <el-select
+                      v-model="item.disinfectionMethod"
+                      size="small"
+                      placeholder="请选择消毒方式"
+                      style="width: 110px;">
+                      <el-option
+                        v-for="opt in getMethodOptions(item.disinfectionProcess)"
+                        :key="opt.value"
+                        :label="opt.label"
+                        :value="opt.value" />
+                    </el-select>
+                  </template>
+                  <template v-else>
+                    <span style="font-weight: bold;">{{ getMethodLabel(item.disinfectionMethod) }}</span>
+                  </template>
                 </template>
                 <template v-else>
                   <span style="color: #909399;">请先选择工艺</span>
                 </template>
 
+                <!-- 设备参数（按消毒方式动态显示） -->
                 <template v-if="isParamVisible(item.disinfectionMethod)">
                   ，{{ getParamLabel(item.disinfectionMethod) }}
                   <input v-if="isEditMode" v-model="item.disinfectionParam" class="edit-input-short" style="width: 50px;" />
                   <span v-else>{{ item.disinfectionParam || '' }}</span>
                   {{ getParamUnit(item.disinfectionMethod) }}
                 </template>
-                <br/>
 
+                <!-- 消毒时间 + 时长 -->
                 <template v-if="item.disinfectionProcess">
-                  <span style="margin-left: 20px;">
+                  <span style="margin-left: 8px;">
                     消毒时间
                     <template v-if="isEditMode">
-                      <el-time-picker v-model="item.disinfectionStartTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
-                      至 <el-time-picker v-model="item.disinfectionEndTime" value-format="HH:mm:00" placeholder="" size="small" style="width: 100px;" />
+                      <el-time-picker
+                        :model-value="getDisinfectionTimeRange(item)"
+                        @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
+                        is-range
+                        value-format="HH:mm:00"
+                        start-placeholder="开始时间"
+                        end-placeholder="结束时间"
+                        size="small"
+                        style="width: 120px;" />
                     </template>
                     <template v-else>
                       {{ formatHm(item.disinfectionStartTime) }} 至 {{ formatHm(item.disinfectionEndTime) }}
                     </template>
-                    ，共 <input v-model="item.disinfectionCost" disabled class="edit-input-short" /> 分钟
+                    ，共
+                    <template v-if="isEditMode">
+                      <input v-model="item.disinfectionCost" disabled class="edit-input-short" /> 分钟
+                    </template>
+                    <template v-else>
+                      {{ item.disinfectionCost || '' }} 分钟
+                    </template>
                   </span>
                 </template>
               </div>
@@ -356,7 +384,7 @@
                   @change="(val) => { item.cleanBagFlag = val ? 'N' : '' }">否</el-checkbox>
               </div>
 
-              <!-- 6）内包装是否完整（附加项） -->
+              <!-- 6）内包装是否完整 -->
               <div style="margin-top: 4px;">
                 <span>6）内包装是否完整：</span>
                 <el-checkbox :model-value="item.innerPackagingIntactFlag === 'Y'" :disabled="!isEditMode"
@@ -368,7 +396,7 @@
             </div>
           </td>
 
-          <!-- 签名列：仅第一行渲染，跨 4 行，承载 3 组签名 -->
+          <!-- 第4列：签名（仅第一行渲染，跨 4 行） -->
           <td v-if="idx === 0" class="td-sign" :rowspan="paddedStep2List.length">
             <div>操作人：{{ submitSignatureName }}</div>
             <div>{{ submitSignatureTime }}</div>
@@ -459,6 +487,80 @@ const isEditMode = computed(() => props.actionType === 'EDIT')
 const isPreviewMode = computed(() => props.actionType === 'PREVIEW')
 const isApproveMode = computed(() => !isEditMode.value && !isPreviewMode.value)
 
+// ==================== Step1 时间范围（datetimerange 双向绑定） ====================
+/**
+ * Step1 时间范围：将 s1StartTime / s1EndTime 两个独立字段映射为 [start, end] 数组
+ * 供 el-date-picker type="datetimerange" 使用，落库仍写入独立字段
+ */
+const s1TimeRange = computed({
+  get: () => {
+    if (!record.s1StartTime && !record.s1EndTime) return null
+    return [record.s1StartTime || '', record.s1EndTime || '']
+  },
+  set: (val) => {
+    if (Array.isArray(val) && val.length === 2) {
+      record.s1StartTime = val[0] || null
+      record.s1EndTime = val[1] || null
+    } else {
+      record.s1StartTime = null
+      record.s1EndTime = null
+    }
+  }
+})
+
+// ==================== Step2 工艺时间范围（datetimerange 双向绑定） ====================
+/**
+ * 获取当前行的工艺时间范围（用于 datetimerange 组件的 :model-value）
+ * @param {Object} item Step2 行数据
+ * @returns {Array|null} [start, end] 或 null
+ */
+function getStepTimeRange(item) {
+  if (!item.stepStartTime && !item.stepEndTime) return null
+  return [item.stepStartTime || '', item.stepEndTime || '']
+}
+
+/**
+ * 设置当前行的工艺时间范围（用于 datetimerange 组件的 @update:model-value）
+ * @param {Object} item Step2 行数据
+ * @param {Array|null} val 选中的范围数组或 null
+ */
+function setStepTimeRange(item, val) {
+  if (Array.isArray(val) && val.length === 2) {
+    item.stepStartTime = val[0] || null
+    item.stepEndTime = val[1] || null
+  } else {
+    item.stepStartTime = null
+    item.stepEndTime = null
+  }
+}
+
+// ==================== Step2 消毒时间范围（time is-range 双向绑定） ====================
+/**
+ * 获取当前行的消毒时间范围（用于 is-range time-picker 的 :model-value）
+ * @param {Object} item Step2 行数据
+ * @returns {Array|null} [start, end] 或 null
+ */
+function getDisinfectionTimeRange(item) {
+  if (!item.disinfectionStartTime && !item.disinfectionEndTime) return null
+  return [item.disinfectionStartTime || '', item.disinfectionEndTime || '']
+}
+
+/**
+ * 设置当前行的消毒时间范围（用于 is-range time-picker 的 @update:model-value）
+ * 落库字段仍为 disinfectionStartTime / disinfectionEndTime（不变）
+ * 注意：时长自动计算由 watch(record.step2List) 触发，此处赋值后自动联动
+ * @param {Object} item Step2 行数据
+ * @param {Array|null} val 选中的范围数组或 null
+ */
+function setDisinfectionTimeRange(item, val) {
+  if (Array.isArray(val) && val.length === 2) {
+    item.disinfectionStartTime = val[0] || null
+    item.disinfectionEndTime = val[1] || null
+  } else {
+    item.disinfectionStartTime = null
+    item.disinfectionEndTime = null
+  }
+}
 // ==================== 滚动条显隐控制 ====================
 const isScrolling = ref(false)
 let scrollHideTimer = null
@@ -652,6 +754,15 @@ function getParamUnit(method) {
   return ''
 }
 
+/** 获取消毒方式的中文标签（用于非编辑态纯文本展示） */
+function getMethodLabel(method) {
+  if (method === 'method_OZONE') return '臭氧'
+  if (method === 'method_HIGH_TEMP') return '高温'
+  if (method === 'method_WASHER_DRYER') return '洗烘一体机'
+  if (method === 'method_ALCOHOL') return '75%酒精消毒'
+  if (method === 'method_UV') return '紫外线消毒'
+  return ''
+}
 // ==================== 数据加载 ====================
 onMounted(async () => {
   await loadFNodes()
@@ -988,7 +1099,7 @@ async function handleApproveSubmit() {
 /* ============================================================
    Step1 内部样式（保留原有视觉）
    ============================================================ */
-.step1-inner td {
+/* .step1-inner td {
   border-bottom: 1px solid #dcdfe6;
   padding: 4px 0px;
 }
@@ -1001,9 +1112,7 @@ async function handleApproveSubmit() {
 .step1-inner td[colspan="2"] {
   text-align: center;
   border-right: none;
-}
-.s1-split-left { width: 350px; }
-.s1-split-right { }
+} */
 
 /* ============================================================
    Step1 / Step2 通用列样式
@@ -1015,55 +1124,6 @@ async function handleApproveSubmit() {
   font-size: 14px;
   padding: 4px 6px !important;
 }
-
-/* ============================================================
-   Step2 单元格样式
-   ============================================================ */
-/* .td-process-cell {
-  vertical-align: top !important;
-  padding: 6px 8px;
-  font-size: 13px;
-  line-height: 1.0;
-}
-.process-checkbox-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 4px 0 6px 0;
-}
-.process-fixed-text {
-  margin-top: 4px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #303133;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.td-record-block {
-  vertical-align: top !important;
-  padding: 6px 8px;
-  font-size: 12px;
-  line-height: 1.0;
-}
-
-.td-record-cell {
-  vertical-align: middle !important;
-  text-align: left;
-  padding: 4px 6px;
-  font-size: 13px;
-}
-.td-record-center {
-  text-align: center;
-}
-
-.td-sign {
-  font-size: 12px;
-  line-height: 1.5;
-  text-align: left;
-  vertical-align: middle !important;
-  padding: 4px 6px !important;
-} */
 
 /* ============================================================
    el-checkbox 紧凑样式
@@ -1180,13 +1240,13 @@ async function handleApproveSubmit() {
 }
 
 /* Step1 时间行 */
-.s1-time-row {
+/* .s1-time-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 6px;
+  margin-bottom: 1px;
   font-size: 13px;
-}
+} */
 
 /* Step2 工艺要求列 */
 .td-process-cell {
@@ -1196,38 +1256,74 @@ async function handleApproveSubmit() {
   line-height: 1.1;
 }
 
-/* 物料名称行（无 label，仅组件） */
-.process-material-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 6px;
-  min-height: 26px;
-}
-
 /* 时间字段行（并排） */
 .process-time-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 6px;
+  margin-bottom: 1px;
   font-size: 13px;
 }
 
-/* 工艺复选框行 */
-.process-checkbox-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 4px 0 6px 0;
-}
-
-/* 工艺固定文本 */
-.process-fixed-text {
-  margin-top: 4px;
+/* 工艺固定文本（Step1 / Step2 共用，统一风格） */
+.process-fixed-text1 {
   font-size: 12px;
   line-height: 1.5;
   color: #303133;
   white-space: normal;
   word-break: break-word;
+}
+/* ============================================================
+   Step2 第1列（v1.4 改造：每行独立，2.n + 下拉框 + 回显）
+   ============================================================ */
+.td-step-label-row {
+  text-align: left;
+  padding: 4px 4px !important;
+  vertical-align: middle !important;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* 编辑态顶部：2.n + 下拉框（flex-wrap 自动换行） */
+.step-row-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.step-no {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.step-material-wrap {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+/* BaseCategorySelect 内部 el-select / el-input 宽度撑满 */
+.step-material-wrap :deep(.el-select),
+.step-material-wrap :deep(.el-input) {
+  width: 100%;
+  min-width: 0;
+}
+
+/* 编辑态回显：物料名 + 处理（自动换行） */
+.step-row-echo {
+  font-size: 11px;
+  color: #606266;
+  word-break: break-all;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* 非编辑态：2.n 物料名处理（自动换行） */
+.step-row-view {
+  font-size: 12px;
+  color: #303133;
+  word-break: break-all;
+  word-wrap: break-word;
+  line-height: 1.4;
 }
 </style>

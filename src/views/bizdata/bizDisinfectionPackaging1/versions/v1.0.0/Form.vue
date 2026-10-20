@@ -83,7 +83,10 @@
                   style="width: 280px;" />
               </template>
               <template v-else>
-                {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
+                <span class="filled-value" style="color: #4046ff;">
+                {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}-{m}-{d} {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}-{m}-{d} {h}:{i}') : '' }}
+                </span>
+                <!-- {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} -->
               </template>
             </div>
             <div class="process-fixed-text1">
@@ -97,31 +100,40 @@
 
           <!-- 第3列：操作记录（温湿度 + 检查 + 不合格说明） -->
           <td class="td-record-cell td-record-block">
-            <div class="step-text">
-              温湿度记录：<br/>
-              一般区：
+            <div :class="isEditMode ? 'step-text' : 'record-view-text'">
+              <!-- ========== 编辑态：输入框 + checkbox ========== -->
               <template v-if="isEditMode">
+                温湿度记录：<br/>
+                一般区：
                 <input v-model="record.s1NormalAreaTemperature" class="edit-input-short" placeholder="℃" /> ℃，
                 <input v-model="record.s1NormalAreaHumidity" class="edit-input-short" placeholder="%" /> %，
                 洁净区：
                 <input v-model="record.s1CleanAreaTemperature" class="edit-input-short" placeholder="℃" /> ℃，
                 <input v-model="record.s1CleanAreaHumidity" class="edit-input-short" placeholder="%" /> %
-              </template>
-              <template v-else>
-                {{ record.s1NormalAreaTemperature || '' }} ℃，{{ record.s1NormalAreaHumidity || '' }} %，
-                洁净区：{{ record.s1CleanAreaTemperature || '' }} ℃，{{ record.s1CleanAreaHumidity || '' }} %
-              </template>
-              <br/>
-              <div style="height: 5px;"></div>
-              <span>检查是否合格：</span>
-              <el-checkbox v-model="record.s1QualifiedFlag" true-value="Y" false-value="" :disabled="!isEditMode">是</el-checkbox>
-              <el-checkbox v-model="record.s1QualifiedFlag" true-value="N" false-value="" :disabled="!isEditMode">否</el-checkbox>
-              ；不合格情况说明及处理方式：<br/>
-              <template v-if="isEditMode">
+                <br/>
+                <div style="height: 5px;"></div>
+                <span>检查是否合格：</span>
+                <el-checkbox v-model="record.s1QualifiedFlag" true-value="Y" false-value="">是</el-checkbox>
+                <el-checkbox v-model="record.s1QualifiedFlag" true-value="N" false-value="">否</el-checkbox>
+                ；不合格情况说明及处理方式：<br/>
                 <textarea v-model="record.s1Remark" class="edit-textarea" rows="2" placeholder="请输入不合格情况说明"></textarea>
               </template>
+
+              <!-- ========== 非编辑态：纯文本 + 动态值突出 ========== -->
               <template v-else>
-                {{ record.s1Remark || '' }}
+                温湿度记录：<br/>
+                一般区：
+                <span class="filled-value">{{ record.s1NormalAreaTemperature || '' }}</span> ℃，
+                <span class="filled-value">{{ record.s1NormalAreaHumidity || '' }}</span> %，
+                洁净区：
+                <span class="filled-value">{{ record.s1CleanAreaTemperature || '' }}</span> ℃，
+                <span class="filled-value">{{ record.s1CleanAreaHumidity || '' }}</span> %
+                <br/>
+                <div style="height: 5px;"></div>
+                <span>检查是否合格：</span>
+                <span class="filled-value">{{ record.s1QualifiedFlag === 'Y' ? '是' : (record.s1QualifiedFlag === 'N' ? '否' : '') }}</span>
+                ；不合格情况说明及处理方式：<br/>
+                <span class="filled-value">{{ record.s1Remark || '' }}</span>
               </template>
             </div>
           </td>
@@ -139,7 +151,7 @@
           <col>                         <!-- 操作记录 -->
           <col style="width: 130px;">  <!-- 签名（跨4行） -->
         </colgroup>
-        <tr v-for="(item, idx) in paddedStep2List" :key="idx" style="height: 125px;">
+        <tr v-for="(item, idx) in paddedStep2List" :key="idx" style="height: 105px;">
           <!-- 第1列：每行独立（编辑态：物料下拉 + 回显；非编辑态：2.n 物料名处理） -->
           <td class="td-step-label td-step-label-row">
             <template v-if="isEditMode">
@@ -182,12 +194,15 @@
                   style="width: 280px;" />
               </template>
               <template v-else>
-                {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }}
+                <span class="filled-value" style="color: #4046ff;">
+                {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}-{m}-{d} {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}-{m}-{d} {h}:{i}') : '' }}
+                </span>
+                <!-- {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} -->
               </template>
             </div>
 
             <!-- 工艺单选（4 个复选框视觉，行为互斥） -->
-            <div class="process-checkbox-row">
+            <div class="process-checkbox-row" style="text-align: center;">
               <el-checkbox
                 :model-value="item.disinfectionProcess === 'process_OZONE1'"
                 :disabled="!isEditMode"
@@ -209,7 +224,8 @@
             <!-- 工艺固定文本（未选时提示，选中时展示对应文本） -->
             <div class="process-fixed-text1">
               <template v-if="!item.disinfectionProcess">
-                <span style="color: #909399;">请选择工艺</span>
+                <br/>
+                <span style="color: #ff0000;">外盖、内塞、手拉垫、泵头、次抛，请选择工艺：臭氧2</span>
               </template>
               <template v-else-if="item.disinfectionProcess === 'process_OZONE1'">
                 1）脱包；<br/>
@@ -239,99 +255,55 @@
             </div>
           </td>
 
-          <!-- 第3列：操作记录（6 子块） -->
+          <!-- 第3列：操作记录（按工艺物理拆分：臭氧1 / 高温 / 臭氧2 / 风淋） -->
           <td class="td-record-cell td-record-block">
-            <div class="step-text">
-              <!-- 1）设备/编码（固定 2 组通用设备） -->
-              <div class="device-row">
-                <span class="device-row-label">1）设备/编码：</span>
-                <template v-if="isEditMode">
-                  <!-- 设备 1：下拉显示名称，只读框显示编码 -->
-                  <el-select
-                    v-model="item.deviceCode1"
-                    size="small"
-                    placeholder="请选择设备1"
-                    class="device-select"
-                    @change="(code) => handleDeviceChange(item, 1, code)">
-                    <el-option
-                      v-for="opt in DEVICE_OPTIONS"
-                      :key="opt.code"
-                      :label="opt.name"
-                      :value="opt.code" />
-                  </el-select>
-                  <input
-                    v-model="item.deviceCode1"
-                    readonly
-                    class="edit-input-device-code"
-                    placeholder="编码" />
-                  <!-- 设备 2 -->
-                  <el-select
-                    v-model="item.deviceCode2"
-                    size="small"
-                    placeholder="请选择设备2"
-                    class="device-select"
-                    style="margin-left: 12px;"
-                    @change="(code) => handleDeviceChange(item, 2, code)">
-                    <el-option
-                      v-for="opt in DEVICE_OPTIONS"
-                      :key="opt.code"
-                      :label="opt.name"
-                      :value="opt.code" />
-                  </el-select>
-                  <input
-                    v-model="item.deviceCode2"
-                    readonly
-                    class="edit-input-device-code"
-                    placeholder="编码" />
-                </template>
-                <template v-else>
-                  <!-- 非编辑态：显示 名称（编码） -->
-                  <span>{{ item.deviceName1 || '' }}<template v-if="item.deviceCode1">（{{ item.deviceCode1 }}）</template></span>
-                  <span v-if="item.deviceCode2" style="margin-left: 12px;">{{ item.deviceName2 || '' }}<template v-if="item.deviceCode2">（{{ item.deviceCode2 }}）</template></span>
-                </template>
-              </div>
+            <div :class="isEditMode ? 'step-text' : 'record-view-text'">
 
-              <!-- 2）消毒 -->
-              <div style="margin-top: 4px;">
-                <span>2）消毒：</span>
-                <template v-if="item.disinfectionProcess === 'process_OZONE1' || item.disinfectionProcess === 'process_OZONE2'">
-                  <span style="font-weight: bold;">臭氧</span>
-                </template>
-                <template v-else-if="item.disinfectionProcess">
-                  <template v-if="isEditMode">
+              <!-- ============================ 编辑态 ============================ -->
+              <template v-if="isEditMode">
+
+                <!-- ========== 工艺：臭氧1 ========== -->
+                <template v-if="item.disinfectionProcess === 'process_OZONE1'">
+                  <!-- 1）设备/编码 -->
+                  <div class="device-row">
+                    <span class="device-row-label">1）设备/编码：</span>
                     <el-select
-                      v-model="item.disinfectionMethod"
+                      v-model="item.deviceCode1"
                       size="small"
-                      placeholder="请选择消毒方式"
-                      style="width: 110px;">
+                      placeholder="请选择设备1"
+                      class="device-select"
+                      @change="(code) => handleDeviceChange(item, 1, code)">
                       <el-option
-                        v-for="opt in getMethodOptions(item.disinfectionProcess)"
-                        :key="opt.value"
-                        :label="opt.label"
-                        :value="opt.value" />
+                        v-for="opt in DEVICE_OPTIONS"
+                        :key="opt.code"
+                        :label="opt.name"
+                        :value="opt.code" />
                     </el-select>
-                  </template>
-                  <template v-else>
-                    <span style="font-weight: bold;">{{ getMethodLabel(item.disinfectionMethod) }}</span>
-                  </template>
-                </template>
-                <template v-else>
-                  <span style="color: #909399;">请先选择工艺</span>
-                </template>
-
-                <!-- 设备参数（按消毒方式动态显示） -->
-                <template v-if="isParamVisible(item.disinfectionMethod)">
-                  ，{{ getParamLabel(item.disinfectionMethod) }}
-                  <input v-if="isEditMode" v-model="item.disinfectionParam" class="edit-input-short" style="width: 50px;" />
-                  <span v-else>{{ item.disinfectionParam || '' }}</span>
-                  {{ getParamUnit(item.disinfectionMethod) }}
-                </template>
-
-                <!-- 消毒时间 + 时长 -->
-                <template v-if="item.disinfectionProcess">
-                  <span style="margin-left: 8px;">
-                    消毒时间
-                    <template v-if="isEditMode">
+                    <input v-model="item.deviceCode1" readonly class="edit-input-device-code" placeholder="编码" />
+                    <el-select
+                      v-model="item.deviceCode2"
+                      size="small"
+                      placeholder="请选择设备2"
+                      class="device-select"
+                      style="margin-left: 20px;"
+                      @change="(code) => handleDeviceChange(item, 2, code)">
+                      <el-option
+                        v-for="opt in DEVICE_OPTIONS"
+                        :key="opt.code"
+                        :label="opt.name"
+                        :value="opt.code" />
+                    </el-select>
+                    <input v-model="item.deviceCode2" readonly class="edit-input-device-code" placeholder="编码" />
+                  </div>
+                  <!-- 2）消毒 -->
+                  <div style="margin-top: 0px;">
+                    <span>2）消毒</span>
+                    <span style="font-weight: bold; margin-left: 18px;">臭氧</span>
+                    ，臭氧浓度
+                    <input v-model="item.disinfectionParam" class="edit-input-short" style="width: 50px;" /> ppm
+                    <br/>
+                    <span style="margin-left: 18px;">
+                      消毒时间
                       <el-time-picker
                         :model-value="getDisinfectionTimeRange(item)"
                         @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
@@ -341,58 +313,428 @@
                         end-placeholder="结束时间"
                         size="small"
                         style="width: 120px;" />
-                    </template>
-                    <template v-else>
-                      {{ formatHm(item.disinfectionStartTime) }} 至 {{ formatHm(item.disinfectionEndTime) }}
-                    </template>
-                    ，共
-                    <template v-if="isEditMode">
-                      <input v-model="item.disinfectionCost" disabled class="edit-input-short" /> 分钟
-                    </template>
-                    <template v-else>
-                      {{ item.disinfectionCost || '' }} 分钟
-                    </template>
-                  </span>
+                      ，共 <input v-model="item.disinfectionCost" disabled class="edit-input-short" /> 分钟
+                    </span>
+                  </div>
+                  <!-- 3）干净干燥完好 -->
+                  <div style="margin-top: 0px;">
+                    <span>3）是否干净，干燥、完好、外观无变色：</span>
+                    <el-checkbox :model-value="item.waiguanFlag === 'Y'"
+                      @change="(val) => { item.waiguanFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.waiguanFlag === 'N'"
+                      @change="(val) => { item.waiguanFlag = val ? 'N' : '' }">否</el-checkbox>
+                  </div>
+                  <!-- 4）装入洁净袋 -->
+                  <div style="margin-top: 0px;">
+                    <span>4）是否装入洁净袋：</span>
+                    <el-checkbox :model-value="item.cleanBagFlag === 'Y'"
+                      @change="(val) => { item.cleanBagFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.cleanBagFlag === 'N'"
+                      @change="(val) => { item.cleanBagFlag = val ? 'N' : '' }">否</el-checkbox>
+                  </div>
                 </template>
-              </div>
 
-              <!-- 3）是否干净，干燥、完好、外观无变色 -->
-              <div style="margin-top: 4px;">
-                <span>3）是否干净，干燥、完好、外观无变色：</span>
-                <el-checkbox :model-value="item.waiguanFlag === 'Y'" :disabled="!isEditMode"
-                  @change="(val) => { item.waiguanFlag = val ? 'Y' : '' }">是</el-checkbox>
-                <el-checkbox :model-value="item.waiguanFlag === 'N'" :disabled="!isEditMode"
-                  @change="(val) => { item.waiguanFlag = val ? 'N' : '' }">否</el-checkbox>
-              </div>
+                <!-- ========== 工艺：高温 ========== -->
+                <template v-else-if="item.disinfectionProcess === 'process_HIGH_TEMP'">
+                  <!-- 1）设备/编码 -->
+                  <div class="device-row">
+                    <span class="device-row-label">1）设备/编码：</span>
+                    <el-select
+                      v-model="item.deviceCode1"
+                      size="small"
+                      placeholder="请选择设备1"
+                      class="device-select"
+                      @change="(code) => handleDeviceChange(item, 1, code)">
+                      <el-option
+                        v-for="opt in DEVICE_OPTIONS"
+                        :key="opt.code"
+                        :label="opt.name"
+                        :value="opt.code" />
+                    </el-select>
+                    <input v-model="item.deviceCode1" readonly class="edit-input-device-code" placeholder="编码" />
+                    <el-select
+                      v-model="item.deviceCode2"
+                      size="small"
+                      placeholder="请选择设备2"
+                      class="device-select"
+                      style="margin-left: 20px;"
+                      @change="(code) => handleDeviceChange(item, 2, code)">
+                      <el-option
+                        v-for="opt in DEVICE_OPTIONS"
+                        :key="opt.code"
+                        :label="opt.name"
+                        :value="opt.code" />
+                    </el-select>
+                    <input v-model="item.deviceCode2" readonly class="edit-input-device-code" placeholder="编码" />
+                  </div>
+                  <!-- 2）消毒 -->
+                  <div style="margin-top: 0px;">
+                    <span>2）消毒</span>
+                    <el-select
+                      v-model="item.disinfectionMethod"
+                      size="small"
+                      placeholder="请选择消毒方式"
+                      style="width: 110px; margin-left: 18px;">
+                      <el-option
+                        v-for="opt in getMethodOptions(item.disinfectionProcess)"
+                        :key="opt.value"
+                        :label="opt.label"
+                        :value="opt.value" />
+                    </el-select>
+                    <template v-if="isParamVisible(item.disinfectionMethod)">
+                      ，{{ getParamLabel(item.disinfectionMethod) }}
+                      <input v-model="item.disinfectionParam" class="edit-input-short" style="width: 50px;" />
+                      {{ getParamUnit(item.disinfectionMethod) }}
+                    </template>
+                    <br/>
+                    <span style="margin-left: 18px;">
+                      消毒时间
+                      <el-time-picker
+                        :model-value="getDisinfectionTimeRange(item)"
+                        @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
+                        is-range
+                        value-format="HH:mm:00"
+                        start-placeholder="开始时间"
+                        end-placeholder="结束时间"
+                        size="small"
+                        style="width: 120px;" />
+                      ，共 <input v-model="item.disinfectionCost" disabled class="edit-input-short" /> 分钟
+                    </span>
+                  </div>
+                  <!-- 3）干净干燥完好 -->
+                  <div style="margin-top: 0px;">
+                    <span>3）是否干净，干燥、完好、外观无变色：</span>
+                    <el-checkbox :model-value="item.waiguanFlag === 'Y'"
+                      @change="(val) => { item.waiguanFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.waiguanFlag === 'N'"
+                      @change="(val) => { item.waiguanFlag = val ? 'N' : '' }">否</el-checkbox>
+                  </div>
+                  <!-- 4）洗瓶用水是否纯化水（高温专属） -->
+                  <div style="margin-top: 0px;">
+                    <span>4）洗瓶用水是否纯化水：</span>
+                    <el-checkbox :model-value="item.purifiedWaterFlag === 'Y'"
+                      @change="(val) => { item.purifiedWaterFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.purifiedWaterFlag === 'N'"
+                      @change="(val) => { item.purifiedWaterFlag = val ? 'N' : '' }">否</el-checkbox>
+                    <el-checkbox v-model="item.noPurifiedWaterFlag" true-value="Y" false-value="" style="margin-left: 8px;">无此项</el-checkbox>
+                  </div>
+                  <!-- 5）装入洁净袋 -->
+                  <div style="margin-top: 0px;">
+                    <span>5）是否装入洁净袋：</span>
+                    <el-checkbox :model-value="item.cleanBagFlag === 'Y'"
+                      @change="(val) => { item.cleanBagFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.cleanBagFlag === 'N'"
+                      @change="(val) => { item.cleanBagFlag = val ? 'N' : '' }">否</el-checkbox>
+                  </div>
+                </template>
 
-              <!-- 4）洗瓶用水是否纯化水 -->
-              <div style="margin-top: 4px;">
-                <span>4）洗瓶用水是否纯化水：</span>
-                <el-checkbox :model-value="item.purifiedWaterFlag === 'Y'" :disabled="!isEditMode"
-                  @change="(val) => { item.purifiedWaterFlag = val ? 'Y' : '' }">是</el-checkbox>
-                <el-checkbox :model-value="item.purifiedWaterFlag === 'N'" :disabled="!isEditMode"
-                  @change="(val) => { item.purifiedWaterFlag = val ? 'N' : '' }">否</el-checkbox>
-                <el-checkbox v-model="item.noPurifiedWaterFlag" true-value="Y" false-value="" :disabled="!isEditMode" style="margin-left: 8px;">无此项</el-checkbox>
-              </div>
+                <!-- ========== 工艺：臭氧2 ========== -->
+                <template v-else-if="item.disinfectionProcess === 'process_OZONE2'">
+                  <!-- 1）设备/编码 -->
+                  <div class="device-row">
+                    <span class="device-row-label">1）设备/编码：</span>
+                    <el-select
+                      v-model="item.deviceCode1"
+                      size="small"
+                      placeholder="请选择设备1"
+                      class="device-select"
+                      @change="(code) => handleDeviceChange(item, 1, code)">
+                      <el-option
+                        v-for="opt in DEVICE_OPTIONS"
+                        :key="opt.code"
+                        :label="opt.name"
+                        :value="opt.code" />
+                    </el-select>
+                    <input v-model="item.deviceCode1" readonly class="edit-input-device-code" placeholder="编码" />
+                    <el-select
+                      v-model="item.deviceCode2"
+                      size="small"
+                      placeholder="请选择设备2"
+                      class="device-select"
+                      style="margin-left: 20px;"
+                      @change="(code) => handleDeviceChange(item, 2, code)">
+                      <el-option
+                        v-for="opt in DEVICE_OPTIONS"
+                        :key="opt.code"
+                        :label="opt.name"
+                        :value="opt.code" />
+                    </el-select>
+                    <input v-model="item.deviceCode2" readonly class="edit-input-device-code" placeholder="编码" />
+                  </div>
+                  <!-- 2）消毒 -->
+                  <div style="margin-top: 0px;">
+                    <span>2）消毒</span>
+                    <span style="font-weight: bold; margin-left: 18px;">臭氧</span>
+                    ，臭氧浓度
+                    <input v-model="item.disinfectionParam" class="edit-input-short" style="width: 50px;" /> ppm
+                    <br/>
+                    <span style="margin-left: 18px;">
+                      消毒时间
+                      <el-time-picker
+                        :model-value="getDisinfectionTimeRange(item)"
+                        @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
+                        is-range
+                        value-format="HH:mm:00"
+                        start-placeholder="开始时间"
+                        end-placeholder="结束时间"
+                        size="small"
+                        style="width: 120px;" />
+                      ，共 <input v-model="item.disinfectionCost" disabled class="edit-input-short" /> 分钟
+                    </span>
+                  </div>
+                  <!-- 3）干净干燥完好 -->
+                  <div style="margin-top: 0px;">
+                    <span>3）是否干净，干燥、完好、外观无变色：</span>
+                    <el-checkbox :model-value="item.waiguanFlag === 'Y'"
+                      @change="(val) => { item.waiguanFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.waiguanFlag === 'N'"
+                      @change="(val) => { item.waiguanFlag = val ? 'N' : '' }">否</el-checkbox>
+                  </div>
+                  <!-- 4）装入洁净袋 -->
+                  <div style="margin-top: 0px;">
+                    <span>4）是否装入洁净袋：</span>
+                    <el-checkbox :model-value="item.cleanBagFlag === 'Y'"
+                      @change="(val) => { item.cleanBagFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.cleanBagFlag === 'N'"
+                      @change="(val) => { item.cleanBagFlag = val ? 'N' : '' }">否</el-checkbox>
+                  </div>
+                </template>
 
-              <!-- 5）是否装入洁净袋 -->
-              <div style="margin-top: 4px;">
-                <span>5）是否装入洁净袋：</span>
-                <el-checkbox :model-value="item.cleanBagFlag === 'Y'" :disabled="!isEditMode"
-                  @change="(val) => { item.cleanBagFlag = val ? 'Y' : '' }">是</el-checkbox>
-                <el-checkbox :model-value="item.cleanBagFlag === 'N'" :disabled="!isEditMode"
-                  @change="(val) => { item.cleanBagFlag = val ? 'N' : '' }">否</el-checkbox>
-              </div>
+                <!-- ========== 工艺：风淋 ========== -->
+                <template v-else-if="item.disinfectionProcess === 'process_AIR_SHOWER'">
+                  <!-- 1）设备/编码 -->
+                  <div class="device-row">
+                    <span class="device-row-label">1）设备/编码：</span>
+                    <el-select
+                      v-model="item.deviceCode1"
+                      size="small"
+                      placeholder="请选择设备1"
+                      class="device-select"
+                      @change="(code) => handleDeviceChange(item, 1, code)">
+                      <el-option
+                        v-for="opt in DEVICE_OPTIONS"
+                        :key="opt.code"
+                        :label="opt.name"
+                        :value="opt.code" />
+                    </el-select>
+                    <input v-model="item.deviceCode1" readonly class="edit-input-device-code" placeholder="编码" />
+                    <el-select
+                      v-model="item.deviceCode2"
+                      size="small"
+                      placeholder="请选择设备2"
+                      class="device-select"
+                      style="margin-left: 20px;"
+                      @change="(code) => handleDeviceChange(item, 2, code)">
+                      <el-option
+                        v-for="opt in DEVICE_OPTIONS"
+                        :key="opt.code"
+                        :label="opt.name"
+                        :value="opt.code" />
+                    </el-select>
+                    <input v-model="item.deviceCode2" readonly class="edit-input-device-code" placeholder="编码" />
+                  </div>
+                  <!-- 2）消毒 -->
+                  <div style="margin-top: 0px;">
+                    <span>2）消毒</span>
+                    <el-select
+                      v-model="item.disinfectionMethod"
+                      size="small"
+                      placeholder="请选择消毒方式"
+                      style="width: 110px; margin-left: 18px;">
+                      <el-option
+                        v-for="opt in getMethodOptions(item.disinfectionProcess)"
+                        :key="opt.value"
+                        :label="opt.label"
+                        :value="opt.value" />
+                    </el-select>
+                    <br/>
+                    <span style="margin-left: 18px;">
+                      消毒时间
+                      <el-time-picker
+                        :model-value="getDisinfectionTimeRange(item)"
+                        @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
+                        is-range
+                        value-format="HH:mm:00"
+                        start-placeholder="开始时间"
+                        end-placeholder="结束时间"
+                        size="small"
+                        style="width: 120px;" />
+                      ，共 <input v-model="item.disinfectionCost" disabled class="edit-input-short" /> 分钟
+                    </span>
+                    <!-- 3）内包装是否完整（风淋专属） -->
+                    <div style="margin-top: 0px;">
+                      <span>3）内包装是否完整：</span>
+                      <el-checkbox :model-value="item.innerPackagingIntactFlag === 'Y'"
+                        @change="(val) => { item.innerPackagingIntactFlag = val ? 'Y' : '' }">是</el-checkbox>
+                      <el-checkbox :model-value="item.innerPackagingIntactFlag === 'N'"
+                        @change="(val) => { item.innerPackagingIntactFlag = val ? 'N' : '' }">否</el-checkbox>
+                      <el-checkbox v-model="item.noInnerPackagingIntactFlag" true-value="Y" false-value="" style="margin-left: 8px;">无此项</el-checkbox>
+                    </div>
+                  </div>
+                  <!-- 4）干净干燥完好 -->
+                  <div style="margin-top: 0px;">
+                    <span>4）是否干净，干燥、完好、外观无变色：</span>
+                    <el-checkbox :model-value="item.waiguanFlag === 'Y'"
+                      @change="(val) => { item.waiguanFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.waiguanFlag === 'N'"
+                      @change="(val) => { item.waiguanFlag = val ? 'N' : '' }">否</el-checkbox>
+                  </div>
+                  <!-- 5）装入洁净袋 -->
+                  <div style="margin-top: 0px;">
+                    <span>5）是否装入洁净袋：</span>
+                    <el-checkbox :model-value="item.cleanBagFlag === 'Y'"
+                      @change="(val) => { item.cleanBagFlag = val ? 'Y' : '' }">是</el-checkbox>
+                    <el-checkbox :model-value="item.cleanBagFlag === 'N'"
+                      @change="(val) => { item.cleanBagFlag = val ? 'N' : '' }">否</el-checkbox>
+                  </div>
+                </template>
 
-              <!-- 6）内包装是否完整 -->
-              <div style="margin-top: 4px;">
-                <span>6）内包装是否完整：</span>
-                <el-checkbox :model-value="item.innerPackagingIntactFlag === 'Y'" :disabled="!isEditMode"
-                  @change="(val) => { item.innerPackagingIntactFlag = val ? 'Y' : '' }">是</el-checkbox>
-                <el-checkbox :model-value="item.innerPackagingIntactFlag === 'N'" :disabled="!isEditMode"
-                  @change="(val) => { item.innerPackagingIntactFlag = val ? 'N' : '' }">否</el-checkbox>
-                <el-checkbox v-model="item.noInnerPackagingIntactFlag" true-value="Y" false-value="" :disabled="!isEditMode" style="margin-left: 8px;">无此项</el-checkbox>
-              </div>
+                <!-- 未选工艺 -->
+                <template v-else>
+                  <span style="color: #909399;">请先选择工艺</span>
+                </template>
+              </template>
+
+              <!-- ============================ 非编辑态 ============================ -->
+              <template v-else>
+
+                <!-- ========== 工艺：臭氧1 ========== -->
+                <template v-if="item.disinfectionProcess === 'process_OZONE1'">
+                  <div>
+                    1）设备/编码：
+                    <span class="filled-value">{{ item.deviceName1 || '' }}<template v-if="item.deviceCode1">（{{ item.deviceCode1 }}）</template></span>
+                    <span v-if="item.deviceCode2" style="margin-left: 12px;" class="filled-value">{{ item.deviceName2 || '' }}（{{ item.deviceCode2 }}）</span>
+                  </div>
+                  <div>
+                    2）消毒：
+                    <span class="filled-value" style=" margin-left: 27px;">臭氧</span>
+                    ，臭氧浓度 <span class="filled-value">{{ item.disinfectionParam || '' }}</span> ppm
+                    <br/>
+                    <span style="margin-left: 18px;">
+                      消毒时间
+                      <span class="filled-value" style="margin-left: 14px;">{{ formatHm(item.disinfectionStartTime) }}</span>
+                      至
+                      <span class="filled-value">{{ formatHm(item.disinfectionEndTime) }}</span>
+                      ，共 <span class="filled-value">{{ item.disinfectionCost || '' }}</span> 分钟
+                    </span>
+                  </div>
+                  <div>
+                    3）是否干净，干燥、完好、外观无变色：
+                    <span class="filled-value">{{ item.waiguanFlag === 'Y' ? '是' : (item.waiguanFlag === 'N' ? '否' : '') }}</span>
+                  </div>
+                  <div>
+                    4）是否装入洁净袋：
+                    <span class="filled-value">{{ item.cleanBagFlag === 'Y' ? '是' : (item.cleanBagFlag === 'N' ? '否' : '') }}</span>
+                  </div>
+                </template>
+
+                <!-- ========== 工艺：高温 ========== -->
+                <template v-else-if="item.disinfectionProcess === 'process_HIGH_TEMP'">
+                  <div>
+                    1）设备/编码：
+                    <span class="filled-value">{{ item.deviceName1 || '' }}<template v-if="item.deviceCode1">（{{ item.deviceCode1 }}）</template></span>
+                    <span v-if="item.deviceCode2" style="margin-left: 12px;" class="filled-value">{{ item.deviceName2 || '' }}（{{ item.deviceCode2 }}）</span>
+                  </div>
+                  <div>
+                    2）消毒：
+                    <span style="margin-left: 27px;" class="filled-value">{{ getMethodLabel(item.disinfectionMethod) }}</span>
+                    <template v-if="isParamVisible(item.disinfectionMethod)">
+                      ，{{ getParamLabel(item.disinfectionMethod) }} <span class="filled-value">{{ item.disinfectionParam || '' }}</span> {{ getParamUnit(item.disinfectionMethod) }}
+                    </template>
+                    <br/>
+                    <span style="margin-left: 18px;">
+                      消毒时间
+                      <span class="filled-value" style="margin-left: 14px;">{{ formatHm(item.disinfectionStartTime) }}</span>
+                      至
+                      <span class="filled-value">{{ formatHm(item.disinfectionEndTime) }}</span>
+                      ，共 <span class="filled-value">{{ item.disinfectionCost || '' }}</span> 分钟
+                    </span>
+                  </div>
+                  <div>
+                    3）是否干净，干燥、完好、外观无变色：
+                    <span class="filled-value">{{ item.waiguanFlag === 'Y' ? '是' : (item.waiguanFlag === 'N' ? '否' : '') }}</span>
+                  </div>
+                  <div>
+                    4）洗瓶用水是否纯化水：
+                    <span class="filled-value">{{ item.purifiedWaterFlag === 'Y' ? '是' : (item.purifiedWaterFlag === 'N' ? '否' : '') }}</span>
+                    <span v-if="item.noPurifiedWaterFlag === 'Y'" style="margin-left: 8px;" class="filled-value">（无此项）</span>
+                  </div>
+                  <div>
+                    5）是否装入洁净袋：
+                    <span class="filled-value">{{ item.cleanBagFlag === 'Y' ? '是' : (item.cleanBagFlag === 'N' ? '否' : '') }}</span>
+                  </div>
+                </template>
+
+                <!-- ========== 工艺：臭氧2 ========== -->
+                <template v-else-if="item.disinfectionProcess === 'process_OZONE2'">
+                  <div>
+                    1）设备/编码：
+                    <span class="filled-value">{{ item.deviceName1 || '' }}<template v-if="item.deviceCode1">（{{ item.deviceCode1 }}）</template></span>
+                    <span v-if="item.deviceCode2" style="margin-left: 12px;" class="filled-value">{{ item.deviceName2 || '' }}（{{ item.deviceCode2 }}）</span>
+                  </div>
+                  <div>
+                    2）消毒：
+                    <span class="filled-value" style=" margin-left: 27px;">臭氧</span>
+                    ，臭氧浓度 <span class="filled-value">{{ item.disinfectionParam || '' }}</span> ppm
+                    <br/>
+                    <span style="margin-left: 18px;">
+                      消毒时间
+                      <span class="filled-value" style="margin-left: 14px;">{{ formatHm(item.disinfectionStartTime) }}</span>
+                      至
+                      <span class="filled-value">{{ formatHm(item.disinfectionEndTime) }}</span>
+                      ，共 <span class="filled-value">{{ item.disinfectionCost || '' }}</span> 分钟
+                    </span>
+                  </div>
+                  <div>
+                    3）是否干净，干燥、完好、外观无变色：
+                    <span class="filled-value">{{ item.waiguanFlag === 'Y' ? '是' : (item.waiguanFlag === 'N' ? '否' : '') }}</span>
+                  </div>
+                  <div>
+                    4）是否装入洁净袋：
+                    <span class="filled-value">{{ item.cleanBagFlag === 'Y' ? '是' : (item.cleanBagFlag === 'N' ? '否' : '') }}</span>
+                  </div>
+                </template>
+
+                <!-- ========== 工艺：风淋 ========== -->
+                <template v-else-if="item.disinfectionProcess === 'process_AIR_SHOWER'">
+                  <div>
+                    1）设备/编码：
+                    <span class="filled-value">{{ item.deviceName1 || '' }}<template v-if="item.deviceCode1">（{{ item.deviceCode1 }}）</template></span>
+                    <span v-if="item.deviceCode2" style="margin-left: 12px;" class="filled-value">{{ item.deviceName2 || '' }}（{{ item.deviceCode2 }}）</span>
+                  </div>
+                  <div>
+                    2）消毒：
+                    <span style="margin-left: 27px;" class="filled-value">{{ getMethodLabel(item.disinfectionMethod) }}</span>
+                    <br/>
+                    <span style="margin-left: 18px;">
+                      消毒时间
+                      <span class="filled-value" style="margin-left: 14px;">{{ formatHm(item.disinfectionStartTime) }}</span>
+                      至
+                      <span class="filled-value">{{ formatHm(item.disinfectionEndTime) }}</span>
+                      ，共 <span class="filled-value">{{ item.disinfectionCost || '' }}</span> 分钟
+                    </span>
+                    <div style="margin-left: 0px;">
+                      3）内包装是否完整：
+                      <span class="filled-value">{{ item.innerPackagingIntactFlag === 'Y' ? '是' : (item.innerPackagingIntactFlag === 'N' ? '否' : '') }}</span>
+                      <span v-if="item.noInnerPackagingIntactFlag === 'Y'" style="margin-left: 8px;" class="filled-value">（无此项）</span>
+                    </div>
+                  </div>
+                  <div>
+                    4）是否干净，干燥、完好、外观无变色：
+                    <span class="filled-value">{{ item.waiguanFlag === 'Y' ? '是' : (item.waiguanFlag === 'N' ? '否' : '') }}</span>
+                  </div>
+                  <div>
+                    5）是否装入洁净袋：
+                    <span class="filled-value">{{ item.cleanBagFlag === 'Y' ? '是' : (item.cleanBagFlag === 'N' ? '否' : '') }}</span>
+                  </div>
+                </template>
+
+                <!-- 未选工艺 -->
+                <template v-else>
+                  <span style="color: #909399;">请先选择工艺</span>
+                </template>
+              </template>
+
             </div>
           </td>
 
@@ -726,6 +1068,7 @@ function getMethodOptions(process) {
   }
   if (process === 'process_AIR_SHOWER') {
     return [
+      { label: '风淋', value: 'method_AIR_SHOWER' },
       { label: '75%酒精消毒', value: 'method_ALCOHOL' },
       { label: '紫外线消毒', value: 'method_UV' }
     ]
@@ -759,6 +1102,7 @@ function getMethodLabel(method) {
   if (method === 'method_OZONE') return '臭氧'
   if (method === 'method_HIGH_TEMP') return '高温'
   if (method === 'method_WASHER_DRYER') return '洗烘一体机'
+  if (method === 'method_AIR_SHOWER') return '风淋'
   if (method === 'method_ALCOHOL') return '75%酒精消毒'
   if (method === 'method_UV') return '紫外线消毒'
   return ''
@@ -1097,24 +1441,6 @@ async function handleApproveSubmit() {
 }
 
 /* ============================================================
-   Step1 内部样式（保留原有视觉）
-   ============================================================ */
-/* .step1-inner td {
-  border-bottom: 1px solid #dcdfe6;
-  padding: 4px 0px;
-}
-.step1-inner td:first-child {
-  border-right: 1px solid #dcdfe6;
-}
-.step1-inner tr:last-child td {
-  border-bottom: none;
-}
-.step1-inner td[colspan="2"] {
-  text-align: center;
-  border-right: none;
-} */
-
-/* ============================================================
    Step1 / Step2 通用列样式
    ============================================================ */
 .td-step-label {
@@ -1180,6 +1506,20 @@ async function handleApproveSubmit() {
   line-height: 1.0;
 }
 
+/* 非编辑态：操作记录区文本（与工艺要求列统一：字号/行高/颜色一致） */
+.record-view-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #303133;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* 动态回填值突出显示（区别于固定文本） */
+.record-view-text .filled-value {
+  color: #4046ff;
+  /* font-weight: bold; */
+}
 /* ============================================================
    Step2 设备/编码行（v1.3 新增）
    ============================================================ */

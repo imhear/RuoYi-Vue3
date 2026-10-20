@@ -138,8 +138,8 @@
             </div>
           </td>
 
-          <!-- 第4列：签名（留空） -->
-          <td class="td-sign"></td>
+          <!-- 第4列：签名（留空；与 Step2 签名列视觉合并：隐藏底边框） -->
+          <td class="td-sign" style="border-bottom: none;"></td>
         </tr>
       </table>
 
@@ -194,38 +194,54 @@
                   style="width: 280px;" />
               </template>
               <template v-else>
-                <span class="filled-value" style="color: #4046ff;">
-                {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}-{m}-{d} {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}-{m}-{d} {h}:{i}') : '' }}
-                </span>
+                <template v-if="item.stepStartTime">
+                  <span class="filled-value" style="color: #4046ff;">
+                  {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}-{m}-{d} {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}-{m}-{d} {h}:{i}') : '' }}
+                  </span>
+                </template>
                 <!-- {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} -->
               </template>
             </div>
 
             <!-- 工艺单选（4 个复选框视觉，行为互斥） -->
-            <div class="process-checkbox-row" style="text-align: center;">
-              <el-checkbox
-                :model-value="item.disinfectionProcess === 'process_OZONE1'"
-                :disabled="!isEditMode"
-                @change="(val) => toggleProcess(item, 'process_OZONE1', val)">臭氧1</el-checkbox>
-              <el-checkbox
-                :model-value="item.disinfectionProcess === 'process_HIGH_TEMP'"
-                :disabled="!isEditMode"
-                @change="(val) => toggleProcess(item, 'process_HIGH_TEMP', val)">高温</el-checkbox>
-              <el-checkbox
-                :model-value="item.disinfectionProcess === 'process_OZONE2'"
-                :disabled="!isEditMode"
-                @change="(val) => toggleProcess(item, 'process_OZONE2', val)">臭氧2</el-checkbox>
-              <el-checkbox
-                :model-value="item.disinfectionProcess === 'process_AIR_SHOWER'"
-                :disabled="!isEditMode"
-                @change="(val) => toggleProcess(item, 'process_AIR_SHOWER', val)">风淋</el-checkbox>
-            </div>
+             <template v-if="isEditMode">
+              <div class="process-checkbox-row" style="text-align: center;">
+                <el-checkbox
+                  :model-value="item.disinfectionProcess === 'process_OZONE1'"
+                  :disabled="!isEditMode"
+                  @change="(val) => toggleProcess(item, 'process_OZONE1', val)">臭氧1</el-checkbox>
+                <el-checkbox
+                  :model-value="item.disinfectionProcess === 'process_HIGH_TEMP'"
+                  :disabled="!isEditMode"
+                  @change="(val) => toggleProcess(item, 'process_HIGH_TEMP', val)">高温</el-checkbox>
+                <el-checkbox
+                  :model-value="item.disinfectionProcess === 'process_OZONE2'"
+                  :disabled="!isEditMode"
+                  @change="(val) => toggleProcess(item, 'process_OZONE2', val)">臭氧2</el-checkbox>
+                <el-checkbox
+                  :model-value="item.disinfectionProcess === 'process_AIR_SHOWER'"
+                  :disabled="!isEditMode"
+                  @change="(val) => toggleProcess(item, 'process_AIR_SHOWER', val)">风淋</el-checkbox>
+              </div>
+             </template>
+             <template v-else>
+                <template v-if="item.disinfectionProcess">
+                  <div class="filled-value" style="text-align: center; color: #4046ff;">
+                    <template v-if="item.disinfectionProcess === 'process_OZONE1'">臭氧1</template>
+                    <template v-if="item.disinfectionProcess === 'process_HIGH_TEMP'">高温</template>
+                    <template v-if="item.disinfectionProcess === 'process_OZONE2'">臭氧2</template>
+                    <template v-if="item.disinfectionProcess === 'process_AIR_SHOWER'">风淋</template>
+                  </div>
+                </template>
+             </template>
 
             <!-- 工艺固定文本（未选时提示，选中时展示对应文本） -->
             <div class="process-fixed-text1">
               <template v-if="!item.disinfectionProcess">
                 <br/>
-                <span style="color: #ff0000;">外盖、内塞、手拉垫、泵头、次抛，请选择工艺：臭氧2</span>
+                <template v-if="isEditMode">
+                  <span style="color: #ff0000;">外盖、内塞、手拉垫、泵头、次抛，请选择工艺：臭氧2</span>
+                </template>
               </template>
               <template v-else-if="item.disinfectionProcess === 'process_OZONE1'">
                 1）脱包；<br/>
@@ -731,15 +747,15 @@
 
                 <!-- 未选工艺 -->
                 <template v-else>
-                  <span style="color: #909399;">请先选择工艺</span>
+                  <!-- <span style="color: #909399;">请先选择工艺</span> -->
                 </template>
               </template>
 
             </div>
           </td>
 
-          <!-- 第4列：签名（仅第一行渲染，跨 4 行） -->
-          <td v-if="idx === 0" class="td-sign" :rowspan="paddedStep2List.length">
+          <!-- 第4列：签名（仅第一行渲染，跨 4 行；与 Step1 签名列视觉合并：隐藏顶边框） -->
+          <td v-if="idx === 0" class="td-sign" :rowspan="paddedStep2List.length" style="border-top: none;">
             <div>操作人：{{ submitSignatureName }}</div>
             <div>{{ submitSignatureTime }}</div>
             <div style="height: 8px;"></div>

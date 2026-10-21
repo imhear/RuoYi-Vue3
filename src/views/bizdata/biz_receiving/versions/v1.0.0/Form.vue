@@ -1,7 +1,17 @@
 <template>
-  <div class="receiving-form-container">
-      <!-- 顶部操作按钮（位于表单之上，打印时通过 print 或截图时可直接忽略） -->
-      <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px;margin-bottom: 1px; width: 220px;">
+  <div class="receiving-form-container" :class="{ 'is-a4-mode': useA4Preview }">
+      <!-- 顶部操作按钮（位于表单之上，打印时通过 print 或截图时可直接忽略）
+           【v1.7 改造】
+           - 居中显示（原 text-align: right）
+           - 全屏按钮排列在最前（文字按钮，全屏 / 取消全屏）
+           - v-if 放宽为"编辑态 / 审批态 / 对话框内预览态"三选一
+           - 独立打印场景（dialogCtx = null）预览态不渲染按钮栏，走 A4 模式
+      -->
+      <div v-if="isEditMode || isApproveMode || dialogCtx" class="form-action-bar">
+        <el-button
+          v-if="dialogCtx"
+          @click="dialogCtx.toggleFullscreen()"
+        >{{ dialogCtx.isFullscreen.value ? '取消全屏' : '全屏' }}</el-button>
         <el-button v-if="isEditMode" type="primary" @click="handleEditSubmit">保 存</el-button>
         <el-button v-if="isApproveMode" type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
       </div>
@@ -10,7 +20,7 @@
       v-if="actionType !== 'PREVIEW' || !loading"
       class="view-container"
       :class="[
-        actionType === 'PREVIEW' ? 'preview-mode' : '',
+        actionType === 'PREVIEW' && useA4Preview ? 'preview-mode-a4' : 'preview-mode-flex',
         isScrolling ? 'is-scrolling' : ''
       ]"
       @scroll="handlePreviewScroll"
@@ -32,7 +42,10 @@
         <span style="font-weight: bold;">）领料单</span>
       </div>
 
-      <!-- 产品信息 -->
+      <!-- 产品信息
+           【v1.8 改造】非编辑态下产品名称 / 规格 / 产品批号 为动态回填值，
+           用 .filled-value 突出显示（区分固定标题文本）
+      -->
       <el-table :data="[{}]" :show-header="false" border size="small" class="top-table">
         <el-table-column width="120" align="center">
           <template #default><span style="font-weight: bold;">产品名称</span></template>
@@ -54,7 +67,11 @@
         </el-table-column>
       </el-table>
 
-      <!-- 物料明细 -->
+      <!-- 物料明细
+           【v1.8 改造】非编辑态下各文本字段（物料名称 / 规格 / 单位 / 计划领用量 /
+           物料批号 / 实际发料量 / 备注）为动态回填值，用 .filled-value 突出显示。
+           复选框列（物料核对 4 列）保持原样不改。
+      -->
       <el-table
         :data="displayItems"
         border
@@ -78,7 +95,7 @@
                 @change="(code, name) => handleSelectChange(scope.row, 'material', code, name)"
               />
             </template>
-            <template v-else>{{ scope.row.materialName || '' }}</template>
+            <template v-else><span class="filled-value">{{ scope.row.materialName || '' }}</span></template>
           </template>
         </el-table-column>
 
@@ -93,7 +110,7 @@
                 @change="(code, name) => handleSelectChange(scope.row, 'spec', code, name)"
               />
             </template>
-            <template v-else>{{ scope.row.spec || '' }}</template>
+            <template v-else><span class="filled-value">{{ scope.row.spec || '' }}</span></template>
           </template>
         </el-table-column>
 
@@ -108,7 +125,7 @@
                 @change="(code, name) => handleSelectChange(scope.row, 'unit', code, name)"
               />
             </template>
-            <template v-else>{{ scope.row.unit || '' }}</template>
+            <template v-else><span class="filled-value">{{ scope.row.unit || '' }}</span></template>
           </template>
         </el-table-column>
 
@@ -116,7 +133,7 @@
           <template #header><div style="line-height: 1.2;">计划<br/>领用量</div></template>
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.requireQty" size="small" /></template>
-            <template v-else>{{ scope.row.requireQty || '' }}</template>
+            <template v-else><span class="filled-value">{{ scope.row.requireQty || '' }}</span></template>
           </template>
         </el-table-column>
 
@@ -162,7 +179,7 @@
         <el-table-column label="物料批号" min-width="80" align="center">
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.batchNumber" size="small" /></template>
-            <template v-else>{{ scope.row.batchNumber || '' }}</template>
+            <template v-else><span class="filled-value">{{ scope.row.batchNumber || '' }}</span></template>
           </template>
         </el-table-column>
 
@@ -170,31 +187,33 @@
           <template #header><div style="line-height: 1.2;">实际<br/>发料量</div></template>
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.actualQty" size="small" /></template>
-            <template v-else>{{ scope.row.actualQty || '' }}</template>
+            <template v-else><span class="filled-value">{{ scope.row.actualQty || '' }}</span></template>
           </template>
         </el-table-column>
 
         <el-table-column label="备注" min-width="60" align="center">
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.remark" size="small" /></template>
-            <template v-else>{{ scope.row.remark || '' }}</template>
+            <template v-else><span class="filled-value">{{ scope.row.remark || '' }}</span></template>
           </template>
         </el-table-column>
       </el-table>
 
-      <!-- 签名行（只读，数据源来自 batch_record_menu 控制表） -->
+      <!-- 签名行（只读，数据源来自 batch_record_menu 控制表）
+           【v1.8 改造】非编辑态签名内容为动态回填值，用 .filled-value 突出显示
+      -->
       <el-table :data="[{}]" :show-header="false" border size="small" class="bottom-table">
         <el-table-column width="130" align="center">
           <template #default><span style="font-weight: normal;">领用人/日期：</span></template>
         </el-table-column>
         <el-table-column>
-          <template #default>{{ submitSignatureText }}</template>
+          <template #default><span class="filled-value">{{ submitSignatureText }}</span></template>
         </el-table-column>
         <el-table-column width="130" align="center">
           <template #default><span style="font-weight: normal;">发料人/日期：</span></template>
         </el-table-column>
         <el-table-column>
-          <template #default>{{ reviewSignatureText }}</template>
+          <template #default><span class="filled-value">{{ reviewSignatureText }}</span></template>
         </el-table-column>
       </el-table>
 
@@ -203,7 +222,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getBizReceivingDetail } from '@/api/bizdata/biz_receiving'
 import { getBatch_record } from '@/api/batch/batch_record'
@@ -223,6 +242,11 @@ defineOptions({ name: 'ReceivingForm' })
  * cMenuId: 当前表单对应的 C 节点 ID（用于获取签名行数据）
  * backendRoute: 后端接口路径模板（来自操作码配置，需包含占位符）
  * 其余为按钮节点相关信息
+ *
+ * 【v1.5 新增】useA4Preview：
+ * - true：view-container 固定为 201mm（A4 物理高度），用于打印场景
+ * - false（默认）：view-container 使用 flex: 1 自适应父容器高度，用于聚合入口场景
+ * 聚合入口（查看/编辑/审批）始终为 false；打印对话框为 true
  */
 const props = defineProps({
   actionType: { type: String, default: 'PREVIEW' },
@@ -234,10 +258,23 @@ const props = defineProps({
   backendRoute: { type: String, default: '' },
   tableName: { type: String, default: '' },
   menuName: { type: String, default: '' },
-  buttonLabel: { type: String, default: '确认' }
+  buttonLabel: { type: String, default: '确认' },
+  useA4Preview: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['closed', 'refresh'])
+
+/**
+ * 【v1.6 新增】获取父对话框提供的全屏上下文
+ *
+ * 父组件 DynamicComponentDialog 通过 provide 暴露：
+ *   - isFullscreen：ref，当前全屏状态（需 .value 访问）
+ *   - toggleFullscreen：函数，切换全屏
+ *
+ * 如果本组件不在对话框内（如独立打印场景），inject 返回 null，
+ * 上方按钮区 v-if 判断会降级，不渲染全屏按钮。
+ */
+const dialogCtx = inject('dynamicDialogCtx', null)
 
 const loading = ref(false)
 const receiving = ref(null)
@@ -616,28 +653,75 @@ async function handleApproveSubmit() {
 </script>
 
 <style scoped>
+/* ============================================================
+   容器（v1.5 改造：flex 自适应）
+   ============================================================ */
 .receiving-form-container {
-  padding: 8px;
+  /* 上 padding 从 8px 改为 4px，给按钮留出贴紧顶部的空间 */
+  padding: 4px 8px 8px 8px;
+  /* 根容器撑满 dialog body，由父容器驱动高度 */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
+/* 【v1.5】A4 打印模式：根容器改为自然高度，不撑满 dialog */
+.receiving-form-container.is-a4-mode {
+  height: auto;
+  display: block;
+}
+
+/* 【v1.7 改造】顶部按钮区：正常文档流占位 + 居中显示
+ * - flex-shrink: 0：避免被 flex 布局压缩
+ * - justify-content: center：居中（原为 text-align: right）
+ * - gap: 8px：按钮间距
+ * - margin-bottom: 4px：与下方内容的间距
+ */
+.form-action-bar {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+/* ============================================================
+   滚动容器（v1.5 改造：flex 自适应 / A4 固定高度 两种模式）
+   ============================================================ */
 .view-container {
   overflow-x: hidden;
   overflow-y: auto;
-  height: 85vh;
   box-sizing: border-box;
   color: #000;
 }
-/* 预览模式固定高度，用于生成批记录时展示 A4 样式
+/* 【v1.5】Flex 自适应模式（聚合入口：查看/编辑/审批都走这个） */
+.preview-mode-flex {
+  flex: 1;
+  min-height: 0;
+}
+/* 【v1.5】A4 打印模式（独立打印对话框）
  * - 保持 height: 201mm（A4 比例视觉）
  * - 使用 overflow-y: auto 允许内容超出 201mm 时滚动查看
  *   原因：物料明细固定 14 行时内容高度可能超过 201mm，
  *   overflow: hidden 会把底部签名栏等元素裁掉，导致用户无法查看；
  *   auto 让预览模式也能滚动到底部查看完整内容（如签名行）
  */
-.preview-mode {
+.preview-mode-a4 {
   height: 201mm;
+  flex-shrink: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+/* 【v1.8 新增】动态回填值突出显示（区别于固定文本）
+ * 适用范围：非编辑态下的所有动态回填纯文本（产品信息 / 物料明细文本字段 / 签名行）
+ * 注意：复选框列（物料核对 4 列）保持原样，不使用此样式
+ */
+.filled-value {
+  color: #4046ff;
+}
+
 .view-container :deep(.el-table) { color: #000; }
 .view-container :deep(.el-table th) { color: #000; font-weight: normal; }
 .view-container :deep(.el-checkbox__label) { color: #000 !important; }

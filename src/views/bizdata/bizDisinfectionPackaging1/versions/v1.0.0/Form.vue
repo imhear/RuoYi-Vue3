@@ -1,7 +1,15 @@
 <template>
-  <div class="dis-pack1-form-container">
-    <!-- 顶部操作按钮 -->
-    <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px; margin-bottom: 1px; width: 380px;">
+  <div class="dis-pack1-form-container" :class="{ 'is-a4-mode': useA4Preview }">
+    <!--
+      【v1.6 改造】form-action-bar 的 v-if 放宽为"编辑态 / 审批态 / 对话框内预览态"
+      - 编辑态：同步物料 + 保存 + 全屏
+      - 审批态：确认 + 全屏
+      - 预览态（在对话框内，dialogCtx 存在）：仅全屏
+      - 独立打印场景（dialogCtx = null）：不渲染（预览态不显示按钮栏，走 A4 模式）
+    -->
+    <div v-if="isEditMode || isApproveMode || dialogCtx" class="form-action-bar">
+      <!-- 【v1.7 改造】全屏切换按钮：文字按钮，排列在最前 -->
+      <el-button v-if="dialogCtx" @click="dialogCtx.toggleFullscreen()">{{ dialogCtx.isFullscreen.value ? '取消全屏' : '全屏' }}</el-button>
       <el-button v-if="isEditMode" type="primary" @click="handleSyncMaterialFromReceiving">从领料单同步物料</el-button>
       <el-button v-if="isEditMode" type="primary" @click="handleEditSubmit">保 存</el-button>
       <el-button v-if="isApproveMode" type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
@@ -11,7 +19,7 @@
       v-if="actionType !== 'PREVIEW' || !loading"
       class="view-container"
       :class="[
-        actionType === 'PREVIEW' ? 'preview-mode' : '',
+        actionType === 'PREVIEW' && useA4Preview ? 'preview-mode-a4' : 'preview-mode-flex',
         isScrolling ? 'is-scrolling' : ''
       ]"
       @scroll="handlePreviewScroll"
@@ -773,7 +781,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, inject } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getBizDisinfectionPackaging1Detail,
@@ -817,10 +825,29 @@ const props = defineProps({
   backendRoute: { type: String, default: '' },
   tableName: { type: String, default: '' },
   menuName: { type: String, default: '' },
-  buttonLabel: { type: String, default: '确认' }
+  buttonLabel: { type: String, default: '确认' },
+  /**
+   * 【v1.5 新增】是否使用 A4 预览高度
+   * - true：view-container 固定为 201mm（A4 物理高度），用于打印场景
+   * - false（默认）：view-container 使用 flex: 1 自适应父容器高度，用于聚合入口场景
+   * 聚合入口（查看/编辑/审批）始终为 false；打印对话框为 true
+   */
+  useA4Preview: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['closed', 'refresh'])
+
+/**
+ * 【v1.6 新增】获取父对话框提供的全屏上下文
+ *
+ * 父组件 DynamicComponentDialog 通过 provide 暴露：
+ *   - isFullscreen：ref，当前全屏状态（需 .value 访问）
+ *   - toggleFullscreen：函数，切换全屏
+ *
+ * 如果本组件不在对话框内（如独立打印场景），inject 返回 null，
+ * 下方按钮区 v-if 判断会降级，不渲染全屏按钮。
+ */
+const dialogCtx = inject('dynamicDialogCtx', null)
 
 const loading = ref(false)
 const batchRecord = ref(null)
@@ -1378,21 +1405,55 @@ async function handleApproveSubmit() {
 
 <style scoped>
 /* ============================================================
-   容器
+   容器（v1.5 改造：flex 自适应）
    ============================================================ */
 .dis-pack1-form-container {
-  padding: 8px;
+  /* 上 padding 从 8px 改为 4px，给按钮留出贴紧顶部的空间 */
+  padding: 4px 8px 8px 8px;
+  /* 根容器撑满 dialog body，由父容器驱动高度 */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* 已移除：position: relative（不再需要，按钮不再 absolute 定位） */
 }
+/* 【v1.5】A4 打印模式：根容器改为自然高度，不撑满 dialog */
+.dis-pack1-form-container.is-a4-mode {
+  height: auto;
+  display: block;
+}
+
+/* 【v1.5 修复】顶部按钮区：正常文档流占位，避免被 overflow: hidden 裁剪 */
+/* 【v1.7 改造】居中显示：从 flex-end 改为 center */
+.form-action-bar {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+/* 【v1.7 移除】.form-fullscreen-icon 不再使用（全屏按钮改为 el-button 文字按钮） */
+
+/* ============================================================
+   滚动容器（v1.5 改造：flex 自适应 / A4 固定高度 两种模式）
+   ============================================================ */
 .view-container {
   overflow-x: hidden;
   overflow-y: auto;
-  height: 85vh;
   box-sizing: border-box;
   color: #000;
 }
-/* 预览模式固定高度，用于生成批记录时展示 A4 样式；允许滚动，避免底部内容被裁 */
-.preview-mode {
+/* 【v1.5】Flex 自适应模式（聚合入口：查看/编辑/审批都走这个） */
+.preview-mode-flex {
+  flex: 1;
+  min-height: 0;
+}
+/* 【v1.5】A4 打印模式（独立打印对话框） */
+.preview-mode-a4 {
   height: 201mm;
+  flex-shrink: 0;
   overflow-y: auto;
   overflow-x: hidden;
 }

@@ -1,7 +1,11 @@
 <template>
-  <div class="dis-pack2-form-container">
-    <!-- 顶部操作按钮 -->
-    <div v-if="isEditMode || isApproveMode" style="text-align: right; margin-top: -52px; margin-bottom: 1px; width: 300px;">
+  <div class="dis-pack2-form-container" :class="{ 'is-a4-mode': useA4Preview }">
+    <!-- 顶部操作按钮（v1.7 改造：flex 居中 + 全屏按钮最前） -->
+    <div v-if="isEditMode || isApproveMode || dialogCtx" class="form-action-bar">
+      <el-button
+        v-if="dialogCtx"
+        @click="dialogCtx.toggleFullscreen()"
+      >{{ dialogCtx.isFullscreen.value ? '取消全屏' : '全屏' }}</el-button>
       <el-button v-if="isEditMode" type="primary" @click="handleSyncMaterialFromReceiving">从领料单同步物料</el-button>
       <el-button v-if="isEditMode" type="primary" @click="handleEditSubmit">保 存</el-button>
       <el-button v-if="isApproveMode" type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
@@ -11,7 +15,7 @@
       v-if="actionType !== 'PREVIEW' || !loading"
       class="view-container"
       :class="[
-        actionType === 'PREVIEW' ? 'preview-mode' : '',
+        actionType === 'PREVIEW' && useA4Preview ? 'preview-mode-a4' : 'preview-mode-flex',
         isScrolling ? 'is-scrolling' : ''
       ]"
       @scroll="handlePreviewScroll"
@@ -25,7 +29,7 @@
         灌装包材处理记录
       </div>
 
-      <!-- ===== 产品信息（只读） ===== -->
+      <!-- ===== 产品信息（只读，保持默认文本色，不做突出显示） ===== -->
       <table class="row-table info-table" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">
@@ -48,17 +52,19 @@
       <!-- ===== 表头 ===== -->
       <table class="row-table header-table" cellspacing="0" cellpadding="0">
         <colgroup>
-          <col style="width: 80px;"><col style="width: 400px;"><col><col style="width: 130px;">
+          <col style="width: 80px;"><col><col style="width: 130px;">
         </colgroup>
         <tr>
           <td class="header-value">操作项目</td>
           <td class="header-value">操作记录</td>
-          <td class="header-value">/</td>
+          <!-- <td class="header-value">/</td> -->
           <td class="header-value">/</td>
         </tr>
       </table>
 
-      <!-- ===== Step4 物料使用统计（自 packaging_1 迁移而来） ===== -->
+      <!-- ===== Step4 物料使用统计（自 packaging_1 迁移而来） =====
+           【v1.10 修复】非编辑态数量字段从 `|| ''` 改为 `?? ''`，0 值可正常显示
+      -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">   <!-- 操作项目 -->
@@ -99,11 +105,11 @@
                 @change="(code, name) => handleSelectChange(item, 'material', code, name)"
               />
             </template>
-            <template v-else>{{ item.materialName || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.materialName || '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode"><input v-model="item.batchNumber" class="edit-input-short" style="width: 80px;" /></template>
-            <template v-else>{{ item.batchNumber || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.batchNumber || '' }}</span></template>
           </td>
           <td class="td-record-cell">
             <template v-if="isEditMode">
@@ -115,7 +121,7 @@
                 @change="(code, name) => handleSelectChange(item, 'spec', code, name)"
               />
             </template>
-            <template v-else>{{ item.spec || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.spec || '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode">
@@ -127,28 +133,30 @@
                 @change="(code, name) => handleSelectChange(item, 'unit', code, name)"
               />
             </template>
-            <template v-else>{{ item.unit || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.unit || '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode"><input v-model="item.receiveQty" class="edit-input-short" style="width: 60px;" /></template>
-            <template v-else>{{ item.receiveQty || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.receiveQty ?? '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode"><input v-model="item.useQty" class="edit-input-short" style="width: 60px;" /></template>
-            <template v-else>{{ item.useQty || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.useQty ?? '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode"><input v-model="item.lossQty" class="edit-input-short" style="width: 60px;" /></template>
-            <template v-else>{{ item.lossQty || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.lossQty ?? '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode"><input v-model="item.remainQty" class="edit-input-short" style="width: 60px;" /></template>
-            <template v-else>{{ item.remainQty || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.remainQty ?? '' }}</span></template>
           </td>
         </tr>
       </table>
 
-      <!-- ===== Step5 物料储存/周转（v-for 重构，与 Step4/Step6 统一） ===== -->
+      <!-- ===== Step5 物料储存/周转（v-for 重构，与 Step4/Step6 统一） =====
+           【v1.10 修复】非编辑态数量字段从 `|| ''` 改为 `?? ''`，0 值可正常显示
+      -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">   <!-- 操作项目 -->
@@ -170,7 +178,7 @@
           <td class="header-value">单位</td>
           <td class="header-value">数量</td>
           <td class="header-value">备注</td>
-          <!-- 签名内容承载此处：三表合并后，签名显示在 Step5 右侧 -->
+          <!-- 签名内容承载此处：三表合并后，签名显示在 Step5 右侧（保持原样，不做突出显示） -->
           <td class="td-sign" :rowspan="1 + paddedStep5List.length" style="border-top: none; border-bottom: none;">
             <div>操作人：{{ submitSignatureName }}</div>
             <div>{{ submitSignatureTime }}</div>
@@ -194,11 +202,11 @@
                 @change="(code, name) => handleSelectChange(item, 'material', code, name)"
               />
             </template>
-            <template v-else>{{ item.materialName || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.materialName || '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode"><input v-model="item.batchNumber" class="edit-input-short" style="width: 80px;" /></template>
-            <template v-else>{{ item.batchNumber || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.batchNumber || '' }}</span></template>
           </td>
           <td class="td-record-cell">
             <template v-if="isEditMode">
@@ -210,7 +218,7 @@
                 @change="(code, name) => handleSelectChange(item, 'spec', code, name)"
               />
             </template>
-            <template v-else>{{ item.spec || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.spec || '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode">
@@ -222,20 +230,24 @@
                 @change="(code, name) => handleSelectChange(item, 'unit', code, name)"
               />
             </template>
-            <template v-else>{{ item.unit || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.unit || '' }}</span></template>
           </td>
           <td class="td-record-cell td-record-center">
             <template v-if="isEditMode"><input v-model="item.storeQty" class="edit-input-short" style="width: 60px;" /></template>
-            <template v-else>{{ item.storeQty || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.storeQty ?? '' }}</span></template>
           </td>
           <td class="td-record-cell">
             <template v-if="isEditMode"><input v-model="item.remark" class="edit-input-short" style="width: 99%; text-align: left;" /></template>
-            <template v-else>{{ item.remark || '' }}</template>
+            <template v-else><span class="filled-value">{{ item.remark || '' }}</span></template>
           </td>
         </tr>
       </table>
 
-      <!-- ===== Step6 生产过程不合格物料处理 ===== -->
+      <!-- ===== Step6 生产过程不合格物料处理 =====
+           【v1.9 改造】非编辑态：取消 rowspan=3 合并，每物料 1 行；
+           "不合格原因及对应数量"列、处理方式列转为纯文本；降低整体高度
+           【v1.10 修复】非编辑态数量字段从 `|| ''` 改为 `?? ''`，0 值可正常显示
+      -->
       <table class="row-table step-table-native" cellspacing="0" cellpadding="0">
         <colgroup>
           <col style="width: 80px;">   <!-- 操作项目 -->
@@ -244,30 +256,32 @@
           <col style="width: 90px;">   <!-- 物料批号 -->
           <col style="width: 110px;">  <!-- 规格 -->
           <col style="width: 70px;">   <!-- 单位 -->
-          <col style="width: 90px;">   <!-- 总数量 -->
+          <col style="width: 80px;">   <!-- 总数量 -->
           <col>                         <!-- 不合格原因及对应数量 -->
-          <col style="width: 100px;">  <!-- 处理方式 -->
+          <col style="width: 90px;">  <!-- 处理方式 -->
           <col style="width: 130px;">  <!-- 签名列 -->
         </colgroup>
-        <tr style="height: 28px;">
-          <td class="td-step-label" :rowspan="1 + paddedStep6List.length * 3">6.生产过程不合格物料处理</td>
-          <td></td>
-          <td class="header-value">不合格物料名称</td>
-          <td class="header-value">物料批号</td>
-          <td class="header-value">规格</td>
-          <td class="header-value">单位</td>
-          <td class="header-value">总数量</td>
-          <td class="header-value">不合格原因及对应数量</td>
-          <td class="header-value">处理方式</td>
-          <!-- Step6 为最下方 step 表格：签名列顶部无线，底部随表保留 -->
-          <td class="td-sign" :rowspan="1 + paddedStep6List.length * 3" style="border-top: none;"></td>
-        </tr>
-        <template v-for="(item, idx) in paddedStep6List" :key="idx">
-          <!-- 破损行 -->
+
+        <!-- ============ 编辑态：保持原有 3 行展开结构 ============ -->
+        <template v-if="isEditMode">
           <tr style="height: 28px;">
-            <td :rowspan="3" style="vertical-align: middle;">{{ idx + 1 }}）</td>
-            <td :rowspan="3" class="td-record-cell">
-              <template v-if="isEditMode">
+            <td class="td-step-label" :rowspan="1 + paddedStep6List.length * 3">6.生产过程不合格物料处理</td>
+            <td></td>
+            <td class="header-value">不合格物料名称</td>
+            <td class="header-value">物料批号</td>
+            <td class="header-value">规格</td>
+            <td class="header-value">单位</td>
+            <td class="header-value">总数量</td>
+            <td class="header-value">不合格原因及对应数量</td>
+            <td class="header-value">处理方式</td>
+            <!-- Step6 为最下方 step 表格：签名列顶部无线，底部随表保留 -->
+            <td class="td-sign" :rowspan="1 + paddedStep6List.length * 3" style="border-top: none;"></td>
+          </tr>
+          <template v-for="(item, idx) in paddedStep6List" :key="idx">
+            <!-- 破损行 -->
+            <tr style="height: 28px;">
+              <td :rowspan="3" style="vertical-align: middle;">{{ idx + 1 }}）</td>
+              <td :rowspan="3" class="td-record-cell">
                 <BaseCategorySelect
                   v-model="item.materialCode"
                   api-url="/basic/material/listByCategory"
@@ -275,15 +289,11 @@
                   placeholder=""
                   @change="(code, name) => handleSelectChange(item, 'material', code, name)"
                 />
-              </template>
-              <template v-else>{{ item.materialName || '' }}</template>
-            </td>
-            <td :rowspan="3" class="td-record-cell td-record-center">
-              <template v-if="isEditMode"><input v-model="item.batchNumber" class="edit-input-short" style="width: 80px;" /></template>
-              <template v-else>{{ item.batchNumber || '' }}</template>
-            </td>
-            <td :rowspan="3" class="td-record-cell">
-              <template v-if="isEditMode">
+              </td>
+              <td :rowspan="3" class="td-record-cell td-record-center">
+                <input v-model="item.batchNumber" class="edit-input-short" style="width: 80px;" />
+              </td>
+              <td :rowspan="3" class="td-record-cell">
                 <BaseCategorySelect
                   v-model="item.spec"
                   api-url="/basic/spec/listByCategory"
@@ -291,11 +301,8 @@
                   placeholder=""
                   @change="(code, name) => handleSelectChange(item, 'spec', code, name)"
                 />
-              </template>
-              <template v-else>{{ item.spec || '' }}</template>
-            </td>
-            <td :rowspan="3" class="td-record-cell td-record-center">
-              <template v-if="isEditMode">
+              </td>
+              <td :rowspan="3" class="td-record-cell td-record-center">
                 <BaseCategorySelect
                   v-model="item.unit"
                   api-url="/basic/unit/listByCategory"
@@ -303,34 +310,75 @@
                   placeholder=""
                   @change="(code, name) => handleSelectChange(item, 'unit', code, name)"
                 />
-              </template>
-              <template v-else>{{ item.unit || '' }}</template>
-            </td>
-            <td :rowspan="3" class="td-record-cell td-record-center">
-              <template v-if="isEditMode"><input v-model="item.nonConformingQty" class="edit-input-short" style="width: 60px;" /></template>
-              <template v-else>{{ item.nonConformingQty || '' }}</template>
-            </td>
-            <td class="td-record-cell">
-              <el-checkbox v-model="item.damageFlag" true-value="Y" false-value="" :disabled="!isEditMode">破损</el-checkbox>
-              ，&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.damageQty" class="edit-input-short" style="width: 40px;" /><span v-else>{{ item.damageQty || '' }}</span> 个
-            </td>
-            <td :rowspan="3" class="td-record-cell">
-              <el-checkbox v-model="item.destroyFlag" true-value="Y" false-value="" :disabled="!isEditMode">销毁</el-checkbox>
-              <br/><br/>
-              <el-checkbox v-model="item.shearFailureFlag" true-value="Y" false-value="" :disabled="!isEditMode">剪毁</el-checkbox>
-            </td>
-          </tr>
-          <!-- 色差行 -->
+              </td>
+              <td :rowspan="3" class="td-record-cell td-record-center">
+                <input v-model="item.nonConformingQty" class="edit-input-short" style="width: 60px;" />
+              </td>
+              <td class="td-record-cell">
+                <el-checkbox v-model="item.damageFlag" true-value="Y" false-value="">破损</el-checkbox>
+                ，数量 <input v-model="item.damageQty" class="edit-input-short" style="width: 30px;" /> 个
+              </td>
+              <td :rowspan="3" class="td-record-cell">
+                <el-checkbox v-model="item.destroyFlag" true-value="Y" false-value="">销毁</el-checkbox>
+                <br/><br/>
+                <el-checkbox v-model="item.shearFailureFlag" true-value="Y" false-value="">剪毁</el-checkbox>
+              </td>
+            </tr>
+            <!-- 色差行 -->
+            <tr style="height: 28px;">
+              <td class="td-record-cell">
+                <el-checkbox v-model="item.colorDifferenceFlag" true-value="Y" false-value="">色差</el-checkbox>
+                ，数量 <input v-model="item.colorDifferenceQty" class="edit-input-short" style="width: 30px;" /> 个
+              </td>
+            </tr>
+            <!-- 其他行 -->
+            <tr style="height: 28px;">
+              <td class="td-record-cell">
+                <el-checkbox v-model="item.otherFlag" true-value="Y" false-value="">其他</el-checkbox>，<input v-model="item.otherReason" class="edit-input-short" style="width: 70px;" />&nbsp;&nbsp;数量 <input v-model="item.otherQty" class="edit-input-short" style="width: 30px;" /> 个
+              </td>
+            </tr>
+          </template>
+        </template>
+
+        <!-- ============ 非编辑态：每物料 1 行（三种原因合并到 1 行文本 + 处理方式合并） ============ -->
+        <template v-else>
           <tr style="height: 28px;">
-            <td class="td-record-cell">
-              <el-checkbox v-model="item.colorDifferenceFlag" true-value="Y" false-value="" :disabled="!isEditMode">色差</el-checkbox>
-              ，&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.colorDifferenceQty" class="edit-input-short" style="width: 40px;" /><span v-else>{{ item.colorDifferenceQty || '' }}</span> 个
-            </td>
+            <td class="td-step-label" :rowspan="1 + paddedStep6List.length">6.生产过程不合格物料处理</td>
+            <td></td>
+            <td class="header-value">不合格物料名称</td>
+            <td class="header-value">物料批号</td>
+            <td class="header-value">规格</td>
+            <td class="header-value">单位</td>
+            <td class="header-value">总数量</td>
+            <td class="header-value">不合格原因及对应数量</td>
+            <td class="header-value">处理方式</td>
+            <!-- 非编辑态：签名列跨 1 + 4 = 5 行 -->
+            <td class="td-sign" :rowspan="1 + paddedStep6List.length" style="border-top: none;"></td>
           </tr>
-          <!-- 其他行 -->
-          <tr style="height: 28px;">
+          <tr v-for="(item, idx) in paddedStep6List" :key="idx" style="height: 28px;">
+            <td class="td-record-cell td-record-center">{{ idx + 1 }}）</td>
             <td class="td-record-cell">
-              <el-checkbox v-model="item.otherFlag" true-value="Y" false-value="" :disabled="!isEditMode">其他</el-checkbox>，<input v-if="isEditMode" v-model="item.otherReason" class="edit-input-short" style="width: 70px;" /><span v-else>{{ item.otherReason || '' }}</span>&nbsp;&nbsp;数量 <input v-if="isEditMode" v-model="item.otherQty" class="edit-input-short" style="width: 40px;" /><span v-else>{{ item.otherQty || '' }}</span> 个
+              <span class="filled-value">{{ item.materialName || '' }}</span>
+            </td>
+            <td class="td-record-cell td-record-center">
+              <span class="filled-value">{{ item.batchNumber || '' }}</span>
+            </td>
+            <td class="td-record-cell">
+              <span class="filled-value">{{ item.spec || '' }}</span>
+            </td>
+            <td class="td-record-cell td-record-center">
+              <span class="filled-value">{{ item.unit || '' }}</span>
+            </td>
+            <td class="td-record-cell td-record-center">
+              <span class="filled-value">{{ item.nonConformingQty ?? '' }}</span>
+            </td>
+            <td class="td-record-cell">
+              <!-- 不合格原因及对应数量：三种原因合并为纯文本 -->
+              <span class="filled-value">{{ formatNonConformingReason(item) }}</span>
+            </td>
+            <td class="td-record-cell td-record-center">
+              <!-- 处理方式：销毁/剪毁合并为纯文本 -->
+              <span class="filled-value">{{ formatDisposalMethod(item) }}</span>
             </td>
           </tr>
         </template>
@@ -341,7 +389,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, inject } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getBizDisinfectionPackaging2Detail,
@@ -368,6 +416,10 @@ const SYNC_WORKSHOP = 'D'
 
 /**
  * 组件 Props 定义
+ *
+ * 【v1.5 新增】useA4Preview：
+ * - true：view-container 固定为 201mm（A4 物理高度），用于打印场景
+ * - false（默认）：view-container 使用 flex: 1 自适应父容器高度，用于聚合入口场景
  */
 const props = defineProps({
   actionType: { type: String, default: 'PREVIEW' },
@@ -379,10 +431,23 @@ const props = defineProps({
   backendRoute: { type: String, default: '' },
   tableName: { type: String, default: '' },
   menuName: { type: String, default: '' },
-  buttonLabel: { type: String, default: '确认' }
+  buttonLabel: { type: String, default: '确认' },
+  useA4Preview: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['closed', 'refresh'])
+
+/**
+ * 【v1.6 新增】获取父对话框提供的全屏上下文
+ *
+ * 父组件 DynamicComponentDialog 通过 provide 暴露：
+ *   - isFullscreen：ref，当前全屏状态（需 .value 访问）
+ *   - toggleFullscreen：函数，切换全屏
+ *
+ * 如果本组件不在对话框内（如独立打印场景），inject 返回 null，
+ * 上方按钮区 v-if 判断会降级，不渲染全屏按钮。
+ */
+const dialogCtx = inject('dynamicDialogCtx', null)
 
 const loading = ref(false)
 const batchRecord = ref(null)
@@ -566,6 +631,56 @@ function handleSelectChange(row, type, code, name) {
   else if (type === 'unit') row.unit = name || ''
 }
 
+// ==================== Step6 非编辑态纯文本格式化 ====================
+/**
+ * 【v1.9 新增】非编辑态：Step6 不合格原因及对应数量的纯文本格式化
+ *
+ * 格式化规则：
+ * - 破损勾选：破损，数量X个
+ * - 色差勾选：色差，数量X个
+ * - 其他勾选：其他：xxx，数量X个（reason 为空时省略"：xxx"）
+ * - 多个同时勾选：用"；"分隔
+ * - 均未勾选：返回空字符串
+ *
+ * 【v1.10 修复】数量拼接从 `|| ''` 改为 `?? ''`，0 值可正常显示
+ *
+ * @param {Object} item Step6 行数据
+ * @returns {String} 格式化后的纯文本
+ */
+function formatNonConformingReason(item) {
+  const parts = []
+  if (item.damageFlag === 'Y') {
+    parts.push(`破损，数量${item.damageQty ?? ''}个`)
+  }
+  if (item.colorDifferenceFlag === 'Y') {
+    parts.push(`色差，数量${item.colorDifferenceQty ?? ''}个`)
+  }
+  if (item.otherFlag === 'Y') {
+    const reason = item.otherReason || ''
+    parts.push(`其他${reason ? '：' + reason : ''}，数量${item.otherQty ?? ''}个`)
+  }
+  return parts.join('；')
+}
+
+/**
+ * 【v1.9 新增】非编辑态：Step6 处理方式的纯文本格式化
+ *
+ * 格式化规则：
+ * - 销毁勾选：销毁
+ * - 剪毁勾选：剪毁
+ * - 多个同时勾选：用"、"分隔
+ * - 均未勾选：返回空字符串
+ *
+ * @param {Object} item Step6 行数据
+ * @returns {String} 格式化后的纯文本
+ */
+function formatDisposalMethod(item) {
+  const parts = []
+  if (item.destroyFlag === 'Y') parts.push('销毁')
+  if (item.shearFailureFlag === 'Y') parts.push('剪毁')
+  return parts.join('、')
+}
+
 // ==================== 通用动态请求 ====================
 async function dynamicRequest(routeTemplate, pathParams, data = {}, method = 'post') {
   let url = routeTemplate
@@ -729,22 +844,58 @@ async function handleApproveSubmit() {
 
 <style scoped>
 /* ============================================================
-   容器
+   容器（v1.5 改造：flex 自适应）
    ============================================================ */
 .dis-pack2-form-container {
-  padding: 8px;
+  /* 上 padding 从 8px 改为 4px，给按钮留出贴紧顶部的空间 */
+  padding: 4px 8px 8px 8px;
+  /* 根容器撑满 dialog body，由父容器驱动高度 */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
+/* 【v1.5】A4 打印模式：根容器改为自然高度，不撑满 dialog */
+.dis-pack2-form-container.is-a4-mode {
+  height: auto;
+  display: block;
+}
+
+/* 【v1.7 改造】顶部按钮区：正常文档流占位 + 居中显示 */
+.form-action-bar {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+/* ============================================================
+   滚动容器（v1.5 改造：flex 自适应 / A4 固定高度 两种模式）
+   ============================================================ */
 .view-container {
   overflow-x: hidden;
   overflow-y: auto;
-  height: 85vh;
   box-sizing: border-box;
   color: #000;
 }
-.preview-mode {
+/* 【v1.5】Flex 自适应模式（聚合入口：查看/编辑/审批都走这个） */
+.preview-mode-flex {
+  flex: 1;
+  min-height: 0;
+}
+/* 【v1.5】A4 打印模式（独立打印对话框） */
+.preview-mode-a4 {
   height: 201mm;
+  flex-shrink: 0;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* 【v1.8 新增】动态回填值突出显示（区别于固定文本） */
+.filled-value {
+  color: #4046ff;
 }
 
 /* ============================================================

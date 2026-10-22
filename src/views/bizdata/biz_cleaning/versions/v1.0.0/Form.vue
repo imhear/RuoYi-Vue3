@@ -25,14 +25,14 @@
         <span style="flex-shrink: 0; font-size: 14px;">编号：R-(LS-SMP-S-08)-01</span>
       </div>
 
-      <!-- ===== 标题：清场记录 + 车间复选框（只读） ===== -->
-      <div style="text-align: center; margin-bottom: 4px; font-size: 15px;">
-        清场记录（
-        <label class="workshop-check"><span>消毒</span><input type="checkbox" :checked="record.workshop === 'D'" disabled /></label>
-        <label class="workshop-check"><span>灌装</span><input type="checkbox" :checked="record.workshop === 'F'" disabled /></label>
-        <label class="workshop-check"><span>包装</span><input type="checkbox" :checked="record.workshop === 'P'" disabled /></label>
-        <label class="workshop-check"><span>组套</span><input type="checkbox" :checked="record.workshop === 'G'" disabled /></label>
-        ）
+      <!-- ===== 标题：清场记录 + 车间复选框（选中高亮） ===== -->
+      <div class="cleaning-title-bar">
+        <span>清场记录（</span>
+        <el-checkbox :model-value="record.workshop === 'D'" disabled>消毒</el-checkbox>
+        <el-checkbox :model-value="record.workshop === 'F'" disabled>灌装</el-checkbox>
+        <el-checkbox :model-value="record.workshop === 'P'" disabled>外包</el-checkbox>
+        <el-checkbox :model-value="record.workshop === 'G'" disabled>组套</el-checkbox>
+        <span>）</span>
       </div>
 
       <!-- ===== 产品信息（只读，不突出） ===== -->
@@ -40,10 +40,10 @@
         <colgroup>
           <col style="width: 110px;">
           <col>
-          <col style="width: 60px;">
-          <col style="width: 220px;">
-          <col style="width: 90px;">
-          <col style="width: 180px;">
+          <col style="width: 80px;">
+          <col style="width: 110px;">
+          <col style="width: 120px;">
+          <col style="width: 160px;">
         </colgroup>
         <tr>
           <td class="info-label">产品名称</td>
@@ -87,7 +87,7 @@
           <col style="width: 170px;">
           <col>
           <col style="width: 120px;">
-          <col style="width: 210px;">
+          <col style="width: 160px;">
         </colgroup>
         <tr>
           <td class="header-value">清场项目</td>
@@ -103,7 +103,7 @@
           <col style="width: 170px;">
           <col>
           <col style="width: 120px;">
-          <col style="width: 210px;">
+          <col style="width: 160px;">
         </colgroup>
 
         <!-- 1. 更换状态标识 -->
@@ -111,15 +111,12 @@
           <td class="td-step-label">更换状态标识</td>
           <td class="td-require">更换设备状态标识</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.statusLabelReplaceFlag === 'Y'"
-                @change="(val) => { record.statusLabelReplaceFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.statusLabelReplaceFlag === 'N'"
-                @change="(val) => { record.statusLabelReplaceFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.statusLabelReplaceFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.statusLabelReplaceFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.statusLabelReplaceFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
-          <!-- 签名列：跨 12 行数据（含表头行的第四列由上方 header-table 提供视觉连续） -->
+          <!-- 签名列：跨 12 行数据 -->
           <td class="td-sign" :rowspan="12" style="border-top-color: #fff;">
             <div>操作人：{{ submitSignatureName }}</div>
             <div v-if="submitSignatureTime">{{ submitSignatureTime }}</div>
@@ -137,37 +134,28 @@
           <td class="td-step-label" rowspan="3">物料清除</td>
           <td class="td-require">移出工序产品</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.materialRemoveProductFlag === 'Y'"
-                @change="(val) => { record.materialRemoveProductFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.materialRemoveProductFlag === 'N'"
-                @change="(val) => { record.materialRemoveProductFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.materialRemoveProductFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.materialRemoveProductFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.materialRemoveProductFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
         <tr style="height: 32px;">
           <td class="td-require">移出剩余物料及不合格物料</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.materialRemoveResidualFlag === 'Y'"
-                @change="(val) => { record.materialRemoveResidualFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.materialRemoveResidualFlag === 'N'"
-                @change="(val) => { record.materialRemoveResidualFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.materialRemoveResidualFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.materialRemoveResidualFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.materialRemoveResidualFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
         <tr style="height: 32px;">
           <td class="td-require">无本批残留物</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.materialRemoveBatchResidueFlag === 'Y'"
-                @change="(val) => { record.materialRemoveBatchResidueFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.materialRemoveBatchResidueFlag === 'N'"
-                @change="(val) => { record.materialRemoveBatchResidueFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.materialRemoveBatchResidueFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.materialRemoveBatchResidueFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.materialRemoveBatchResidueFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
 
@@ -176,25 +164,19 @@
           <td class="td-step-label" rowspan="2">场所清洁</td>
           <td class="td-require">地面无积水、无粉尘、无污物</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.siteCleanFloorFlag === 'Y'"
-                @change="(val) => { record.siteCleanFloorFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.siteCleanFloorFlag === 'N'"
-                @change="(val) => { record.siteCleanFloorFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.siteCleanFloorFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.siteCleanFloorFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.siteCleanFloorFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
         <tr style="height: 32px;">
           <td class="td-require">门窗、内墙、顶棚、灯具、管道、线路等清洁干净</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.siteCleanStructureFlag === 'Y'"
-                @change="(val) => { record.siteCleanStructureFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.siteCleanStructureFlag === 'N'"
-                @change="(val) => { record.siteCleanStructureFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.siteCleanStructureFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.siteCleanStructureFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.siteCleanStructureFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
 
@@ -203,25 +185,19 @@
           <td class="td-step-label" rowspan="2">设备清洁</td>
           <td class="td-require">无粉尘、无油污</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.equipCleanDustOilFlag === 'Y'"
-                @change="(val) => { record.equipCleanDustOilFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.equipCleanDustOilFlag === 'N'"
-                @change="(val) => { record.equipCleanDustOilFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.equipCleanDustOilFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.equipCleanDustOilFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.equipCleanDustOilFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
         <tr style="height: 32px;">
           <td class="td-require">设备见本色、光亮、洁净</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.equipCleanOriginalColorFlag === 'Y'"
-                @change="(val) => { record.equipCleanOriginalColorFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.equipCleanOriginalColorFlag === 'N'"
-                @change="(val) => { record.equipCleanOriginalColorFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.equipCleanOriginalColorFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.equipCleanOriginalColorFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.equipCleanOriginalColorFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
 
@@ -230,13 +206,10 @@
           <td class="td-step-label">工器具清洁</td>
           <td class="td-require">无粉尘、无污物，洁净见本色</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.toolCleanDustDirtFlag === 'Y'"
-                @change="(val) => { record.toolCleanDustDirtFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.toolCleanDustDirtFlag === 'N'"
-                @change="(val) => { record.toolCleanDustDirtFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.toolCleanDustDirtFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.toolCleanDustDirtFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.toolCleanDustDirtFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
 
@@ -245,25 +218,19 @@
           <td class="td-step-label" rowspan="2">设施清洁</td>
           <td class="td-require">无粉尘、无污物、干净见本色</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.facilityCleanDustDirtFlag === 'Y'"
-                @change="(val) => { record.facilityCleanDustDirtFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.facilityCleanDustDirtFlag === 'N'"
-                @change="(val) => { record.facilityCleanDustDirtFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.facilityCleanDustDirtFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.facilityCleanDustDirtFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.facilityCleanDustDirtFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
         <tr style="height: 32px;">
           <td class="td-require">摆放整齐</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.facilityCleanArrangementFlag === 'Y'"
-                @change="(val) => { record.facilityCleanArrangementFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.facilityCleanArrangementFlag === 'N'"
-                @change="(val) => { record.facilityCleanArrangementFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.facilityCleanArrangementFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.facilityCleanArrangementFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.facilityCleanArrangementFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
 
@@ -272,13 +239,10 @@
           <td class="td-step-label">其 它</td>
           <td class="td-require">洁 净</td>
           <td class="td-record">
-            <template v-if="isEditMode">
-              <el-checkbox :model-value="record.otherCleanStatusFlag === 'Y'"
-                @change="(val) => { record.otherCleanStatusFlag = val ? 'Y' : '' }">是</el-checkbox>
-              <el-checkbox :model-value="record.otherCleanStatusFlag === 'N'"
-                @change="(val) => { record.otherCleanStatusFlag = val ? 'N' : '' }">否</el-checkbox>
-            </template>
-            <template v-else><span class="filled-value">{{ formatYesNo(record.otherCleanStatusFlag) }}</span></template>
+            <div class="checkbox-pair">
+              <el-checkbox v-model="record.otherCleanStatusFlag" true-value="Y" false-value="N" :disabled="!isEditMode">是</el-checkbox>
+              <el-checkbox v-model="record.otherCleanStatusFlag" true-value="N" false-value="Y" :disabled="!isEditMode">否</el-checkbox>
+            </div>
           </td>
         </tr>
       </table>
@@ -313,6 +277,16 @@ const props = defineProps({
 
 const emit = defineEmits(['closed', 'refresh'])
 
+/**
+ * 【v1.6 新增】获取父对话框提供的全屏上下文
+ *
+ * 父组件 DynamicComponentDialog 通过 provide 暴露：
+ *   - isFullscreen：ref，当前全屏状态（需 .value 访问）
+ *   - toggleFullscreen：函数，切换全屏
+ *
+ * 如果本组件不在对话框内（如独立打印场景），inject 返回 null，
+ * 上方按钮区 v-if 判断会降级，不渲染全屏按钮。
+ */
 const dialogCtx = inject('dynamicDialogCtx', null)
 
 const loading = ref(false)
@@ -375,13 +349,6 @@ const inspectSignatureName = computed(() => inspectNode.value?.operator || '')
 const inspectSignatureTime = computed(() =>
   inspectNode.value?.operatorTime ? parseTime(inspectNode.value.operatorTime, '{y}-{m}-{d} {h}:{i}') : ''
 )
-
-// ==================== Y/N → 中文 ====================
-function formatYesNo(flag) {
-  if (flag === 'Y') return '是'
-  if (flag === 'N') return '否'
-  return ''
-}
 
 // ==================== 数据加载 ====================
 onMounted(async () => {
@@ -559,24 +526,6 @@ async function handleApproveSubmit() {
 }
 
 /* ============================================================
-   车间复选框（标题处，只读）
-   ============================================================ */
-.workshop-check {
-  display: inline-flex;
-  align-items: center;
-  cursor: default;
-  font-size: 15px;
-  user-select: none;
-  margin: 0 2px;
-}
-.workshop-check span {
-  margin-right: 2px;
-}
-.workshop-check + .workshop-check {
-  margin-left: 4px;
-}
-
-/* ============================================================
    表格通用样式
    ============================================================ */
 .row-table {
@@ -688,5 +637,48 @@ async function handleApproveSubmit() {
 }
 .view-container.is-scrolling {
   scrollbar-color: rgba(144, 147, 153, 0.5) transparent;
+}
+
+/* ============================================================
+   标题区（清场记录 + 车间复选框）
+   ============================================================ */
+.cleaning-title-bar {
+  text-align: center;
+  margin-bottom: 4px;
+  font-size: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ============================================================
+   复选框对（互斥 Y/N 双 checkbox，与领料单一致）
+   ============================================================ */
+.checkbox-pair {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.checkbox-pair :deep(.el-checkbox) {
+  margin-right: 0;
+}
+
+/* ============================================================
+   复选框选中高亮（覆盖 Element Plus disabled 状态的默认灰色）
+   - 应用于：标题车间复选框 + 12 项 Y/N 复选框
+   - 与领料单完全一致
+   ============================================================ */
+.view-container :deep(.el-checkbox.is-checked .el-checkbox__inner) {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+.view-container :deep(.el-checkbox.is-checked .el-checkbox__inner::after) {
+  border-color: #fff;
+}
+.view-container :deep(.el-checkbox__inner) {
+  border-radius: 2px;
+}
+.view-container :deep(.el-checkbox__label) {
+  color: #000 !important;
 }
 </style>

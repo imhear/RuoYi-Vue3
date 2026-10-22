@@ -740,7 +740,7 @@
                     <div style="margin-left: 0px;">
                       3）内包装是否完整：
                       <span class="filled-value">{{ item.innerPackagingIntactFlag === 'Y' ? '是' : (item.innerPackagingIntactFlag === 'N' ? '否' : '') }}</span>
-                      <span v-if="item.noInnerPackagingIntactFlag === 'Y'" style="margin-left: 8px;" class="filled-value">（无此项）</span>
+                      <span v-if="item.noInnerPackagingIntactFlag === 'Y'" style="margin-left: 0px;" class="filled-value">无此项</span>
                     </div>
                   </div>
                   <div>

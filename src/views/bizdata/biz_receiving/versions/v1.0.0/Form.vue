@@ -7,11 +7,9 @@
            - v-if 放宽为"编辑态 / 审批态 / 对话框内预览态"三选一
            - 独立打印场景（dialogCtx = null）预览态不渲染按钮栏，走 A4 模式
       -->
-      <div v-if="isEditMode || isApproveMode || dialogCtx" class="form-action-bar">
-        <el-button
-          v-if="dialogCtx"
-          @click="dialogCtx.toggleFullscreen()"
-        >{{ dialogCtx.isFullscreen.value ? '取消全屏' : '全屏' }}</el-button>
+      <div v-if="isEditMode || isApproveMode || isAddPageMode || dialogCtx" class="form-action-bar">
+        <el-button v-if="dialogCtx" @click="dialogCtx.toggleFullscreen()">{{ dialogCtx.isFullscreen.value ? '取消全屏' : '全屏' }}</el-button>
+        <el-button v-if="isAddPageMode" type="primary" @click="handleAddPage">加 页</el-button>
         <el-button v-if="isEditMode" type="primary" @click="handleEditSubmit">保 存</el-button>
         <el-button v-if="isApproveMode" type="primary" @click="handleApproveSubmit">{{ buttonLabel || '确认' }}</el-button>
       </div>
@@ -218,6 +216,20 @@
       </el-table>
 
     </div>
+
+    <!-- ===== 加页对话框 ===== -->
+    <el-dialog v-model="addDialogVisible" title="添加日期" width="400px" append-to-body>
+      <el-form :model="addForm" :rules="addRules" ref="addFormRef" label-width="80px">
+        <el-form-item label="日期" prop="date">
+          <el-date-picker v-model="addForm.date" type="date" value-format="YYYY-MM-DD" placeholder="请选择日期" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="addDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleAddSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -284,7 +296,16 @@ const fNodes = ref([])            // 当前 C 节点下所有 F 节点
 
 const isEditMode = computed(() => props.actionType === 'EDIT')
 const isPreviewMode = computed(() => props.actionType === 'PREVIEW')
-const isApproveMode = computed(() => !isEditMode.value && !isPreviewMode.value)
+const isApproveMode = computed(() => !isEditMode.value && !isPreviewMode.value && !isAddPageMode.value)
+
+// ==================== 加页状态（v1.1 新增） ====================
+const isAddPageMode = computed(() => props.actionType === 'ADD_PAGE')
+const addDialogVisible = ref(false)
+const addFormRef = ref(null)
+const addForm = reactive({ date: '' })
+const addRules = {
+  date: [{ required: true, message: '请选择日期', trigger: 'change' }]
+}
 
 // ==================== 滚动条显隐控制 ====================
 
@@ -648,6 +669,36 @@ async function handleApproveSubmit() {
     emit('closed')
   } catch (error) {
     ElMessage.error('操作失败')
+  }
+}
+
+// ==================== 加页（v1.1 新增） ====================
+/**
+ * 打开加页对话框（仅 ADD_PAGE 态可点）
+ */
+function handleAddPage() {
+  addForm.date = new Date().toISOString().slice(0, 10)
+  addDialogVisible.value = true
+}
+
+/**
+ * 提交加页
+ */
+async function handleAddSubmit() {
+  if (addFormRef.value) {
+    addFormRef.value.validate(async (valid) => {
+      if (!valid) return
+      try {
+        const routeTemplate = props.backendRoute || '/batch/batch_record/addPage/{cMenuId}'
+        await dynamicRequest(routeTemplate, { cMenuId: props.cMenuId }, { instanceDate: addForm.date })
+        ElMessage.success('操作成功')
+        addDialogVisible.value = false
+        emit('refresh')
+        emit('closed')
+      } catch (error) {
+        ElMessage.error(error?.message || '加页失败')
+      }
+    })
   }
 }
 </script>

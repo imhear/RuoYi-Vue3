@@ -553,7 +553,8 @@ function getActionTypeText(actionType) {
     CANCEL_SUBMIT: '取消提交',
     CANCEL_REVIEW: '取消复核',
     CANCEL_INSPECT: '取消检查',
-    CANCEL_ARCHIVE: '取消归档'
+    CANCEL_ARCHIVE: '取消归档',
+    ADD_PAGE: '加页'
   }
   return map[actionType] || actionType
 }
@@ -571,6 +572,7 @@ function getActionTypeTag(actionType) {
   if (actionType === 'CANCEL_REVIEW') return 'warning'
   if (actionType === 'CANCEL_INSPECT') return 'warning'
   if (actionType === 'CANCEL_ARCHIVE') return 'warning'
+  if (actionType === 'ADD_PAGE') return 'warning'
   return 'info'
 }
 

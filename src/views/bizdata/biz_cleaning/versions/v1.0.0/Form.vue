@@ -679,6 +679,6 @@ async function handleApproveSubmit() {
   border-radius: 2px;
 }
 .view-container :deep(.el-checkbox__label) {
-  color: #000 !important;
+  /* color: #000 !important; */
 }
 </style>

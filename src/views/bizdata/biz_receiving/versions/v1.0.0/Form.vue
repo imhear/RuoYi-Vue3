@@ -775,7 +775,7 @@ async function handleAddSubmit() {
 
 .view-container :deep(.el-table) { color: #000; }
 .view-container :deep(.el-table th) { color: #000; font-weight: normal; }
-.view-container :deep(.el-checkbox__label) { color: #000 !important; }
+/* .view-container :deep(.el-checkbox__label) { color: #000 !important; } */
 .top-table { margin-bottom: -1px; }
 .top-table :deep(.el-table__body tr) { background-color: #f5f7fa !important; }
 .bottom-table :deep(.el-table__body tr) { background-color: #f5f7fa !important; }

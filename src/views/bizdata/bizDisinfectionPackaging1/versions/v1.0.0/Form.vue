@@ -298,10 +298,12 @@
                       class="device-select"
                       @change="(code) => handleDeviceChange(item, 1, code)">
                       <el-option
-                        v-for="opt in DEVICE_OPTIONS"
+                        v-for="opt in deviceOptions"
                         :key="opt.code"
                         :label="opt.name"
-                        :value="opt.code" />
+                        :value="opt.code">
+                        {{ opt.name }} {{ opt.code }}
+                      </el-option>
                     </el-select>
                     <input v-model="item.deviceCode1" readonly class="edit-input-device-code" placeholder="编码" />
                     <el-select
@@ -312,10 +314,12 @@
                       style="margin-left: 20px;"
                       @change="(code) => handleDeviceChange(item, 2, code)">
                       <el-option
-                        v-for="opt in DEVICE_OPTIONS"
+                        v-for="opt in deviceOptions"
                         :key="opt.code"
                         :label="opt.name"
-                        :value="opt.code" />
+                        :value="opt.code">
+                        {{ opt.name }} {{ opt.code }}
+                      </el-option>
                     </el-select>
                     <input v-model="item.deviceCode2" readonly class="edit-input-device-code" placeholder="编码" />
                   </div>
@@ -370,10 +374,12 @@
                       class="device-select"
                       @change="(code) => handleDeviceChange(item, 1, code)">
                       <el-option
-                        v-for="opt in DEVICE_OPTIONS"
+                        v-for="opt in deviceOptions"
                         :key="opt.code"
                         :label="opt.name"
-                        :value="opt.code" />
+                        :value="opt.code">
+                        {{ opt.name }} {{ opt.code }}
+                      </el-option>
                     </el-select>
                     <input v-model="item.deviceCode1" readonly class="edit-input-device-code" placeholder="编码" />
                     <el-select
@@ -384,10 +390,12 @@
                       style="margin-left: 20px;"
                       @change="(code) => handleDeviceChange(item, 2, code)">
                       <el-option
-                        v-for="opt in DEVICE_OPTIONS"
+                        v-for="opt in deviceOptions"
                         :key="opt.code"
                         :label="opt.name"
-                        :value="opt.code" />
+                        :value="opt.code">
+                        {{ opt.name }} {{ opt.code }}
+                      </el-option>
                     </el-select>
                     <input v-model="item.deviceCode2" readonly class="edit-input-device-code" placeholder="编码" />
                   </div>
@@ -464,10 +472,12 @@
                       class="device-select"
                       @change="(code) => handleDeviceChange(item, 1, code)">
                       <el-option
-                        v-for="opt in DEVICE_OPTIONS"
+                        v-for="opt in deviceOptions"
                         :key="opt.code"
                         :label="opt.name"
-                        :value="opt.code" />
+                        :value="opt.code">
+                        {{ opt.name }} {{ opt.code }}
+                      </el-option>
                     </el-select>
                     <input v-model="item.deviceCode1" readonly class="edit-input-device-code" placeholder="编码" />
                     <el-select
@@ -478,10 +488,12 @@
                       style="margin-left: 20px;"
                       @change="(code) => handleDeviceChange(item, 2, code)">
                       <el-option
-                        v-for="opt in DEVICE_OPTIONS"
+                        v-for="opt in deviceOptions"
                         :key="opt.code"
                         :label="opt.name"
-                        :value="opt.code" />
+                        :value="opt.code">
+                        {{ opt.name }} {{ opt.code }}
+                      </el-option>
                     </el-select>
                     <input v-model="item.deviceCode2" readonly class="edit-input-device-code" placeholder="编码" />
                   </div>
@@ -536,10 +548,12 @@
                       class="device-select"
                       @change="(code) => handleDeviceChange(item, 1, code)">
                       <el-option
-                        v-for="opt in DEVICE_OPTIONS"
+                        v-for="opt in deviceOptions"
                         :key="opt.code"
                         :label="opt.name"
-                        :value="opt.code" />
+                        :value="opt.code">
+                        {{ opt.name }} {{ opt.code }}
+                      </el-option>
                     </el-select>
                     <input v-model="item.deviceCode1" readonly class="edit-input-device-code" placeholder="编码" />
                     <el-select
@@ -550,10 +564,12 @@
                       style="margin-left: 20px;"
                       @change="(code) => handleDeviceChange(item, 2, code)">
                       <el-option
-                        v-for="opt in DEVICE_OPTIONS"
+                        v-for="opt in deviceOptions"
                         :key="opt.code"
                         :label="opt.name"
-                        :value="opt.code" />
+                        :value="opt.code">
+                        {{ opt.name }} {{ opt.code }}
+                      </el-option>
                     </el-select>
                     <input v-model="item.deviceCode2" readonly class="edit-input-device-code" placeholder="编码" />
                   </div>
@@ -789,6 +805,7 @@ import {
 } from '@/api/bizdata/bizDisinfectionPackaging1'
 import { getBatch_record } from '@/api/batch/batch_record'
 import { listBatchRecordMenuButtonsByCMenuId } from '@/api/batch/batch_record_menu'
+import { listDeviceOptions } from '@/api/basic/device'
 import BaseCategorySelect from '@/components/BaseCategorySelect/index.vue'
 import request from '@/utils/request'
 import { parseTime } from '@/utils/ruoyi'
@@ -801,16 +818,10 @@ const MATERIAL_CATEGORY_CODE = 'PACKAGING_MATERIAL'
 /** 本表单为消毒车间专属表单，从消毒车间（D）的领料单同步物料 */
 const SYNC_WORKSHOP = 'D'
 
-/** 临时设备数据源（后续可切换为真实设备表查询） */
-const DEVICE_OPTIONS = [
-  { code: '1', name: '臭氧机1号' },
-  { code: '2', name: '洗瓶机1号' },
-  { code: '3', name: '吹瓶机1号' },
-  { code: '4', name: '洗烘一体机1号' },
-  { code: '5', name: '风淋室1号' },
-  { code: '6', name: '气枪1号' },
-  { code: '7', name: '消毒柜1号' }
-]
+/** 设备下拉选项（从基础数据 API 加载） */
+const deviceOptions = ref([])
+/** 当前节点所属工作单元编码（从 batch_record_menu 查） */
+const currentWorkUnitCode = ref('')
 
 /**
  * 组件 Props 定义
@@ -1153,6 +1164,8 @@ function getMethodLabel(method) {
 // ==================== 数据加载 ====================
 onMounted(async () => {
   await loadFNodes()
+  await loadCurrentWorkUnitCode()   // 新增
+  await loadDeviceOptions()          // 新增
   if (isPreviewMode.value && !props.businessRecordId) {
     initEmptyTemplate()
   } else {
@@ -1220,11 +1233,48 @@ function handleSelectChange(row, type, code, name) {
  * @param {String} code  选中的设备编码（空字符串表示清空）
  */
 function handleDeviceChange(item, index, code) {
-  const matched = code ? DEVICE_OPTIONS.find(opt => opt.code === code) : null
+  const matched = code ? deviceOptions.value.find(opt => opt.code === code) : null
   if (index === 1) {
     item.deviceName1 = matched ? matched.name : ''
   } else {
     item.deviceName2 = matched ? matched.name : ''
+  }
+}
+
+/**
+ * 加载当前 C 节点所属工作单元编码
+ *
+ * 通过若依标准节点查询接口取 batch_record_menu.work_unit_code，
+ * 避免依赖父组件透传（可扩展性更佳）。
+ */
+async function loadCurrentWorkUnitCode() {
+  if (!props.cMenuId) return
+  try {
+    const res = await request({
+      url: '/batch/batch_record_menu/' + props.cMenuId,
+      method: 'get'
+    })
+    currentWorkUnitCode.value = res.data?.workUnitCode || ''
+  } catch (error) {
+    console.error('加载当前节点工作单元编码失败', error)
+    currentWorkUnitCode.value = ''
+  }
+}
+
+/**
+ * 按工作单元加载设备下拉选项
+ */
+async function loadDeviceOptions() {
+  if (!currentWorkUnitCode.value) {
+    deviceOptions.value = []
+    return
+  }
+  try {
+    const res = await listDeviceOptions({ workUnitCode: currentWorkUnitCode.value })
+    deviceOptions.value = res.data || []
+  } catch (error) {
+    console.error('加载设备下拉选项失败', error)
+    deviceOptions.value = []
   }
 }
 // ==================== 通用动态请求 ====================
@@ -1611,10 +1661,10 @@ async function handleApproveSubmit() {
   white-space: nowrap;
 }
 .device-select {
-  width: 110px;
+  width: 90px;
 }
 .edit-input-device-code {
-  width: 30px;
+  width: 80px;
   border: 1px solid #dcdfe6;
   border-radius: 2px;
   padding: 2px 0px;

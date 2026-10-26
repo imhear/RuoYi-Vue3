@@ -84,6 +84,7 @@
                 <el-date-picker
                   v-model="s1TimeRange"
                   type="datetimerange"
+                  format="YYYY-MM-DD HH:mm"
                   value-format="YYYY-MM-DD HH:mm:00"
                   start-placeholder="开始时间"
                   end-placeholder="结束时间"
@@ -92,7 +93,7 @@
               </template>
               <template v-else>
                 <span class="filled-value" style="color: #4046ff;">
-                {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}-{m}-{d} {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}-{m}-{d} {h}:{i}') : '' }}
+                {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}-{m}-{d} {h}:{i}') : '' }} - {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}-{m}-{d} {h}:{i}') : '' }}
                 </span>
                 <!-- {{ record.s1StartTime ? parseTime(record.s1StartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ record.s1EndTime ? parseTime(record.s1EndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} -->
               </template>
@@ -195,6 +196,7 @@
                   :model-value="getStepTimeRange(item)"
                   @update:model-value="(val) => setStepTimeRange(item, val)"
                   type="datetimerange"
+                  format="YYYY-MM-DD HH:mm"
                   value-format="YYYY-MM-DD HH:mm:00"
                   start-placeholder="开始时间"
                   end-placeholder="结束时间"
@@ -204,7 +206,7 @@
               <template v-else>
                 <template v-if="item.stepStartTime">
                   <span class="filled-value" style="color: #4046ff;">
-                  {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}-{m}-{d} {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}-{m}-{d} {h}:{i}') : '' }}
+                  {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}-{m}-{d} {h}:{i}') : '' }} - {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}-{m}-{d} {h}:{i}') : '' }}
                   </span>
                 </template>
                 <!-- {{ item.stepStartTime ? parseTime(item.stepStartTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} 至 {{ item.stepEndTime ? parseTime(item.stepEndTime, '{y}年{m}月{d}日 {h}:{i}') : '' }} -->
@@ -336,6 +338,7 @@
                         :model-value="getDisinfectionTimeRange(item)"
                         @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
                         is-range
+                        format="HH:mm"
                         value-format="HH:mm:00"
                         start-placeholder="开始时间"
                         end-placeholder="结束时间"
@@ -425,6 +428,7 @@
                         :model-value="getDisinfectionTimeRange(item)"
                         @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
                         is-range
+                        format="HH:mm"
                         value-format="HH:mm:00"
                         start-placeholder="开始时间"
                         end-placeholder="结束时间"
@@ -510,6 +514,7 @@
                         :model-value="getDisinfectionTimeRange(item)"
                         @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
                         is-range
+                        format="HH:mm"
                         value-format="HH:mm:00"
                         start-placeholder="开始时间"
                         end-placeholder="结束时间"
@@ -594,6 +599,7 @@
                         :model-value="getDisinfectionTimeRange(item)"
                         @update:model-value="(val) => setDisinfectionTimeRange(item, val)"
                         is-range
+                        format="HH:mm"
                         value-format="HH:mm:00"
                         start-placeholder="开始时间"
                         end-placeholder="结束时间"

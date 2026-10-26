@@ -56,6 +56,7 @@
               <el-date-picker
                 v-model="record.startTime"
                 type="datetime"
+                format="YYYY-MM-DD HH:mm"
                 value-format="YYYY-MM-DD HH:mm:ss"
                 placeholder="开始时间"
                 size="small"
@@ -65,6 +66,7 @@
               <el-date-picker
                 v-model="record.endTime"
                 type="datetime"
+                format="YYYY-MM-DD HH:mm"
                 value-format="YYYY-MM-DD HH:mm:ss"
                 placeholder="结束时间"
                 size="small"
@@ -72,9 +74,12 @@
               />
             </template>
             <template v-else>
-              <span class="filled-value">{{ formatDateTime(record.startTime) }}</span>
-              <span v-if="record.startTime && record.endTime" style="margin: 0 6px;">至</span>
-              <span class="filled-value">{{ formatDateTime(record.endTime) }}</span>
+              <span class="filled-value">
+                {{ record.startTime ? parseTime(record.startTime, '{y}-{m}-{d} {h}:{i}') : '' }} - {{ record.endTime ? parseTime(record.endTime, '{y}-{m}-{d} {h}:{i}') : '' }}
+              </span>
+              <!-- <span class="filled-value">{{ formatDateTime(record.startTime) }}</span>
+              <span v-if="record.startTime && record.endTime" style="margin: 0 6px;">-</span>
+              <span class="filled-value">{{ formatDateTime(record.endTime) }}</span> -->
             </template>
           </td>
           <td class="info-label">灌装首件确认</td>
@@ -419,7 +424,7 @@ function formatYesNo(flag) {
 
 function formatDateTime(val) {
   if (!val) return ''
-  return parseTime(val, '{y}年{m}月{d}日 {h}:{i}')
+  return parseTime(val, '{y}-{m}-{d} {h}:{i}')
 }
 
 function formatInCleanValidity(flag) {

@@ -292,7 +292,7 @@ const startEndTimeText = computed(() => {
   // s 格式例如：2026-10-18 12:00
   const sShort = s.substring(2) // 截取：26-10-18 12:00
   const eTime = e.substring(11) // 截取：12:15
-  return `${sShort} - ${eTime}`
+  return `${sShort}-${eTime}`
 })
 
 /** datetimerange 双向绑定：将 startTime / endTime 拼成数组 */

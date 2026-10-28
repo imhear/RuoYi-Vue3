@@ -329,7 +329,7 @@ defineOptions({ name: 'FillingRecord3Form' })
 const MATERIAL_CATEGORY_CODE = 'PACKAGING_MATERIAL'
 
 /** 本表单为灌装车间专属表单，领料单关联消毒车间（D） */
-const SYNC_WORKSHOP = 'D'
+const SYNC_WORKSHOP = 'DISINFECTION'
 
 const props = defineProps({
   actionType: { type: String, default: 'PREVIEW' },

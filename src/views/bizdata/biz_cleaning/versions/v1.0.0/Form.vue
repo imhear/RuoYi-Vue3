@@ -28,10 +28,10 @@
       <!-- ===== 标题：清场记录 + 车间复选框（选中高亮） ===== -->
       <div class="cleaning-title-bar">
         <span>清场记录（</span>
-        <el-checkbox :model-value="record.workshop === 'D'" disabled>消毒</el-checkbox>
-        <el-checkbox :model-value="record.workshop === 'F'" disabled>灌装</el-checkbox>
-        <el-checkbox :model-value="record.workshop === 'P'" disabled>外包</el-checkbox>
-        <el-checkbox :model-value="record.workshop === 'G'" disabled>组套</el-checkbox>
+        <el-checkbox :model-value="record.bizWorkshopType === 'DISINFECTION'" disabled>消毒</el-checkbox>
+        <el-checkbox :model-value="record.bizWorkshopType === 'FILLING'" disabled>灌装</el-checkbox>
+        <el-checkbox :model-value="record.bizWorkshopType === 'PACKAGING'" disabled>外包</el-checkbox>
+        <el-checkbox :model-value="record.bizWorkshopType === 'ASSEMBLY'" disabled>组套</el-checkbox>
         <span>）</span>
       </div>
 

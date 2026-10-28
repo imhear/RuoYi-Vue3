@@ -33,10 +33,10 @@
       <!-- 物料类别 -->
       <div style="text-align: center; margin-top: 4px; margin-bottom: -6px; display: flex; justify-content: center; align-items: center;">
         <span style="font-weight: bold;">（</span>
-        <el-checkbox :model-value="receiving?.materialType === 'RAW_MATERIAL'" disabled>原料</el-checkbox>
-        <el-checkbox :model-value="receiving?.materialType === 'SEMI_FINISHED_PRODUCT'" disabled>半成品</el-checkbox>
-        <el-checkbox :model-value="receiving?.materialType === 'INTERMEDIATE_PRODUCT'" disabled>半制品</el-checkbox>
-        <el-checkbox :model-value="receiving?.materialType === 'PACKAGING_MATERIAL'" disabled>包装材料</el-checkbox>
+        <el-checkbox :model-value="receiving?.bizMaterialType === 'RAW_MATERIAL'" disabled>原料</el-checkbox>
+        <el-checkbox :model-value="receiving?.bizMaterialType === 'SEMI_FINISHED_PRODUCT'" disabled>半成品</el-checkbox>
+        <el-checkbox :model-value="receiving?.bizMaterialType === 'INTERMEDIATE_PRODUCT'" disabled>半制品</el-checkbox>
+        <el-checkbox :model-value="receiving?.bizMaterialType === 'PACKAGING_MATERIAL'" disabled>包装材料</el-checkbox>
         <span style="font-weight: bold;">）领料单</span>
       </div>
 
@@ -88,7 +88,7 @@
               <BaseCategorySelect
                 v-model="scope.row.materialCode"
                 api-url="/basic/material/listByCategory"
-                :category-code="receiving?.materialType"
+                :category-code="receiving?.bizMaterialType"
                 placeholder="请选择物料"
                 @change="(code, name) => handleSelectChange(scope.row, 'material', code, name)"
               />
@@ -103,7 +103,7 @@
               <BaseCategorySelect
                 v-model="scope.row.specCode"
                 api-url="/basic/spec/listByCategory"
-                :category-code="receiving?.materialType"
+                :category-code="receiving?.bizMaterialType"
                 placeholder="请选择规格"
                 @change="(code, name) => handleSelectChange(scope.row, 'spec', code, name)"
               />
@@ -118,7 +118,7 @@
               <BaseCategorySelect
                 v-model="scope.row.unitCode"
                 api-url="/basic/unit/listByCategory"
-                :category-code="receiving?.materialType"
+                :category-code="receiving?.bizMaterialType"
                 placeholder="请选择单位"
                 @change="(code, name) => handleSelectChange(scope.row, 'unit', code, name)"
               />

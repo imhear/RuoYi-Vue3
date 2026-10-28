@@ -412,7 +412,7 @@ const MATERIAL_CATEGORY_CODE = 'PACKAGING_MATERIAL'
  *   - 灌装车间：'F'
  *   - 包装车间：'P'
  */
-const SYNC_WORKSHOP = 'D'
+const SYNC_WORKSHOP = 'DISINFECTION'
 
 /**
  * 组件 Props 定义

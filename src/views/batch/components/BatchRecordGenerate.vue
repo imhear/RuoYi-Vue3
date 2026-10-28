@@ -280,8 +280,26 @@ function toggleFullscreen() {
 }
 
 // ==================== 数据加载 ====================
+/**
+ * 加载发布方案列表
+ * 
+ * 【改造说明】
+ * 对齐 src/views/fill/scheme_release/index.vue 中的查询逻辑：
+ * 默认只查询未删除（delFlag='0'）的数据，并按 create_time 降序排列，
+ * 确保下拉列表展示的最新发布的方案在最前面，且不会出现已删除的脏数据。
+ */
 function loadReleaseList() {
-  listScheme_release({ pageNum: 1, pageSize: 1000 }).then(res => { releaseList.value = res.rows || res.data || [] })
+  const queryParams = {
+    pageNum: 1,
+    pageSize: 1000,
+    status: '0',
+    delFlag: '0',
+    orderByColumn: 'create_time',
+    isAsc: 'desc'
+  }
+  listScheme_release(queryParams).then(res => { 
+    releaseList.value = res.rows || res.data || [] 
+  })
 }
 function loadWorkUnitList() {
   listWork_unit({ pageNum: 1, pageSize: 1000 }).then(res => { workUnitList.value = res.rows || res.data || [] })

@@ -822,7 +822,7 @@ defineOptions({ name: 'DisinfectionPackaging1Form' })
 const MATERIAL_CATEGORY_CODE = 'PACKAGING_MATERIAL'
 
 /** 本表单为消毒车间专属表单，从消毒车间（D）的领料单同步物料 */
-const SYNC_WORKSHOP = 'D'
+const SYNC_WORKSHOP = 'DISINFECTION'
 
 /** 设备下拉选项（从基础数据 API 加载） */
 const deviceOptions = ref([])

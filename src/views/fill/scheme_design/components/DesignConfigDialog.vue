@@ -224,10 +224,24 @@
             </el-form-item>
           </el-col>
 
-          <!-- C 菜单专用：自定义参数 -->
+          <!-- C 菜单专用：自定义参数（【v1.9 改造】增加可视化配置弹窗） -->
           <el-col :span="24" v-if="editForm.menuType === 'C'">
             <el-form-item label="自定义参数">
-              <el-input v-model="editForm.customParams" placeholder='如 {"MaterialType":"PACKAGING_MATERIAL"}' />
+              <template #label>
+                <span>
+                  <el-tooltip content="用于保证逻辑唯一性：如消毒车间领料单为：{&quot;biz_workshop_type&quot;:&quot;DISINFECTION&quot;,&quot;biz_material_type&quot;:&quot;PACKAGING_MATERIAL&quot;}，在生成空表记录时预设值，保证唯一性）" placement="top">
+                    <el-icon><question-filled /></el-icon>
+                  </el-tooltip>
+                  自定义参数
+                </span>
+              </template>
+
+              <el-input v-model="editForm.customParams" placeholder='如 {"biz_workshop_type":"FILLING"}' disabled>
+                <template #append>
+                  <!-- 【v1.9 新增】点击打开环境变量配置弹窗 -->
+                  <el-button icon="Setting" @click="openParamDialog">配置</el-button>
+                </template>
+              </el-input>
             </el-form-item>
           </el-col>
 
@@ -379,40 +393,6 @@
 
           <!-- ========== 设计态专用字段 ========== -->
 
-          <!-- C 菜单专用：选择系统菜单（el-tree-select） -->
-          <!-- <el-col :span="12" v-if="editForm.menuType === 'C'">
-            <el-form-item label="系统菜单">
-              <el-tree-select
-                v-model="selectedSysMenuId"
-                :data="sysMenuTreeData"
-                :props="sysMenuTreeProps"
-                node-key="menuId"
-                check-strictly
-                placeholder="请选择系统菜单"
-                style="width: 100%"
-                @change="handleSysMenuSelect"
-              />
-            </el-form-item>
-          </el-col> -->
-
-          <!-- C 菜单专用：物理表名 -->
-          <!-- <el-col :span="24" v-if="editForm.menuType === 'C'">
-            <el-form-item label="物理表名" prop="tableName">
-              <el-input v-model="editForm.tableName" placeholder="请选择物理表" readonly>
-                <template #append>
-                  <el-button icon="Search" @click="openSelectTable" />
-                </template>
-              </el-input>
-            </el-form-item>
-          </el-col> -->
-
-          <!-- C 菜单专用：自定义参数 -->
-          <!-- <el-col :span="24" v-if="editForm.menuType === 'C'">
-            <el-form-item label="自定义参数">
-              <el-input v-model="editForm.customParams" placeholder='如 {"MaterialType":"PACKAGING_MATERIAL"}' />
-            </el-form-item>
-          </el-col> -->
-
           <!-- C 菜单专用：前置菜单ID -->
           <el-col :span="24" v-if="editForm.menuType === 'C'">
             <el-form-item label="前置菜单ID">
@@ -523,6 +503,63 @@
       </template>
     </el-dialog>
 
+    <!-- 【v1.9 新增】自定义参数配置弹窗（环境变量模式） -->
+    <el-dialog v-model="paramDialogVisible" title="自定义参数配置" width="600px" append-to-body>
+      <el-table :data="paramTableData" border size="small">
+        <!-- 左列：字典类型 -->
+        <el-table-column label="字段名（Key）" min-width="200">
+          <template #default="scope">
+            <el-select 
+              v-model="scope.row.key" 
+              placeholder="请选择预设字段" 
+              style="width: 100%" 
+              filterable
+              @change="(val) => handleParamTypeChange(scope.row, val)"
+            >
+              <el-option 
+                v-for="item in bizDictTypeOptions" 
+                :key="item.dictType" 
+                :label="item.dictName" 
+                :value="item.dictType" 
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <!-- 右列：字典值 -->
+        <el-table-column label="字段值（Value）" min-width="200">
+          <template #default="scope">
+            <el-select 
+              v-model="scope.row.value" 
+              placeholder="请选择字段值" 
+              style="width: 100%" 
+              filterable
+              :disabled="!scope.row.key"
+            >
+              <el-option 
+                v-for="item in getParamValueOptions(scope.row.key)" 
+                :key="item.dictValue" 
+                :label="item.dictLabel" 
+                :value="item.dictValue" 
+              />
+            </el-select>
+          </template>
+        </el-table-column>
+        <!-- 操作列：删除 -->
+        <el-table-column label="操作" width="80" align="center">
+          <template #default="scope">
+            <el-button link type="danger" icon="Delete" @click="removeParamRow(scope.$index)" />
+          </template>
+        </el-table-column>
+      </el-table>
+      <div style="margin-top: 10px;">
+        <el-button type="primary" plain icon="Plus" @click="addParamRow">新增一行</el-button>
+      </div>
+      <template #footer>
+        <el-button @click="paramDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveParamDialog">确定</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 选择物理表对话框（来自 basic 模块） -->
     <SelectTable ref="selectTableRef" @ok="onFormSelected" />
     <!-- 选择操作码对话框 -->
@@ -539,6 +576,9 @@ import SelectOperation from '@/views/basic/components/SelectOperation.vue'
 import { listMenu } from "@/api/system/menu"
 import { getScheme_design } from "@/api/fill/scheme_design"
 import { listScheme_design_menu, addScheme_design_menu, updateScheme_design_menu, delScheme_design_menu } from "@/api/fill/scheme_design_menu"
+// 【v1.9 新增】引入业务字典接口
+import { optionselect } from '@/api/system/bizDict/type'
+import { getDicts } from '@/api/system/bizDict/data'
 
 defineOptions({ name: 'DesignConfigDialog' })
 
@@ -589,6 +629,16 @@ const isFullscreen = ref(false)
  * 参考 src/views/batch/components/BatchRecordView.vue 的实现方式。
  */
 const modules = import.meta.glob('/src/views/**/*.vue')
+
+// ==================== 【v1.9 新增】自定义参数弹窗状态 ====================
+/** 弹窗是否可见 */
+const paramDialogVisible = ref(false)
+/** 弹窗内的表格数据 */
+const paramTableData = ref([])
+/** 业务字典类型下拉选项 */
+const bizDictTypeOptions = ref([])
+/** 缓存已加载的字典值数据（避免重复请求） */
+const paramValueCache = reactive({})
 
 /** 编辑表单（包含 sys_menu 全部字段 + 设计态专用字段） */
 const editForm = reactive({
@@ -671,6 +721,118 @@ const sysMenuTreeProps = computed(() => {
     disabled: (data) => data.menuType !== requiredType
   }
 })
+
+// ==================== 【v1.9 新增】自定义参数配置弹窗逻辑 ====================
+
+/**
+ * 打开“环境变量配置”弹窗
+ * 1. 懒加载所有字典类型列表（如果尚未加载）
+ * 2. 尝试解析当前 customParams 的 JSON 字符串，回显到表格中
+ */
+async function openParamDialog() {
+  // 加载字典类型
+  if (bizDictTypeOptions.value.length === 0) {
+    try {
+      const res = await optionselect()
+      bizDictTypeOptions.value = res.data || []
+    } catch (e) {
+      ElMessage.error('获取字典类型列表失败')
+      return
+    }
+  }
+
+  // 解析当前的 JSON 数据
+  paramTableData.value = []
+  let parsed = {}
+  if (editForm.customParams && editForm.customParams.trim()) {
+    try {
+      parsed = JSON.parse(editForm.customParams)
+    } catch (e) {
+      ElMessage.warning('当前自定义参数不是有效的 JSON 格式，将清空并重新配置')
+    }
+  }
+  
+  Object.keys(parsed).forEach(key => {
+    paramTableData.value.push({ key: key, value: parsed[key] })
+    // 预加载已使用的字典值选项
+    if (!paramValueCache[key]) {
+      loadParamValues(key)
+    }
+  })
+  
+  paramDialogVisible.value = true
+}
+
+/**
+ * 新增一行空白配置
+ */
+function addParamRow() {
+  paramTableData.value.push({ key: '', value: '' })
+}
+
+/**
+ * 删除一行配置
+ * @param {Number} index 行索引
+ */
+function removeParamRow(index) {
+  paramTableData.value.splice(index, 1)
+}
+
+/**
+ * 左列字典类型变化时触发
+ * 清空当前行的字典值，并加载该类型对应的字典数据
+ * @param {Object} row 当前行数据
+ * @param {String} type 选中的字典类型
+ */
+async function handleParamTypeChange(row, type) {
+  row.value = ''
+  if (type && !paramValueCache[type]) {
+    await loadParamValues(type)
+  }
+}
+
+/**
+ * 根据字典类型加载对应的字典数据（带缓存）
+ * @param {String} dictType 字典类型
+ */
+async function loadParamValues(dictType) {
+  try {
+    const res = await getDicts(dictType)
+    paramValueCache[dictType] = res.data || []
+  } catch (e) {
+    paramValueCache[dictType] = []
+  }
+}
+
+/**
+ * 获取右列下拉可用的选项数据
+ * @param {String} dictType 字典类型
+ * @returns {Array} 字典项列表
+ */
+function getParamValueOptions(dictType) {
+  return paramValueCache[dictType] || []
+}
+
+/**
+ * 保存环境变量配置
+ * 遍历表格，过滤掉空行，将有效数据拼接为 JSON 字符串回填到 customParams
+ */
+function saveParamDialog() {
+  const resultObj = {}
+  paramTableData.value.forEach(row => {
+    if (row.key && row.value) {
+      resultObj[row.key] = row.value
+    }
+  })
+  
+  if (Object.keys(resultObj).length === 0) {
+    editForm.customParams = ''
+  } else {
+    editForm.customParams = JSON.stringify(resultObj)
+  }
+  paramDialogVisible.value = false
+}
+
 
 // ==================== 工具方法 ====================
 function menuTypeText(type) {

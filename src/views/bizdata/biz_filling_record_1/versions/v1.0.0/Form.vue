@@ -268,6 +268,7 @@
               <div style="display: flex; align-items: center;">
                 <span style="white-space: nowrap;">4) 打码信息：</span>
                 <input v-model="record.s3CodingInfo" class="edit-input-short" style="width: 200px;" />
+                <el-button link type="primary" size="small" @click="handleAutoFillCodingInfo">自动计算</el-button>
               </div>
               <div style="display: flex; align-items: center;">
                 <span style="white-space: nowrap;">5) 灌装量及外观检查间下页</span>
@@ -440,6 +441,67 @@ function formatPrintCodeType(value) {
   const list = biz_print_code_type.value || []
   const opt = list.find(o => o.value === value)
   return opt ? opt.label : ''
+}
+
+/**
+ * 自动计算打码信息并回填
+ *
+ * 计算规则：
+ * - 基础格式：`{产品批号} EXP：{限制使用日期}`
+ * - 限制使用日期 = 批记录计划开始日期（planStart）+ 3 年 - 1 天
+ * - 日期格式化：yyyyMMdd（如 20291010）
+ *
+ * 数据来源：
+ * - 产品批号：`batchRecord.batchNumber`（来自 batch_record 表）
+ * - 计划开始日期：`batchRecord.planStart`（Date 类型）
+ *
+ * 计算示例：
+ * - 产品批号：FC0504
+ * - 计划开始日期：2026-10-11
+ * - 加 3 年：2029-10-11
+ * - 减 1 天：2029-10-10
+ * - 格式化：20291010
+ * - 最终结果：FC0504 EXP：20291010
+ *
+ * 业务背景：
+ * 化妆品灌装 GMP 规则要求打码信息包含产品批号与限制使用日期；
+ * 限制使用日期基于首次生产计划日期（planStart）计算，3 年内有效。
+ *
+ * 边界处理：
+ * - 产品批号缺失：提示后终止
+ * - 计划开始日期缺失或非法：提示后终止
+ */
+function handleAutoFillCodingInfo() {
+  const batchNumber = batchRecord.value?.batchNumber || ''
+  const planStart = batchRecord.value?.planStart
+
+  if (!batchNumber) {
+    ElMessage.warning('产品批号缺失，无法自动计算打码信息')
+    return
+  }
+  if (!planStart) {
+    ElMessage.warning('计划开始日期缺失，无法计算限制使用日期')
+    return
+  }
+
+  const startDate = new Date(planStart)
+  if (isNaN(startDate.getTime())) {
+    ElMessage.warning('计划开始日期格式不正确，无法计算')
+    return
+  }
+
+  // 基于 Date 对象运算，规避手工拼接年月日时的闰年/跨月边界问题
+  const limitDate = new Date(startDate)
+  limitDate.setFullYear(limitDate.getFullYear() + 3)
+  limitDate.setDate(limitDate.getDate() - 1)
+
+  // 格式化为 yyyyMMdd
+  const year = limitDate.getFullYear()
+  const month = String(limitDate.getMonth() + 1).padStart(2, '0')
+  const day = String(limitDate.getDate()).padStart(2, '0')
+  const formattedLimitDate = `${year}${month}${day}`
+
+  record.s3CodingInfo = `${batchNumber} EXP:${formattedLimitDate}`
 }
 
 /**

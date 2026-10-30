@@ -157,7 +157,7 @@
           <template #header><div style="line-height: 1.2;">请退量</div></template>
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.requireQty" size="small" /></template>
-            <template v-else><span class="filled-value">{{ scope.row.requireQty || '' }}</span></template>
+            <template v-else><span class="filled-value">{{ scope.row.requireQty ?? '' }}</span></template>
           </template>
         </el-table-column>
 
@@ -186,7 +186,7 @@
           <template #header><div style="line-height: 1.2;">实退量</div></template>
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.actualQty" size="small" /></template>
-            <template v-else><span class="filled-value">{{ scope.row.actualQty || '' }}</span></template>
+            <template v-else><span class="filled-value">{{ scope.row.actualQty ?? '' }}</span></template>
           </template>
         </el-table-column>
 
@@ -246,6 +246,28 @@ import { parseTime } from '@/utils/ruoyi'
 
 defineOptions({ name: 'ReturnForm' })
 
+// ==================== 常量定义 ====================
+
+/** 非负数字格式（整数或小数，不含符号与空白） */
+const NUMBER_PATTERN = /^\d+(\.\d+)?$/
+
+/** 物料明细固定行数（与后端约定一致） */
+const MATERIAL_ROW_COUNT = 14
+
+/** 物料类别 → 来源车间映射（消毒车间领料单固定为包装材料，灌装车间领料单固定为半成品） */
+const SYNC_WORKSHOP_MAP = {
+  PACKAGING_MATERIAL: 'DISINFECTION',
+  SEMI_FINISHED_PRODUCT: 'FILLING'
+}
+
+/** 车间编码 → 中文名称（仅用于确认框文案） */
+const WORKSHOP_LABEL_MAP = {
+  DISINFECTION: '消毒车间',
+  FILLING: '灌装车间'
+}
+
+// ==================== Props / Emits ====================
+
 /**
  * 组件 Props 定义
  * actionType: 操作类型（大写：PREVIEW/EDIT/SUBMIT等）
@@ -276,6 +298,34 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['closed', 'refresh'])
+
+// ==================== 工具函数 ====================
+
+/**
+ * 判断值是否为空（null / undefined / 空串 / 纯空白串）
+ *
+ * 注意：数字 0 不算空。0 是请退量、实退量的合法业务值（表示刚好用完）。
+ *
+ * @param {*} value 待判断的值
+ * @returns {Boolean} 是否为空
+ */
+function isBlank(value) {
+  return value === null || value === undefined || String(value).trim() === ''
+}
+
+/**
+ * 判断值是否为合法的非负数字（允许 0，允许小数）
+ *
+ * @param {*} value 待判断的值
+ * @returns {Boolean} 是否为非负数字
+ */
+function isNonNegativeNumber(value) {
+  if (isBlank(value)) return false
+  const str = String(value).trim()
+  return NUMBER_PATTERN.test(str) && Number(str) >= 0
+}
+
+// ==================== 状态与上下文 ====================
 
 /**
  * 【v1.6 新增】获取父对话框提供的全屏上下文
@@ -388,6 +438,8 @@ const reviewSignatureText = computed(() => {
   return `${operator} / ${time}`
 })
 
+// ==================== 生命周期 ====================
+
 /**
  * 组件初始化：
  * - 加载 C 节点下 F 节点用于签名回显
@@ -408,11 +460,17 @@ onMounted(async () => {
   }
 })
 
+// ==================== 物料选择与行级操作 ====================
+
 /**
  * 处理 BaseCategorySelect 的选中变化
  * 
  * 根据类型回填对应的 name 快照字段。
  * code 已由 v-model 双向绑定，此处只需回填 name。
+ * 
+ * 特殊处理：
+ * 物料名称字段被清空（点击下拉框右侧清除按钮）时，
+ * 视为用户删除该行数据，联动重置该行其余物料字段，回到批记录空表初始状态。
  * 
  * @param {Object} row 当前行数据对象
  * @param {String} type 字段类型（material / spec / unit）
@@ -421,12 +479,51 @@ onMounted(async () => {
  */
 function handleSelectChange(row, type, code, name) {
   if (type === 'material') {
+    // 物料名称被清空：视为删除该行数据，重置该行物料信息
+    if (!code) {
+      resetMaterialRow(row)
+      return
+    }
     row.materialName = name || ''
   } else if (type === 'spec') {
     row.spec = name || ''
   } else if (type === 'unit') {
     row.unit = name || ''
   }
+}
+
+/**
+ * 重置指定行的物料信息为初始值（批记录空表状态）
+ *
+ * 触发场景：物料名称下拉框被清空（点击右侧清除按钮），
+ * 代表用户删除了该行数据。
+ *
+ * 处理范围：
+ * - 仅重置该行绑定的物料业务字段：物料编码、物料名称、规格编码、规格、
+ *   单位编码、单位、物料批号、请退量、包装是否完整、标识是否清晰、
+ *   实退量、备注；
+ * - 字符串字段重置为空串 ''，数值字段（BigDecimal 对应字段）重置为 null；
+ * - 标志位（包装是否完整 / 标识是否清晰）重置为 null，
+ *   配合后端 updateBizReturnItemFull 全量更新，将数据库对应列写入 NULL；
+ * - 不处理主键类字段（recordId / subRecordId / seqNo），
+ *   以保证保存时后端仍能定位原记录，并将对应字段更新为空。
+ *
+ * @param {Object} row 当前行数据对象
+ */
+function resetMaterialRow(row) {
+  if (!row) return
+  row.materialCode = ''
+  row.materialName = ''
+  row.specCode = ''
+  row.spec = ''
+  row.unitCode = ''
+  row.unit = ''
+  row.batchNumber = ''
+  row.requireQty = null
+  row.baozhuangFlag = null
+  row.biaoqianFlag = null
+  row.actualQty = null
+  row.remark = ''
 }
 
 /**
@@ -442,6 +539,8 @@ function handleMaterialTypeChange(type, checked) {
   if (!receiving.value || !checked) return
   receiving.value.bizMaterialType = type
 }
+
+// ==================== 请求工具 ====================
 
 /**
  * 动态调用后端接口
@@ -474,31 +573,19 @@ async function dynamicRequest(routeTemplate, pathParams, data = {}, method = 'po
 }
 
 // ==================== 从领料单同步 ====================
+
 /**
- * 物料类别 → 来源车间（仅用于确认框文案提示）
- * 消毒车间领料单固定为包装材料，灌装车间领料单固定为半成品
+ * 从领料单同步物料到当前退料单明细
+ *
+ * 业务规则：
+ * - 消毒车间领料单固定为包装材料：选中“包装材料”时从消毒车间同步；
+ * - 灌装车间领料单固定为半成品：选中“半成品”时从灌装车间同步；
+ * - 其它类别不支持同步，直接提示并不发送请求。
+ *
+ * 副作用：
+ * - 同步成功后覆盖当前物料明细（displayItems），主表字段以接口返回为准回填；
+ * - 未保存前不会落库，仍需用户点击“保存”才会持久化。
  */
-const SYNC_WORKSHOP_LABEL_MAP = {
-  PACKAGING_MATERIAL: '消毒车间',
-  SEMI_FINISHED_PRODUCT: '灌装车间'
-}
-
-// ==================== 从领料单同步 ====================
-/**
- * 物料类别 → 来源车间映射
- * 消毒车间领料单固定为包装材料，灌装车间领料单固定为半成品
- */
-const SYNC_WORKSHOP_MAP = {
-  PACKAGING_MATERIAL: 'DISINFECTION',
-  SEMI_FINISHED_PRODUCT: 'FILLING'
-}
-
-/** 车间编码 → 中文名称（仅用于确认框文案） */
-const WORKSHOP_LABEL_MAP = {
-  DISINFECTION: '消毒车间',
-  FILLING: '灌装车间'
-}
-
 async function handleSyncMaterialFromReceiving() {
   // script 中 receiving 是 ref，必须通过 .value 访问
   const bizMaterialType = receiving.value?.bizMaterialType
@@ -541,6 +628,8 @@ async function handleSyncMaterialFromReceiving() {
   }
 }
 
+// ==================== 数据加载与初始化 ====================
+
 /**
  * 加载当前 C 节点下的所有 F 节点（用于签名行数据）
  */
@@ -578,18 +667,25 @@ async function loadData() {
 }
 
 /**
- * 初始化空物料明细（固定14行）
+ * 初始化空物料明细（固定 MATERIAL_ROW_COUNT 行）
  */
 function initEmptyItems() {
   const rows = []
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < MATERIAL_ROW_COUNT; i++) {
     rows.push(createEmptyRow())
   }
   displayItems.value = rows
 }
 
 /**
- * 创建空白行对象
+ * 创建空白物料明细行（批记录空表初始状态）
+ *
+ * 字段说明：
+ * - 字符串字段：空串 ''，便于 el-input 直接绑定；
+ * - 数值字段（请退量 / 实退量）：空串 '' 占位，用户输入后由 el-input 转为字符串；
+ * - 标志位（包装是否完整 / 标识是否清晰）：null，表示未做选择。
+ *
+ * @returns {Object} 空白行对象
  */
 function createEmptyRow() {
   return {
@@ -603,11 +699,13 @@ function createEmptyRow() {
 }
 
 /**
- * 根据已有数据初始化物料明细，不足14行补空
+ * 根据已有数据初始化物料明细，不足 MATERIAL_ROW_COUNT 行补空
+ *
+ * @param {Array<Object>} items 已有物料明细
  */
 function initItems(items) {
   const rows = []
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < MATERIAL_ROW_COUNT; i++) {
     if (items[i]) {
       rows.push({ ...createEmptyRow(), ...items[i] })
     } else {
@@ -617,56 +715,114 @@ function initItems(items) {
   displayItems.value = rows
 }
 
+// ==================== 表单校验 ====================
+
 /**
- * 编辑提交前的校验（仅校验物料明细，不含签名）
- * 
- * 校验项：
- * - 行内至少填写物料、规格、单位之一
- * - 已填写的行必须连续，不允许中间空行
- * - 每行的物料、规格、单位、计划领用量、物料批号、实际发料量均为必填
- * 
- * @returns {Boolean} 校验是否通过
+ * 判断物料明细行是否为空行
+ *
+ * 说明：请退量 / 实退量为数字 0 时视为“已填写”，
+ * 因为 0 是合法业务值（表示刚好用完）。此时该行只要有任一字段非空即视为有效数据行，
+ * 若必填项缺失会在 validateRow 中给出精确提示，而不是被静默当作空行忽略。
+ *
+ * @param {Object} item 物料明细行
+ * @returns {Boolean} 是否为空行
+ */
+function isRowEmpty(item) {
+  return isBlank(item.materialCode)
+    && isBlank(item.specCode)
+    && isBlank(item.unitCode)
+    && isBlank(item.requireQty)
+    && isBlank(item.baozhuangFlag)
+    && isBlank(item.biaoqianFlag)
+    && isBlank(item.batchNumber)
+    && isBlank(item.actualQty)
+    && isBlank(item.remark)
+}
+
+/**
+ * 校验单行物料明细的必填项与数值约束
+ *
+ * 约束说明：
+ * - 请退量、实退量必填，且必须为非负数字（允许 0，表示刚好用完）；
+ * - 其它字段按表单必填项校验。
+ *
+ * @param {Object} item 物料明细行
+ * @param {Number} rowNum 行号（从 1 开始，仅用于错误提示）
+ * @returns {String|null} 校验不通过时返回错误提示；通过返回 null
+ */
+function validateRow(item, rowNum) {
+  if (isBlank(item.materialCode)) return `第${rowNum}行物料名称不能为空`
+  if (isBlank(item.specCode)) return `第${rowNum}行规格不能为空`
+  if (isBlank(item.unitCode)) return `第${rowNum}行单位不能为空`
+  if (isBlank(item.requireQty)) return `第${rowNum}行请退量不能为空`
+  if (!isNonNegativeNumber(item.requireQty)) return `第${rowNum}行请退量必须为非负数`
+  if (isBlank(item.batchNumber)) return `第${rowNum}行物料批号不能为空`
+  if (isBlank(item.actualQty)) return `第${rowNum}行实退量不能为空`
+  if (!isNonNegativeNumber(item.actualQty)) return `第${rowNum}行实退量必须为非负数`
+  return null
+}
+
+/**
+ * 编辑提交前的表单校验（仅校验物料明细，不含签名）
+ *
+ * 校验规则：
+ * 1. 至少填写一条物料明细；
+ * 2. 已填写的行必须连续，不允许中间空行；
+ * 3. 每行必填：物料名称、规格、单位、请退量、物料批号、实退量；
+ * 4. 请退量、实退量必须为非负数字（允许 0，表示刚好用完）。
+ *
+ * @returns {Boolean} 校验通过返回 true；不通过时已弹出提示并返回 false
  */
 function beforeSubmitCheck() {
-  const numberPattern = /^\d+(\.\d+)?$/
+  const items = displayItems.value
   let foundEmpty = false
   let hasItem = false
 
-  for (let i = 0; i < displayItems.value.length; i++) {
-    const item = displayItems.value[i]
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]
     const rowNum = i + 1
-    const isEmpty = !item.materialCode && !item.specCode && !item.unitCode &&
-                    !item.requireQty && !item.baozhuangFlag && !item.biaoqianFlag &&
-                    !item.batchNumber && !item.actualQty && !item.remark
 
-    if (isEmpty) {
+    if (isRowEmpty(item)) {
       foundEmpty = true
       continue
     }
 
     hasItem = true
-    if (foundEmpty) { ElMessage.error(`第${rowNum}行之前存在空行，请连续填写`); return false }
-    if (!item.materialCode) { ElMessage.error(`第${rowNum}行物料名称不能为空`); return false }
-    if (!item.specCode) { ElMessage.error(`第${rowNum}行规格不能为空`); return false }
-    if (!item.unitCode) { ElMessage.error(`第${rowNum}行单位不能为空`); return false }
-    if (!item.requireQty || !numberPattern.test(String(item.requireQty).trim()) || Number(item.requireQty) <= 0) {
-      ElMessage.error(`第${rowNum}行请退量必须为正数`); return false
+    if (foundEmpty) {
+      ElMessage.error(`第${rowNum}行之前存在空行，请连续填写`)
+      return false
     }
-    if (!item.batchNumber) { ElMessage.error(`第${rowNum}行物料批号不能为空`); return false }
-    if (!item.actualQty || !numberPattern.test(String(item.actualQty).trim()) || Number(item.actualQty) <= 0) {
-      ElMessage.error(`第${rowNum}行实退量必须为正数`); return false
+
+    const errorMsg = validateRow(item, rowNum)
+    if (errorMsg) {
+      ElMessage.error(errorMsg)
+      return false
     }
   }
 
-  if (!hasItem) { ElMessage.error('请至少填写一条物料明细'); return false }
+  if (!hasItem) {
+    ElMessage.error('请至少填写一条物料明细')
+    return false
+  }
   return true
 }
 
+// ==================== 编辑保存 ====================
+
 /**
  * 编辑模式：保存修改（带二次确认）
- * 
- * 先执行表单校验，校验通过后弹出二次确认框，用户确认后才提交保存请求。
- * 保存接口通过 props.backendRoute 动态拼接，不再硬编码具体 API。
+ *
+ * 流程：
+ * 1. 执行物料明细校验（beforeSubmitCheck）；
+ * 2. 弹出二次确认框，用户确认后才提交；
+ * 3. 通过 props.backendRoute 动态拼接保存接口，未配置时回落到默认路径；
+ * 4. 提交成功后触发 refresh 通知父级刷新列表，并关闭当前对话框。
+ *
+ * 提交数据说明：
+ * - 主表：recordId + bizMaterialType；
+ * - 子表：过滤规则为“有 subRecordId 的行必须提交（即使业务字段已清空），
+ *   无 subRecordId 的行仅在填写了内容时提交”，
+ *   以配合后端 updateBizReturnItemFull 全量更新实现“清空该行”的语义。
  */
 async function handleEditSubmit() {
   if (!beforeSubmitCheck()) return
@@ -685,6 +841,9 @@ async function handleEditSubmit() {
     recordId: props.businessRecordId,
     bizMaterialType: receiving.value?.bizMaterialType || null,
     itemList: displayItems.value.filter(item =>
+      // 有 subRecordId 的行即使业务字段被重置也需要提交，以便后端把该行更新为空；
+      // 无 subRecordId 的行只在填写了内容时才提交，避免提交无意义的空行
+      item.subRecordId != null ||
       item.materialCode || item.specCode || item.unitCode || item.batchNumber || item.remark
     )
   }
@@ -702,6 +861,8 @@ async function handleEditSubmit() {
     ElMessage.error('保存失败')
   }
 }
+
+// ==================== 审批操作 ====================
 
 /**
  * 审批模式：执行审批/反审操作

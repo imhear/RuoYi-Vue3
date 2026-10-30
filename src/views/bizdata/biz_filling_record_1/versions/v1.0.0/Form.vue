@@ -256,7 +256,7 @@
                 <input v-model="record.s3NetContentRangeLower" class="edit-input-short" style="width: 60px;" placeholder="下限" />
                 <span style="margin: 0 4px;">-</span>
                 <input v-model="record.s3NetContentRangeUpper" class="edit-input-short" style="width: 60px;" placeholder="上限" />
-                <input v-model="record.s3NetContentUnit" class="edit-input-short" style="width: 40px; margin-left: 4px;" placeholder="g" />
+                <input v-model="record.s3NetContentUnit" class="edit-input-short" style="width: 40px; margin-left: 4px;" placeholder="单位" />
               </div>
               <div style="display: flex; align-items: center; margin-bottom: 6px;">
                 <span style="white-space: nowrap; margin-right: 8px;">3) 打码方式：</span>
@@ -271,7 +271,7 @@
                 <el-button link type="primary" size="small" @click="handleAutoFillCodingInfo">自动计算</el-button>
               </div>
               <div style="display: flex; align-items: center;">
-                <span style="white-space: nowrap;">5) 灌装量及外观检查间下页</span>
+                <span style="white-space: nowrap;">5) 灌装量及外观检查见下页</span>
               </div>
             </template>
             <template v-else>
@@ -282,7 +282,7 @@
                 <span class="filled-value">{{ record.s3NetContentUnit || 'g' }}</span><br/>
                 3) 打码方式：<span class="filled-value">{{ formatPrintCodeType(record.s3PrintCodeType) }}</span><br/>
                 4) 打码信息：<span class="filled-value">{{ record.s3CodingInfo || '' }}</span><br/>
-                5) 灌装量及外观检查间下页
+                5) 灌装量及外观检查见下页
               </div>
             </template>
           </td>

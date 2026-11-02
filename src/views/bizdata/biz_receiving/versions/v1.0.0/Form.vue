@@ -40,30 +40,25 @@
         <span style="font-weight: bold;">）领料单</span>
       </div>
 
-      <!-- 产品信息
-           【v1.8 改造】非编辑态下产品名称 / 规格 / 产品批号 为动态回填值，
-           用 .filled-value 突出显示（区分固定标题文本）
-      -->
-      <el-table :data="[{}]" :show-header="false" border size="small" class="top-table">
-        <el-table-column width="120" align="center">
-          <template #default><span style="font-weight: bold;">产品名称</span></template>
-        </el-table-column>
-        <el-table-column width="331">
-          <template #default>{{ batchRecord?.productName || '' }}</template>
-        </el-table-column>
-        <el-table-column width="80" align="center">
-          <template #default><span style="font-weight: bold;">规格</span></template>
-        </el-table-column>
-        <el-table-column>
-          <template #default>{{ batchRecord?.spec || '' }}</template>
-        </el-table-column>
-        <el-table-column width="100" align="center">
-          <template #default><span style="font-weight: bold;">产品批号</span></template>
-        </el-table-column>
-        <el-table-column>
-          <template #default>{{ batchRecord?.batchNumber || '' }}</template>
-        </el-table-column>
-      </el-table>
+      <!-- 产品信息 -->
+      <table class="row-table info-table" cellspacing="0" cellpadding="0">
+        <colgroup>
+          <col style="width: 120px;">
+          <col>
+          <col style="width: 90px;">
+          <col style="width: 183px;">
+          <col style="width: 88px;">
+          <col style="width: 205px;">
+        </colgroup>
+        <tr>
+          <td class="info-label">产品名称</td>
+          <td class="info-value">{{ batchRecord?.productName || '' }}</td>
+          <td class="info-label">规格</td>
+          <td class="info-value">{{ batchRecord?.spec || '' }}</td>
+          <td class="info-label">产品批号</td>
+          <td class="info-value">{{ batchRecord?.batchNumber || '' }}</td>
+        </tr>
+      </table>
 
       <!-- 物料明细
            【v1.8 改造】非编辑态下各文本字段（物料名称 / 规格 / 单位 / 计划领用量 /
@@ -97,7 +92,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="规格" min-width="90" align="center" style="padding: 0;">
+        <el-table-column label="规格" min-width="85" align="center" style="padding: 0;">
           <template #default="scope">
             <template v-if="isEditMode">
               <BaseCategorySelect
@@ -112,7 +107,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="单位" min-width="70" align="center">
+        <el-table-column label="单位" min-width="65" align="center">
           <template #default="scope">
             <template v-if="isEditMode">
               <BaseCategorySelect
@@ -127,7 +122,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column min-width="60" align="center">
+        <el-table-column min-width="55" align="center">
           <template #header><div style="line-height: 1.2;">计划<br/>领用量</div></template>
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.requireQty" size="small" /></template>
@@ -181,7 +176,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column min-width="60" align="center">
+        <el-table-column min-width="55" align="center">
           <template #header><div style="line-height: 1.2;">实际<br/>发料量</div></template>
           <template #default="scope">
             <template v-if="isEditMode"><el-input v-model="scope.row.actualQty" size="small" /></template>
@@ -938,6 +933,35 @@ async function handleAddSubmit() {
   color: #4046ff;
 }
 
+/* ============================================================
+   产品信息原生 table（v2.0 回退老写法）
+   - .row-table：与下方 .mid-table 边框叠合（margin-bottom: -1px）
+   - .info-table / .info-label / .info-value：表头灰底、标签加粗、内容居中
+   ============================================================ */
+.row-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #dcdfe6;
+  table-layout: fixed;
+  margin-bottom: -1px;
+}
+.info-table td {
+  border: 1px solid #dcdfe6;
+  padding: 4px 6px;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+.info-label {
+  font-weight: bold;
+  font-size: 14px;
+  background: #f5f7fa;
+  text-align: center;
+}
+.info-value {
+  font-size: 14px;
+  text-align: center;
+}
+
 .view-container :deep(.el-table) { color: #000; }
 .view-container :deep(.el-table th) { color: #000; font-weight: normal; }
 /* .view-container :deep(.el-checkbox__label) { color: #000 !important; } */
@@ -951,8 +975,8 @@ async function handleAddSubmit() {
 .view-container :deep(.el-table--small .cell) {
   padding: 0 2px;
 }
-.top-table { margin-bottom: -1px; }
-.top-table :deep(.el-table__body tr) { background-color: #f5f7fa !important; }
+/* .top-table { margin-bottom: -1px; } */
+/* .top-table :deep(.el-table__body tr) { background-color: #f5f7fa !important; } */
 .bottom-table :deep(.el-table__body tr) { background-color: #f5f7fa !important; }
 .mid-table { margin-top: -1px; margin-bottom: -1px; }
 .bottom-table { margin-top: -1px; }

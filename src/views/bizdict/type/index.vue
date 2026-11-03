@@ -57,7 +57,7 @@
                plain
                icon="Plus"
                @click="handleAdd"
-               v-hasPermi="['system:bizDict:add']"
+               v-hasPermi="['bizdict:dict:add']"
             >新增</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -67,7 +67,7 @@
                icon="Edit"
                :disabled="single"
                @click="handleUpdate"
-               v-hasPermi="['system:bizDict:edit']"
+               v-hasPermi="['bizdict:dict:edit']"
             >修改</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -77,7 +77,7 @@
                icon="Delete"
                :disabled="multiple"
                @click="handleDelete"
-               v-hasPermi="['system:bizDict:remove']"
+               v-hasPermi="['bizdict:dict:remove']"
             >删除</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -86,7 +86,7 @@
                plain
                icon="Download"
                @click="handleExport"
-               v-hasPermi="['system:bizDict:export']"
+               v-hasPermi="['bizdict:dict:export']"
             >导出</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -95,7 +95,7 @@
                plain
                icon="Refresh"
                @click="handleRefreshCache"
-               v-hasPermi="['system:bizDict:remove']"
+               v-hasPermi="['bizdict:dict:remove']"
             >刷新缓存</el-button>
          </el-col>
          <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
@@ -123,9 +123,9 @@
          </el-table-column>
          <el-table-column label="操作" align="center" width="280" class-name="small-padding fixed-width">
             <template #default="scope">
-               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['system:bizDict:edit']">修改</el-button>
-               <el-button link type="primary" icon="Operation" @click="handleDataList(scope.row)" v-hasPermi="['system:bizDict:edit']">列表</el-button>
-               <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['system:bizDict:remove']">删除</el-button>
+               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['bizdict:dict:edit']">修改</el-button>
+               <el-button link type="primary" icon="Operation" @click="handleDataList(scope.row)" v-hasPermi="['bizdict:dict:edit']">列表</el-button>
+               <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['bizdict:dict:remove']">删除</el-button>
             </template>
          </el-table-column>
       </el-table>
@@ -183,7 +183,7 @@
 <script setup name="BizDict">
 import BizDictDataDrawer from './detail'
 import useBizDictStore from '@/store/modules/bizDict'
-import { listType, getType, delType, addType, updateType, refreshCache } from "@/api/system/bizDict/type"
+import { listType, getType, delType, addType, updateType, refreshCache } from "@/api/bizdict/type"
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict("sys_normal_disable")
@@ -281,7 +281,7 @@ function handleViewData(row) {
 
 /** 业务字典数据列表页面 */
 function handleDataList(row) {
-  proxy.$tab.openPage("业务字典数据", '/system/bizDict-data/index/' + row.dictId)
+  proxy.$tab.openPage("业务字典数据", '/fill/bizdict-data/index/' + row.dictId)
 }
 
 /** 修改按钮操作 */
@@ -329,7 +329,7 @@ function handleDelete(row) {
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download("system/bizDict/type/export", {
+  proxy.download("bizdict/type/export", {
     ...queryParams.value
   }, `bizDict_${new Date().getTime()}.xlsx`)
 }

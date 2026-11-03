@@ -165,16 +165,16 @@ export const dynamicRoutes = [
     ]
   },
   {
-    path: '/system/bizDict-data',
+    path: '/fill/bizdict-data',
     component: Layout,
     hidden: true,
-    permissions: ['system:bizDict:list'],
+    permissions: ['bizdict:dict:list'],
     children: [
       {
         path: 'index/:dictId(\\d+)',
-        component: () => import('@/views/system/bizDict/data'),
+        component: () => import('@/views/bizdict/data/index'),
         name: 'BizDictData',
-        meta: { title: '业务字典数据', activeMenu: '/system/bizDict' }
+        meta: { title: '业务字典数据', activeMenu: '/fill/bizdict' }
       }
     ]
   },

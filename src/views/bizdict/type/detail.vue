@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { listData } from '@/api/system/bizDict/data'
+import { listData } from '@/api/bizdict/data'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },

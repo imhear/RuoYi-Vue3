@@ -577,8 +577,8 @@ import { listMenu } from "@/api/system/menu"
 import { getScheme_design } from "@/api/fill/scheme_design"
 import { listScheme_design_menu, addScheme_design_menu, updateScheme_design_menu, delScheme_design_menu } from "@/api/fill/scheme_design_menu"
 // 【v1.9 新增】引入业务字典接口
-import { optionselect } from '@/api/system/bizDict/type'
-import { getDicts } from '@/api/system/bizDict/data'
+import { optionselect } from '@/api/bizdict/type'
+import { getDicts } from '@/api/bizdict/data'
 
 defineOptions({ name: 'DesignConfigDialog' })
 

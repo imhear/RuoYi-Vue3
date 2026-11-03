@@ -1,5 +1,5 @@
 import useBizDictStore from '@/store/modules/bizDict'
-import { getDicts } from '@/api/system/bizDict/data'
+import { getDicts } from '@/api/bizdict/data'
 
 /**
  * 获取业务字典数据
@@ -7,7 +7,7 @@ import { getDicts } from '@/api/system/bizDict/data'
  * 完全参照若依官方 utils/dict.js，仅：
  * - 函数名 useDict → useBizDict
  * - store 引用 useDictStore → useBizDictStore
- * - 接口 getDicts 来自 api/system/bizDict/data
+ * - 接口 getDicts 来自 api/bizdict/data
  * 
  * 使用示例：
  * const { batch_log_action_type } = useBizDict('batch_log_action_type')

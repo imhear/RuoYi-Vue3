@@ -43,7 +43,7 @@
                plain
                icon="Plus"
                @click="handleAdd"
-               v-hasPermi="['system:bizDict:add']"
+               v-hasPermi="['bizdict:dict:add']"
             >新增</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -53,7 +53,7 @@
                icon="Edit"
                :disabled="single"
                @click="handleUpdate"
-               v-hasPermi="['system:bizDict:edit']"
+               v-hasPermi="['bizdict:dict:edit']"
             >修改</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -63,7 +63,7 @@
                icon="Delete"
                :disabled="multiple"
                @click="handleDelete"
-               v-hasPermi="['system:bizDict:remove']"
+               v-hasPermi="['bizdict:dict:remove']"
             >删除</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -72,7 +72,7 @@
                plain
                icon="Download"
                @click="handleExport"
-               v-hasPermi="['system:bizDict:export']"
+               v-hasPermi="['bizdict:dict:export']"
             >导出</el-button>
          </el-col>
          <el-col :span="1.5">
@@ -110,8 +110,8 @@
          </el-table-column>
          <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
             <template #default="scope">
-               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['system:bizDict:edit']">修改</el-button>
-               <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['system:bizDict:remove']">删除</el-button>
+               <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['bizdict:dict:edit']">修改</el-button>
+               <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['bizdict:dict:remove']">删除</el-button>
             </template>
          </el-table-column>
       </el-table>
@@ -177,8 +177,8 @@
 
 <script setup name="BizDictData">
 import useBizDictStore from '@/store/modules/bizDict'
-import { optionselect as getDictOptionselect, getType } from "@/api/system/bizDict/type"
-import { listData, getData, delData, addData, updateData } from "@/api/system/bizDict/data"
+import { optionselect as getDictOptionselect, getType } from "@/api/bizdict/type"
+import { listData, getData, delData, addData, updateData } from "@/api/bizdict/data"
 
 const { proxy } = getCurrentInstance()
 const { sys_normal_disable } = useDict("sys_normal_disable")
@@ -278,7 +278,7 @@ function handleQuery() {
 
 /** 返回按钮操作 */
 function handleClose() {
-  const obj = { path: "/system/bizDict" }
+  const obj = { path: "/fill/bizdict" }
   proxy.$tab.closeOpenPage(obj)
 }
 
@@ -352,7 +352,7 @@ function handleDelete(row) {
 
 /** 导出按钮操作 */
 function handleExport() {
-  proxy.download("system/bizDict/data/export", {
+  proxy.download("bizdict/data/export", {
     ...queryParams.value
   }, `bizDict_data_${new Date().getTime()}.xlsx`)
 }
